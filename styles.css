@@ -398,6 +398,20 @@ table.dt td.nw{white-space:nowrap;}
 
 .pill.gold{background:rgba(154,123,63,.15);color:var(--gold);}
 
+/* ---- Hiệu quả tuyển dụng: charts phụ ---- */
+.pt-note{font-size:11.5px;color:var(--muted);margin-top:12px;padding-top:9px;border-top:1px solid var(--line-soft);display:flex;align-items:center;gap:6px;line-height:1.5;}
+.pt-note i{color:var(--clay);font-size:14px;}
+.pt-note b{color:var(--ink);font-variant-numeric:tabular-nums;}
+.gbar{display:flex;align-items:flex-end;gap:3px;}
+.gbar-cv{width:11px;max-width:11px;background:rgba(53,101,91,.32);border-radius:3px 3px 0 0;}
+.gbar-hire{width:11px;max-width:11px;background:var(--teal);border-radius:3px 3px 0 0;}
+.legend{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);margin-top:12px;}
+.legend .lg{width:11px;height:11px;border-radius:3px;display:inline-block;}
+.legend .lg-cv{background:rgba(53,101,91,.32);margin-left:4px;}
+.legend .lg-hire{background:var(--teal);margin-left:14px;}
+.callout .empty-list{margin-top:12px;}
+.callout .empty-li span{line-height:1.6;}
+
 @media(max-width:720px){
   #sidebar{width:64px;}
   .sb-name,.sb-sub,.nav-glabel,.nav-item span,.nav-badge,.sb-uname,.sb-urole{display:none;}
