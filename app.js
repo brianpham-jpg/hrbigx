@@ -403,6 +403,199 @@ async function kcvSubmit(){
   kcvValid();
 }
 
+/* ============================================================
+   TAB: TUYỂN DỤNG — funnel + phân tích (đã lọc PII, tên viết tắt)
+   ============================================================ */
+var TDPASS = { hr:'SCAN CV PASS', lm:'PHÙ HỢP', r1:'PASS', r2:'PASS', fin:'TRÚNG TUYỂN' };
+var tdFilter = { q:'', vitri:'', buoc:'' };
+
+function pct(a,b){ return b ? Math.round(a/b*1000)/10 : 0; }
+
+/* bước hiện tại của 1 ứng viên (dựa cột kết quả xa nhất) */
+function tdStage(c){
+  var nhan=(c.ngayNhanViec||'').trim(), f=(c.final||'').trim(), r2=(c.r2||'').trim(),
+      r1=(c.r1||'').trim(), lm=(c.lmReview||'').trim(), hr=(c.hrReview||'').trim();
+  function cls(v){
+    if(/PASS|PHÙ HỢP|TRÚNG TUYỂN/.test(v)) return 'teal';
+    if(/FAIL|KHÔNG PHÙ HỢP|TỪ CHỐI|CANCEL/.test(v)) return 'rust';
+    if(/XEM XÉT|KHÔNG THAM GIA/.test(v)) return 'clay';
+    return 'gray';
+  }
+  if(nhan) return {label:'Đã nhận việc', cls:'teal', bucket:'nhan'};
+  if(f)  return {label:(f==='TRÚNG TUYỂN'?'Trúng tuyển':f), cls:cls(f), bucket:(f==='TRÚNG TUYỂN'?'trung':'loai')};
+  if(r2) return {label:'Vòng 2 · '+r2, cls:cls(r2), bucket:(r2==='PASS'?'xuly':'loai')};
+  if(r1) return {label:'Vòng 1 · '+r1, cls:cls(r1), bucket:(r1==='PASS'?'xuly':'loai')};
+  if(lm) return {label:'LM · '+lm, cls:cls(lm), bucket:(/PHÙ HỢP|XEM XÉT/.test(lm)?'xuly':'loai')};
+  if(hr) return {label:'HR · '+hr, cls:cls(hr), bucket:(/PASS|XEM XÉT/.test(hr)?'xuly':'loai')};
+  return {label:'Mới nộp', cls:'gold', bucket:'xuly'};
+}
+
+function tdFunnel(list){
+  var total=list.length;
+  return [
+    {label:'CV nộp',              sub:'tổng hồ sơ',   n:total},
+    {label:'HR duyệt CV',         sub:'scan pass',    n:list.filter(function(c){return (c.hrReview||'').trim()===TDPASS.hr;}).length},
+    {label:'Line Manager duyệt',  sub:'phù hợp',      n:list.filter(function(c){return (c.lmReview||'').trim()===TDPASS.lm;}).length},
+    {label:'Phỏng vấn vòng 1',    sub:'pass',         n:list.filter(function(c){return (c.r1||'').trim()===TDPASS.r1;}).length},
+    {label:'Phỏng vấn vòng 2',    sub:'pass',         n:list.filter(function(c){return (c.r2||'').trim()===TDPASS.r2;}).length},
+    {label:'Trúng tuyển',         sub:'final',        n:list.filter(function(c){return (c.final||'').trim()===TDPASS.fin;}).length},
+    {label:'Nhận việc',           sub:'đã onboard',   n:list.filter(function(c){return (c.ngayNhanViec||'').trim()!=='';}).length}
+  ];
+}
+
+/* CV theo tháng từ ngày nộp dd/mm/yyyy */
+function tdMonths(list){
+  var m={};
+  list.forEach(function(c){
+    var p=String(c.ngayNop||'').split('/');
+    if(p.length===3){ var k=p[1].padStart(2,'0')+'/'+p[2]; m[k]=(m[k]||0)+1; }
+  });
+  return Object.keys(m).map(function(k){return {k:k,n:m[k]};}).sort(function(a,b){
+    var A=a.k.split('/'), B=b.k.split('/');
+    return (A[1]-B[1])||(A[0]-B[0]);
+  });
+}
+
+/* theo vị trí */
+function tdByViTri(list){
+  var g={};
+  list.forEach(function(c){
+    var v=(c.viTri||'').trim()||'(trống)';
+    if(!g[v]) g[v]={viTri:v,total:0,trung:0};
+    g[v].total++;
+    if((c.final||'').trim()===TDPASS.fin) g[v].trung++;
+  });
+  return Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){return b.total-a.total;});
+}
+
+function renderTuyenDung(){
+  if(HR.error) return errorBox();
+  if(!HR.loaded) return loadingBox();
+  var all = HR.tuyendung || [];
+  var total = all.length;
+
+  var fn = tdFunnel(all);
+  var trung = fn[5].n, nhan = fn[6].n;
+
+  /* KPI */
+  var kpis=[
+    ['Tổng CV', total, 'ti-files',''],
+    ['Trúng tuyển', trung, 'ti-user-check',''],
+    ['Nhận việc', nhan, 'ti-briefcase',''],
+    ['Tỷ lệ đậu', pct(trung,total)+'%', 'ti-target', '']
+  ].map(function(k){
+    return '<div class="stat"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[2]+'"></i></div><div class="stat-val">'+k[1]+'</div></div>';
+  }).join('');
+
+  /* Funnel bars + conversion */
+  var maxN = fn[0].n || 1;
+  var convs = fn.map(function(s,i){ return i===0?null:pct(s.n, fn[i-1].n); });
+  var minConv=101, minIdx=-1;
+  convs.forEach(function(c,i){ if(c!==null && c<minConv){minConv=c; minIdx=i;} });
+  var fnHtml = fn.map(function(s,i){
+    var w=Math.max(4, s.n/maxN*100);
+    var op=(1 - i*0.085).toFixed(3);
+    var conv = i===0 ? ('<span class="fnl-conv">'+ '100% tổng' +'</span>')
+      : '<span class="fnl-conv'+(i===minIdx?' drop':'')+'"><b>'+convs[i]+'%</b> so với bước trên · '+pct(s.n,total)+'% tổng</span>';
+    return '<div class="fnl-row"><div class="fnl-label">'+esc(s.label)+'<small>'+esc(s.sub)+'</small></div>'+
+      '<div class="fnl-barwrap"><div class="fnl-bar" style="width:'+w+'%;background:rgba(53,101,91,'+op+');"><span class="fnl-n">'+s.n+'</span></div>'+conv+'</div></div>';
+  }).join('');
+
+  /* Insight callout */
+  var dropLabel = minIdx>0 ? fn[minIdx].label : '—';
+  var offerAcc = pct(nhan, trung);
+  var insight =
+    '<div class="callout-k"><i class="ti ti-bulb"></i>Đánh giá phễu</div>'+
+    '<p>Từ <b class="big">'+total+'</b> CV, có <b class="big">'+trung+'</b> trúng tuyển và <b class="big">'+nhan+'</b> nhận việc — tỷ lệ đậu <b>'+pct(trung,total)+'%</b>.</p>'+
+    '<p>Bước rớt mạnh nhất: <b>'+esc(dropLabel)+'</b> — chỉ <b style="color:var(--rust)">'+(minIdx>0?convs[minIdx]:0)+'%</b> qua được so với bước trước.</p>'+
+    '<p>HR lọc CV: <b>'+pct(fn[1].n,total)+'%</b> CV qua vòng scan. Nhận offer thực tế: <b>'+offerAcc+'%</b> người trúng tuyển đã onboard.</p>';
+
+  /* Month chart */
+  var mo = tdMonths(all);
+  var maxMo = mo.reduce(function(m,x){return Math.max(m,x.n);},1);
+  var barsHtml = mo.map(function(x){
+    var h=Math.max(3, x.n/maxMo*118);
+    var lbl=x.k.replace(/\/(\d{2})(\d{2})$/,'/$2'); // mm/yyyy -> mm/yy
+    return '<div class="bar-col" title="'+esc(x.k)+': '+x.n+' CV"><div class="bar-v">'+x.n+'</div><div class="bar-fill" style="height:'+h+'px;"></div><div class="bar-x">'+esc(lbl)+'</div></div>';
+  }).join('');
+
+  /* Position table */
+  var vt = tdByViTri(all);
+  var maxVT = vt.reduce(function(m,x){return Math.max(m,x.total);},1);
+  var vtRows = vt.map(function(r){
+    var rate=pct(r.trung,r.total);
+    var rc = rate>=8?'good':(rate>=4?'mid':'low');
+    return '<tr><td class="dt-name nw">'+esc(r.viTri)+'</td>'+
+      '<td><div class="mini"><div class="mini-track"><div class="mini-fill" style="width:'+(r.total/maxVT*100)+'%"></div></div><span class="dt-muted" style="min-width:34px">'+r.total+'</span></div></td>'+
+      '<td style="text-align:center">'+r.trung+'</td>'+
+      '<td class="nw"><span class="rate '+rc+'">'+rate+'%</span></td></tr>';
+  }).join('');
+
+  /* Vị trí filter options */
+  var vtOpts = vt.map(function(r){return '<option value="'+esc(r.viTri)+'"'+(tdFilter.vitri===r.viTri?' selected':'')+'>'+esc(r.viTri)+'</option>';}).join('');
+  var buocOpts = [['','Mọi bước'],['xuly','Đang xử lý'],['trung','Trúng tuyển'],['nhan','Đã nhận việc'],['loai','Đã loại']]
+    .map(function(o){return '<option value="'+o[0]+'"'+(tdFilter.buoc===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
+
+  setTimeout(tdRenderBody,0);
+
+  return ''+
+    '<div class="page-head"><div class="page-h1">Tuyển dụng</div>'+
+    '<div class="page-lead">Phân tích phễu tuyển dụng từ dữ liệu thật (đã lọc thông tin cá nhân — tên hiển thị viết tắt, không có email/SĐT). Nguồn: file Tuyển dụng qua API hub.</div></div>'+
+    '<div class="stat-row">'+kpis+'</div>'+
+
+    '<div class="grid-2">'+
+      '<div class="card"><div class="sec-head"><span class="sec-title">Phễu tuyển dụng</span><span class="sec-sub">số ứng viên qua từng bước &amp; tỷ lệ chuyển đổi</span></div>'+
+        '<div class="funnel">'+fnHtml+'</div></div>'+
+      '<div class="callout">'+insight+'</div>'+
+    '</div>'+
+
+    '<div class="sec"><div class="sec-head"><span class="sec-title">CV nộp theo tháng</span><span class="sec-sub">xu hướng lượng hồ sơ về</span></div>'+
+      '<div class="card"><div class="bars">'+barsHtml+'</div></div></div>'+
+
+    '<div class="sec"><div class="sec-head"><span class="sec-title">Theo vị trí</span><span class="sec-sub">lượng CV, số trúng tuyển &amp; tỷ lệ đậu mỗi vị trí</span></div>'+
+      '<div class="table-wrap"><table class="dt"><thead><tr><th>Vị trí</th><th>Số CV</th><th style="text-align:center">Trúng tuyển</th><th>Tỷ lệ đậu</th></tr></thead><tbody>'+vtRows+'</tbody></table></div></div>'+
+
+    '<div class="sec"><div class="sec-head"><span class="sec-title">Danh sách ứng viên</span><span class="sec-sub">ngày nộp · tên (viết tắt) · vị trí · bước hiện tại</span></div>'+
+      '<div class="toolbar">'+
+        '<div class="tb-search"><i class="ti ti-search"></i><input id="td-q" placeholder="Tìm tên hoặc vị trí…" value="'+esc(tdFilter.q)+'" oninput="tdOn()"></div>'+
+        '<select id="td-vitri" onchange="tdOn()"><option value="">Tất cả vị trí</option>'+vtOpts+'</select>'+
+        '<select id="td-buoc" onchange="tdOn()">'+buocOpts+'</select>'+
+        '<span class="tb-count" id="td-count"></span>'+
+      '</div>'+
+      '<div class="table-wrap"><table class="dt"><thead><tr><th>Ngày nộp</th><th>Họ tên</th><th>Vị trí</th><th>Bước hiện tại</th></tr></thead><tbody id="td-body"></tbody></table></div></div>';
+}
+
+function tdOn(){
+  tdFilter.q=(document.getElementById('td-q')||{}).value||'';
+  tdFilter.vitri=(document.getElementById('td-vitri')||{}).value||'';
+  tdFilter.buoc=(document.getElementById('td-buoc')||{}).value||'';
+  tdRenderBody();
+}
+function tdRenderBody(){
+  var body=document.getElementById('td-body'); if(!body) return;
+  var q=tdFilter.q.trim().toLowerCase();
+  var rows=(HR.tuyendung||[]).map(function(c){ return {c:c, st:tdStage(c)}; }).filter(function(o){
+    if(tdFilter.vitri && (o.c.viTri||'')!==tdFilter.vitri) return false;
+    if(tdFilter.buoc && o.st.bucket!==tdFilter.buoc) return false;
+    if(q){ var hay=((o.c.hoTenMask||'')+' '+(o.c.viTri||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
+    return true;
+  }).sort(function(a,b){
+    var da=parseDMY(a.c.ngayNop), db=parseDMY(b.c.ngayNop);
+    if(!da&&!db) return 0; if(!da) return 1; if(!db) return -1;
+    return db.getTime()-da.getTime();
+  });
+  var cnt=document.getElementById('td-count'); if(cnt) cnt.textContent=rows.length+' ứng viên';
+  if(!rows.length){ body.innerHTML='<tr><td colspan="4" class="dt-empty">Không có ứng viên khớp bộ lọc.</td></tr>'; return; }
+  body.innerHTML=rows.map(function(o){
+    return '<tr>'+
+      '<td class="dt-date nw">'+esc(o.c.ngayNop||'—')+'</td>'+
+      '<td class="dt-name">'+esc(o.c.hoTenMask||'—')+'</td>'+
+      '<td class="nw">'+esc(o.c.viTri||'—')+'</td>'+
+      '<td class="nw"><span class="pill '+o.st.cls+'">'+esc(o.st.label)+'</span></td>'+
+    '</tr>';
+  }).join('');
+}
+
 /* ---- Router ---- */
 var currentTab = null;
 function go(id){
@@ -420,6 +613,7 @@ function go(id){
   var content=document.getElementById('content');
   if(id==='ho-so') content.innerHTML=renderHoSo();
   else if(id==='hop-dong') content.innerHTML=renderHopDong();
+  else if(id==='tuyen-dung') content.innerHTML=renderTuyenDung();
   else if(id==='kho-cv') content.innerHTML=renderKhoCV();
   else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
