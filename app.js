@@ -519,7 +519,7 @@ function tdRenderBody(){
 }
 
 /* ============================================================
-   TAB: HIỆU QUẢ TUYỂN DỤNG — phân tích sâu (tự cập nhật theo data)
+   TAB: HIỆU QUẢ TUYỂN DỤNG — phân tích sâu (ECharts, tự cập nhật)
    ============================================================ */
 var ptFilter = { vitri:'', month:'' };
 
@@ -542,30 +542,94 @@ function ptMonthsHire(list){
 }
 function ptFirstDrop(c){
   if((c.hrReview||'').trim()==='SCAN CV FAIL') return 'HR loại CV';
-  if((c.lmReview||'').trim()==='KHÔNG PHÙ HỢP') return 'LM: không phù hợp';
-  var r1=(c.r1||'').trim(); if(r1==='FAIL') return 'Rớt phỏng vấn V1'; if(r1==='KHÔNG THAM GIA') return 'No-show phỏng vấn V1';
-  var r2=(c.r2||'').trim(); if(r2==='FAIL') return 'Rớt phỏng vấn V2'; if(r2==='KHÔNG THAM GIA') return 'No-show phỏng vấn V2';
+  if((c.lmReview||'').trim()==='KHÔNG PHÙ HỢP') return 'LM không phù hợp';
+  var r1=(c.r1||'').trim(); if(r1==='FAIL') return 'Rớt phỏng vấn V1'; if(r1==='KHÔNG THAM GIA') return 'No-show V1';
+  var r2=(c.r2||'').trim(); if(r2==='FAIL') return 'Rớt phỏng vấn V2'; if(r2==='KHÔNG THAM GIA') return 'No-show V2';
   var f=(c.final||'').trim(); if(f==='TỪ CHỐI OFFER') return 'Từ chối offer'; if(f==='CANCEL') return 'Huỷ'; if(f==='FAIL') return 'Loại (không rõ bước)';
   return null;
 }
-function ptRenderFunnel(){
-  var box=document.getElementById('pt-funnel'); if(!box) return;
-  var list=ptFilteredList();
-  var fn=tdFunnel(list); var maxN=fn[0].n||1;
+
+/* ---- ECharts theme + registry ---- */
+var PTC = { teal:'#35655B', teal2:'#4A8375', clay:'#B07A43', rust:'#A65A4B', muted:'#8B897E', faint:'#A9A599',
+  ink:'#21303B', text:'#414B54', paper:'#FBFAF6', line:'#E4DECF',
+  ramp:['#274b43','#35655B','#3f7669','#4c8577','#6ba496','#8dbcb0'] };
+var PTFONT="'Be Vietnam Pro',sans-serif";
+function ptTip(extra){ return Object.assign({backgroundColor:PTC.paper,borderColor:PTC.line,borderWidth:1,padding:[9,12],
+  textStyle:{color:PTC.ink,fontFamily:PTFONT,fontSize:12},extraCssText:'box-shadow:0 6px 20px rgba(33,48,59,.12);border-radius:8px;'}, extra||{}); }
+window.__ptCharts = window.__ptCharts || {};
+function ptMk(id,opt){
+  var el=document.getElementById(id); if(!el || typeof echarts==='undefined') return;
+  if(window.__ptCharts[id]){ try{ window.__ptCharts[id].dispose(); }catch(e){} }
+  var c=echarts.init(el,null,{renderer:'svg'}); c.setOption(opt); window.__ptCharts[id]=c;
+}
+window.addEventListener('resize',function(){ Object.keys(window.__ptCharts).forEach(function(k){ try{ window.__ptCharts[k].resize(); }catch(e){} }); });
+
+/* funnel chart (theo bộ lọc) */
+function ptDrawFunnel(){
+  if(!document.getElementById('pt-funnel')) return;
+  var list=ptFilteredList(); var fn=tdFunnel(list);
   var convs=fn.map(function(s,i){return i===0?null:pct(s.n,fn[i-1].n);});
-  var minC=101,minIdx=-1; convs.forEach(function(c,i){if(c!==null&&c<minC){minC=c;minIdx=i;}});
-  var rows=fn.map(function(s,i){
-    var w=Math.max(4,s.n/maxN*100), op=(1-i*0.1).toFixed(3);
-    var conv=i===0?'<span class="fnl-conv">100% tổng</span>':'<span class="fnl-conv'+(i===minIdx?' drop':'')+'"><b>'+convs[i]+'%</b> vs bước trên · '+pct(s.n,fn[0].n)+'% tổng</span>';
-    return '<div class="fnl-row"><div class="fnl-label">'+esc(s.label)+'<small>'+esc(s.sub)+'</small></div><div class="fnl-barwrap"><div class="fnl-bar" style="width:'+w+'%;background:rgba(53,101,91,'+op+');"><span class="fnl-n">'+s.n+'</span></div>'+conv+'</div></div>';
-  }).join('');
-  var note=minIdx>0?('Nghẽn nặng nhất ở <b>'+esc(fn[minIdx].label)+'</b> — chỉ <b style="color:var(--rust)">'+convs[minIdx]+'%</b> qua bước.'):'—';
-  box.innerHTML='<div class="funnel">'+rows+'</div><div class="pt-note"><i class="ti ti-bulb"></i> '+note+' · Đậu chung <b>'+pct(fn[5].n,fn[0].n)+'%</b> ('+fn[5].n+'/'+fn[0].n+')</div>';
+  ptMk('pt-funnel',{
+    tooltip:ptTip({trigger:'item',formatter:function(p){var i=p.dataIndex;var cv=i===0?'100% tổng':(convs[i]+'% vs bước trên · '+pct(fn[i].n,fn[0].n)+'% tổng');return '<b>'+p.name+'</b><br/>'+p.value+' ứng viên<br/><span style="color:'+PTC.muted+'">'+cv+'</span>';}}),
+    series:[{type:'funnel',left:'6%',right:'6%',top:8,bottom:8,minSize:'22%',maxSize:'100%',sort:'none',gap:3,
+      label:{show:true,position:'inside',color:'#fff',fontFamily:PTFONT,fontWeight:600,fontSize:12,formatter:function(p){return p.name+'  '+p.value;}},
+      labelLine:{show:false},itemStyle:{borderWidth:0},emphasis:{label:{fontSize:13}},
+      data:fn.map(function(s,i){return {value:s.n,name:s.label,itemStyle:{color:PTC.ramp[i]||PTC.teal}};})
+    }]
+  });
+  var box=document.getElementById('pt-funnote');
+  if(box){ var minC=101,mi=-1; convs.forEach(function(c,i){if(c!==null&&c<minC){minC=c;mi=i;}});
+    box.innerHTML='<i class="ti ti-bulb"></i> '+(mi>0?('Nghẽn nặng nhất ở <b>'+esc(fn[mi].label)+'</b> — chỉ <b style="color:var(--rust)">'+convs[mi]+'%</b> qua bước.'):'—')+' · Đậu chung <b>'+pct(fn[5].n,fn[0].n)+'%</b> ('+fn[5].n+'/'+fn[0].n+')'; }
 }
 function ptOn(){
   ptFilter.vitri=(document.getElementById('pt-vitri')||{}).value||'';
   ptFilter.month=(document.getElementById('pt-month')||{}).value||'';
-  ptRenderFunnel();
+  ptDrawFunnel();
+}
+
+function ptInitCharts(){
+  var all=HR.tuyendung||[];
+  ptDrawFunnel();
+
+  /* donut kết quả cuối */
+  var b={xuly:0,trung:0,loai:0}; all.forEach(function(c){var k=tdStage(c).bucket; b[k]=(b[k]||0)+1;});
+  ptMk('pt-donut',{
+    tooltip:ptTip({trigger:'item',formatter:function(p){return '<b>'+p.name+'</b><br/>'+p.value+' CV · '+p.percent+'%';}}),
+    legend:{bottom:2,icon:'roundRect',itemWidth:11,itemHeight:11,textStyle:{color:PTC.text,fontFamily:PTFONT,fontSize:12}},
+    series:[{type:'pie',radius:['52%','74%'],center:['50%','44%'],avoidLabelOverlap:true,padAngle:2,
+      itemStyle:{borderColor:PTC.paper,borderWidth:2},
+      label:{show:true,position:'outside',color:PTC.text,fontFamily:PTFONT,fontSize:11,formatter:'{b}\n{c}'},
+      labelLine:{length:8,length2:8,lineStyle:{color:PTC.faint}},emphasis:{scale:true,scaleSize:4},
+      data:[{value:b.trung,name:'Trúng tuyển',itemStyle:{color:PTC.teal}},
+            {value:b.xuly,name:'Đang xử lý',itemStyle:{color:PTC.muted}},
+            {value:b.loai,name:'Đã loại',itemStyle:{color:PTC.rust}}]
+    }]
+  });
+
+  /* cột nhóm CV vs trúng tuyển theo tháng */
+  var mh=ptMonthsHire(all);
+  var mLab=mh.map(function(x){return x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');});
+  ptMk('pt-months',{
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){var s='<b>Tháng '+a[0].axisValue+'</b>';a.forEach(function(x){s+='<br/>'+x.marker+x.seriesName+': <b>'+x.value+'</b>';});var cv=a[0].value,hi=(a[1]?a[1].value:0);s+='<br/><span style="color:'+PTC.muted+'">Tỷ lệ đậu: '+(cv?(hi/cv*100).toFixed(1):0)+'%</span>';return s;}}),
+    legend:{top:0,right:0,icon:'roundRect',itemWidth:11,itemHeight:11,textStyle:{color:PTC.text,fontFamily:PTFONT,fontSize:12}},
+    grid:{left:8,right:8,top:34,bottom:4,containLabel:true},
+    xAxis:{type:'category',data:mLab,axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
+    yAxis:{type:'value',splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
+    series:[{name:'CV nộp',type:'bar',data:mh.map(function(x){return x.cv;}),barWidth:11,itemStyle:{color:PTC.teal2,borderRadius:[4,4,0,0]},barGap:'20%'},
+            {name:'Trúng tuyển',type:'bar',data:mh.map(function(x){return x.hire;}),barWidth:11,itemStyle:{color:PTC.clay,borderRadius:[4,4,0,0]}}]
+  });
+
+  /* drop-off bar ngang */
+  var dd={}; all.forEach(function(c){var r=ptFirstDrop(c); if(r) dd[r]=(dd[r]||0)+1;});
+  var da=Object.keys(dd).map(function(k){return [k,dd[k]];}).sort(function(a,b){return a[1]-b[1];}); // asc để lớn nhất trên đầu (yAxis)
+  ptMk('pt-drops',{
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' ứng viên';}}),
+    grid:{left:6,right:30,top:8,bottom:4,containLabel:true},
+    xAxis:{type:'value',splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
+    yAxis:{type:'category',data:da.map(function(x){return x[0];}),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:PTC.text,fontFamily:PTFONT,fontSize:11.5}},
+    series:[{type:'bar',data:da.map(function(x){return x[1];}),barWidth:'58%',itemStyle:{color:PTC.rust,borderRadius:[0,4,4,0],opacity:.85},
+      label:{show:true,position:'right',color:PTC.muted,fontFamily:PTFONT,fontSize:11}}]
+  });
 }
 
 function renderPhanTichTuyenDung(){
@@ -574,9 +638,7 @@ function renderPhanTichTuyenDung(){
   var all=HR.tuyendung||[];
   var total=all.length;
   var fnAll=tdFunnel(all); var trung=fnAll[5].n;
-
-  var byBucket={xuly:0,trung:0,loai:0};
-  all.forEach(function(c){var b=tdStage(c).bucket; byBucket[b]=(byBucket[b]||0)+1;});
+  var byBucket={xuly:0,trung:0,loai:0}; all.forEach(function(c){var k=tdStage(c).bucket; byBucket[k]=(byBucket[k]||0)+1;});
 
   var kpis=[
     ['Tổng CV', total, 'ti-files'],
@@ -591,19 +653,7 @@ function renderPhanTichTuyenDung(){
   var moAll=tdMonths(all);
   var moOpts=moAll.map(function(x){var lbl=x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');return '<option value="'+x.k+'"'+(ptFilter.month===x.k?' selected':'')+'>'+lbl+'</option>';}).join('');
 
-  var mh=ptMonthsHire(all);
-  var maxCv=mh.reduce(function(m,x){return Math.max(m,x.cv);},1);
-  var mbars=mh.map(function(x){
-    var hc=Math.max(2,x.cv/maxCv*120), hh=Math.max(0,x.hire/maxCv*120);
-    var lbl=x.k.replace(/\/(\d{2})(\d{2})$/,'/$2'); var rate=pct(x.hire,x.cv);
-    return '<div class="bar-col" title="'+esc(x.k)+': '+x.cv+' CV, '+x.hire+' tuyển ('+rate+'%)"><div class="bar-v">'+x.cv+'</div>'+
-      '<div class="gbar"><div class="gbar-cv" style="height:'+hc+'px"></div><div class="gbar-hire" style="height:'+hh+'px"></div></div>'+
-      '<div class="bar-x">'+esc(lbl)+'</div></div>';
-  }).join('');
-
-  var vtStats=vt.map(function(r){
-    return {viTri:r.viTri, cv:r.total, hire:r.trung, rate:pct(r.trung,r.total), perHire:(r.trung?Math.round(r.total/r.trung*10)/10:null)};
-  });
+  var vtStats=vt.map(function(r){return {viTri:r.viTri, cv:r.total, hire:r.trung, rate:pct(r.trung,r.total), perHire:(r.trung?Math.round(r.total/r.trung*10)/10:null)};});
   var maxCvVt=vtStats.reduce(function(m,x){return Math.max(m,x.cv);},1);
   var vtRows=vtStats.map(function(r){
     var rc=r.rate>=8?'good':(r.rate>=4?'mid':'low');
@@ -614,22 +664,12 @@ function renderPhanTichTuyenDung(){
       '<td style="text-align:center" class="dt-muted">'+(r.perHire!=null?r.perHire:'—')+'</td></tr>';
   }).join('');
 
-  var drops={};
-  all.forEach(function(c){var r=ptFirstDrop(c); if(r) drops[r]=(drops[r]||0)+1;});
-  var dropArr=Object.keys(drops).map(function(k){return {k:k,n:drops[k]};}).sort(function(a,b){return b.n-a.n;});
-  var maxD=dropArr.reduce(function(m,x){return Math.max(m,x.n);},1);
-  var totalDrop=dropArr.reduce(function(s,x){return s+x.n;},0);
-  var dropRows=dropArr.map(function(x){return '<tr><td class="nw">'+esc(x.k)+'</td>'+
-    '<td><div class="mini"><div class="mini-track"><div class="mini-fill" style="width:'+(x.n/maxD*100)+'%;opacity:.6;background:var(--rust)"></div></div><span class="dt-muted" style="min-width:30px">'+x.n+'</span></div></td>'+
-    '<td class="nw dt-muted">'+pct(x.n,totalDrop)+'%</td></tr>';}).join('');
-
   var gGroups=[['Nam',all.filter(function(c){return (c.gioiTinh||'').trim()==='Nam';})],['Nữ',all.filter(function(c){return (c.gioiTinh||'').trim()==='Nữ';})]];
   var gRows=gGroups.map(function(g){var f=tdFunnel(g[1]);var rr=pct(f[5].n,f[0].n);return '<tr><td class="dt-name nw">'+g[0]+'</td><td style="text-align:center">'+f[0].n+'</td><td style="text-align:center">'+f[5].n+'</td><td class="nw"><span class="rate '+(rr>=6?'good':'mid')+'">'+rr+'%</span></td></tr>';}).join('');
 
   var reachV1=all.filter(function(c){return (c.r1||'').trim()!=='';}).length;
   var noShow=all.filter(function(c){return (c.r1||'').trim()==='KHÔNG THAM GIA'||(c.r2||'').trim()==='KHÔNG THAM GIA';}).length;
   var tuChoi=all.filter(function(c){return (c.final||'').trim()==='TỪ CHỐI OFFER';}).length;
-
   var worst=vtStats.filter(function(x){return x.cv>=10;}).slice().sort(function(a,b){return a.rate-b.rate;})[0];
   var best=vtStats.filter(function(x){return x.cv>=10;}).slice().sort(function(a,b){return b.rate-a.rate;})[0];
   var convsAll=fnAll.map(function(s,i){return i===0?null:pct(s.n,fnAll[i-1].n);});
@@ -642,34 +682,39 @@ function renderPhanTichTuyenDung(){
     'No-show phỏng vấn: <b>'+noShow+'</b> lượt ('+pct(noShow,reachV1)+'% số vào phỏng vấn). Từ chối offer: <b>'+tuChoi+'</b> người.'
   ].filter(Boolean).map(function(t){return '<div class="empty-li"><i class="ti ti-point"></i><span>'+t+'</span></div>';}).join('');
 
-  setTimeout(ptRenderFunnel,0);
+  setTimeout(ptInitCharts,30);
 
   return ''+
     '<div class="page-head"><div class="page-h1">Hiệu quả tuyển dụng</div>'+
     '<div class="page-lead">Phân tích tự động từ data tuyển dụng — mọi chỉ số &amp; biểu đồ cập nhật theo CV nạp vào. Danh sách ứng viên xem ở tab <b>Tuyển dụng</b>.</div></div>'+
     '<div class="stat-row">'+kpis+'</div>'+
 
-    '<div class="sec"><div class="sec-head"><span class="sec-title">Phễu &amp; tỷ lệ chuyển đổi</span><span class="sec-sub">lọc theo vị trí / tháng</span></div>'+
-      '<div class="toolbar">'+
-        '<select id="pt-vitri" onchange="ptOn()"><option value="">Tất cả vị trí</option>'+vtOpts+'</select>'+
-        '<select id="pt-month" onchange="ptOn()"><option value="">Tất cả tháng</option>'+moOpts+'</select>'+
-      '</div>'+
-      '<div class="card" id="pt-funnel"></div></div>'+
-
-    '<div class="sec"><div class="sec-head"><span class="sec-title">CV nộp vs Trúng tuyển theo tháng</span><span class="sec-sub">xu hướng lượng CV &amp; kết quả tuyển</span></div>'+
-      '<div class="card"><div class="bars">'+mbars+'</div><div class="legend"><span class="lg lg-cv"></span>CV nộp<span class="lg lg-hire"></span>Trúng tuyển</div></div></div>'+
-
-    '<div class="sec"><div class="sec-head"><span class="sec-title">Hiệu quả theo vị trí</span><span class="sec-sub">CV · trúng tuyển · tỷ lệ đậu · CV cần cho 1 tuyển</span></div>'+
-      '<div class="table-wrap"><table class="dt"><thead><tr><th>Vị trí</th><th>Số CV</th><th style="text-align:center">Tuyển</th><th>Tỷ lệ đậu</th><th style="text-align:center">CV/1 tuyển</th></tr></thead><tbody>'+vtRows+'</tbody></table></div></div>'+
-
     '<div class="grid-2">'+
-      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Điểm rớt (drop-off)</span><span class="sec-sub">ứng viên bị loại ở bước nào</span></div>'+
-        '<div class="table-wrap"><table class="dt"><thead><tr><th>Lý do / bước</th><th>Số</th><th>Tỷ trọng</th></tr></thead><tbody>'+dropRows+'</tbody></table></div></div>'+
-      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Theo giới tính</span><span class="sec-sub">CV &amp; tỷ lệ đậu</span></div>'+
-        '<div class="table-wrap"><table class="dt"><thead><tr><th>Giới tính</th><th style="text-align:center">CV</th><th style="text-align:center">Tuyển</th><th>Tỷ lệ đậu</th></tr></thead><tbody>'+gRows+'</tbody></table></div></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Phễu &amp; tỷ lệ chuyển đổi</span><span class="sec-sub">lọc theo vị trí / tháng</span></div>'+
+        '<div class="toolbar" style="margin-bottom:10px">'+
+          '<select id="pt-vitri" onchange="ptOn()"><option value="">Tất cả vị trí</option>'+vtOpts+'</select>'+
+          '<select id="pt-month" onchange="ptOn()"><option value="">Tất cả tháng</option>'+moOpts+'</select>'+
+        '</div>'+
+        '<div class="card"><div id="pt-funnel" class="ec ec-tall"></div><div class="pt-note" id="pt-funnote"></div></div></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Kết quả cuối</span><span class="sec-sub">phân bổ toàn bộ CV</span></div>'+
+        '<div class="card"><div id="pt-donut" class="ec ec-tall"></div></div></div>'+
     '</div>'+
 
-    '<div class="sec"><div class="callout"><div class="callout-k"><i class="ti ti-bulb"></i>Đánh giá tự động</div><div class="empty-list">'+insights+'</div></div></div>';
+    '<div class="sec"><div class="sec-head"><span class="sec-title">CV nộp vs Trúng tuyển theo tháng</span><span class="sec-sub">xu hướng lượng CV &amp; kết quả tuyển</span></div>'+
+      '<div class="card"><div id="pt-months" class="ec"></div></div></div>'+
+
+    '<div class="grid-2">'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Hiệu quả theo vị trí</span><span class="sec-sub">CV · tỷ lệ đậu · CV cần/1 tuyển</span></div>'+
+        '<div class="table-wrap"><table class="dt"><thead><tr><th>Vị trí</th><th>Số CV</th><th style="text-align:center">Tuyển</th><th>Tỷ lệ đậu</th><th style="text-align:center">CV/1 tuyển</th></tr></thead><tbody>'+vtRows+'</tbody></table></div></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Điểm rớt (drop-off)</span><span class="sec-sub">ứng viên bị loại ở bước nào</span></div>'+
+        '<div class="card"><div id="pt-drops" class="ec ec-tall"></div></div></div>'+
+    '</div>'+
+
+    '<div class="grid-2">'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Theo giới tính</span><span class="sec-sub">CV &amp; tỷ lệ đậu</span></div>'+
+        '<div class="table-wrap"><table class="dt"><thead><tr><th>Giới tính</th><th style="text-align:center">CV</th><th style="text-align:center">Tuyển</th><th>Tỷ lệ đậu</th></tr></thead><tbody>'+gRows+'</tbody></table></div></div>'+
+      '<div class="sec" style="margin:0"><div class="callout" style="height:100%"><div class="callout-k"><i class="ti ti-bulb"></i>Đánh giá tự động</div><div class="empty-list">'+insights+'</div></div></div>'+
+    '</div>';
 }
 
 /* ---- Router ---- */

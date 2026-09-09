@@ -398,6 +398,11 @@ table.dt td.nw{white-space:nowrap;}
 
 .pill.gold{background:rgba(154,123,63,.15);color:var(--gold);}
 
+
+/* ---- ECharts containers ---- */
+.ec{width:100%;height:300px;}
+.ec-tall{height:342px;}
+
 /* ---- Hiệu quả tuyển dụng: charts phụ ---- */
 .pt-note{font-size:11.5px;color:var(--muted);margin-top:12px;padding-top:9px;border-top:1px solid var(--line-soft);display:flex;align-items:center;gap:6px;line-height:1.5;}
 .pt-note i{color:var(--clay);font-size:14px;}
