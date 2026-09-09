@@ -717,6 +717,127 @@ function renderPhanTichTuyenDung(){
     '</div>';
 }
 
+/* ============================================================
+   TAB: CHỈ SỐ & XU HƯỚNG — phân tích nhân sự (ECharts, tự cập nhật)
+   ============================================================ */
+function csActive(){ return (HR.nhansu||[]).filter(function(e){return (e.tinhTrang||'').trim()!=='Nghỉ việc';}); }
+function csMonthsIn(list){
+  var m={};
+  list.forEach(function(e){var p=String(e.ngayVao||'').split('/');if(p.length!==3)return;var k=p[1].padStart(2,'0')+'/'+p[2];m[k]=(m[k]||0)+1;});
+  return Object.keys(m).map(function(k){return {k:k,n:m[k]};}).sort(function(a,b){var A=a.k.split('/'),B=b.k.split('/');return (A[1]-B[1])||(A[0]-B[0]);});
+}
+function csTenureMonths(e){ var d=parseDMY(e.ngayVao); if(!d) return null; var mo=(Date.now()-d.getTime())/2629800000; return mo>=0?mo:null; }
+function csCount(list,key){ var m={};list.forEach(function(e){var v=(String(e[key]||'').trim())||'(trống)';m[v]=(m[v]||0)+1;});return Object.keys(m).map(function(k){return [k,m[k]];}).sort(function(a,b){return b[1]-a[1];}); }
+
+function csInit(){
+  var ns=HR.nhansu||[]; var act=csActive();
+
+  /* nhân sự vào theo tháng */
+  var mi=csMonthsIn(ns);
+  ptMk('cs-hires',{
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>Tháng '+a[0].axisValue+'</b><br/>'+a[0].value+' người vào';}}),
+    grid:{left:8,right:8,top:12,bottom:4,containLabel:true},
+    xAxis:{type:'category',data:mi.map(function(x){return x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');}),axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
+    yAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
+    series:[{type:'bar',data:mi.map(function(x){return x.n;}),barWidth:'55%',itemStyle:{color:PTC.teal,borderRadius:[4,4,0,0]}}]
+  });
+
+  /* cơ cấu phòng ban (đang làm) — bar ngang */
+  var dept=csCount(act,'phong');
+  ptMk('cs-dept',{
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' người';}}),
+    grid:{left:6,right:28,top:8,bottom:4,containLabel:true},
+    xAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
+    yAxis:{type:'category',data:dept.map(function(x){return x[0];}).reverse(),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:PTC.text,fontFamily:PTFONT,fontSize:11.5}},
+    series:[{type:'bar',data:dept.map(function(x){return x[1];}).reverse(),barWidth:'58%',itemStyle:{color:PTC.teal,borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:PTC.muted,fontFamily:PTFONT,fontSize:11}}]
+  });
+
+  /* donut helper */
+  function donut(id,pairs,colors){
+    ptMk(id,{
+      tooltip:ptTip({trigger:'item',formatter:function(p){return '<b>'+p.name+'</b><br/>'+p.value+' người · '+p.percent+'%';}}),
+      legend:{bottom:0,type:'scroll',icon:'roundRect',itemWidth:10,itemHeight:10,textStyle:{color:PTC.text,fontFamily:PTFONT,fontSize:11}},
+      series:[{type:'pie',radius:['50%','72%'],center:['50%','42%'],avoidLabelOverlap:true,padAngle:2,itemStyle:{borderColor:PTC.paper,borderWidth:2},
+        label:{show:true,position:'outside',color:PTC.text,fontFamily:PTFONT,fontSize:10.5,formatter:'{b}: {c}'},
+        labelLine:{length:6,length2:6,lineStyle:{color:PTC.faint}},emphasis:{scale:true,scaleSize:4},
+        data:pairs.map(function(p,i){return {value:p[1],name:p[0],itemStyle:{color:colors[i%colors.length]}};})}]
+    });
+  }
+  var ramp=[PTC.teal,PTC.clay,PTC.teal2,PTC.rust,PTC.gold,PTC.muted,'#6ba496','#c79a6a'];
+  donut('cs-hd', csCount(act,'loaiHD'), ramp);
+  donut('cs-gender', csCount(act,'gioiTinh'), [PTC.teal,PTC.clay]);
+  donut('cs-status', csCount(ns,'tinhTrang'), [PTC.teal,PTC.clay,PTC.gold,PTC.rust]);
+
+  /* phân bố thâm niên (đang làm) */
+  var bk=[['< 6 tháng',0],['6–12 tháng',0],['1–2 năm',0],['2–3 năm',0],['3 năm+',0]];
+  act.forEach(function(e){var m=csTenureMonths(e);if(m==null)return;if(m<6)bk[0][1]++;else if(m<12)bk[1][1]++;else if(m<24)bk[2][1]++;else if(m<36)bk[3][1]++;else bk[4][1]++;});
+  ptMk('cs-tenure',{
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' người';}}),
+    grid:{left:8,right:8,top:12,bottom:4,containLabel:true},
+    xAxis:{type:'category',data:bk.map(function(x){return x[0];}),axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
+    yAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
+    series:[{type:'bar',data:bk.map(function(x){return x[1];}),barWidth:'50%',itemStyle:{color:PTC.teal2,borderRadius:[4,4,0,0]}}]
+  });
+}
+
+function renderChiSo(){
+  if(HR.error) return errorBox();
+  if(!HR.loaded) return loadingBox();
+  var ns=HR.nhansu||[]; var act=csActive();
+  var tong=ns.length, nghi=ns.filter(function(e){return (e.tinhTrang||'').trim()==='Nghỉ việc';}).length;
+  var dangLam=act.length, thuViec=ns.filter(function(e){return (e.tinhTrang||'').trim()==='Thử việc';}).length;
+  var tenM=act.map(csTenureMonths).filter(function(x){return x!=null;});
+  var avgTen=tenM.length?(tenM.reduce(function(a,b){return a+b;},0)/tenM.length):0;
+  var tenTxt=avgTen>=12?((avgTen/12).toFixed(1)+' năm'):(Math.round(avgTen)+' tháng');
+  var chinhThuc=act.filter(function(e){return /chính thức/i.test(e.loaiHD||'');}).length;
+
+  var kpis=[
+    ['Tổng nhân sự', tong, 'ti-users'],
+    ['Đang làm', dangLam, 'ti-user-check'],
+    ['Nghỉ việc', nghi, 'ti-user-off'],
+    ['Thử việc', thuViec, 'ti-user-plus'],
+    ['Thâm niên TB', tenTxt, 'ti-hourglass']
+  ].map(function(k){return '<div class="stat"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[2]+'"></i></div><div class="stat-val">'+k[1]+'</div></div>';}).join('');
+
+  /* insights */
+  var dept=csCount(act,'phong'); var topDept=dept[0];
+  var namNu=csCount(act,'gioiTinh'); var gStr=namNu.map(function(x){return x[0]+' '+x[1];}).join(' · ');
+  var pctNghi=tong?Math.round(nghi/tong*1000)/10:0;
+  var pctThu=dangLam?Math.round(thuViec/dangLam*1000)/10:0;
+  var insights=[
+    'Hiện có <b>'+dangLam+'</b> nhân sự đang làm / tổng '+tong+' (đã nghỉ <b>'+nghi+'</b> — '+pctNghi+'%).',
+    topDept?('Phòng đông nhất: <b>'+esc(topDept[0])+'</b> ('+topDept[1]+' người) trên '+dept.length+' phòng ban.'):null,
+    'Cơ cấu giới tính (đang làm): <b>'+esc(gStr)+'</b>.',
+    'Thâm niên trung bình: <b>'+tenTxt+'</b>. Chính thức: <b>'+chinhThuc+'</b>/'+dangLam+' · thử việc chiếm <b>'+pctThu+'%</b> lực lượng.'
+  ].filter(Boolean).map(function(t){return '<div class="empty-li"><i class="ti ti-point"></i><span>'+t+'</span></div>';}).join('');
+
+  setTimeout(csInit,30);
+
+  return ''+
+    '<div class="page-head"><div class="page-h1">Chỉ số &amp; xu hướng</div>'+
+    '<div class="page-lead">Bức tranh nhân sự: quy mô, cơ cấu và xu hướng tuyển — tự cập nhật theo Hồ sơ nhân sự.</div></div>'+
+    '<div class="stat-row">'+kpis+'</div>'+
+
+    '<div class="grid-2">'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Nhân sự vào theo tháng</span><span class="sec-sub">theo ngày vào làm</span></div>'+
+        '<div class="card"><div id="cs-hires" class="ec"></div><div class="pt-note"><i class="ti ti-info-circle"></i> Chưa vẽ được luồng nghỉ/ròng vì <b>ngày nghỉ chưa được ghi</b> (chỉ 1/45 dòng có).</div></div></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Cơ cấu phòng ban</span><span class="sec-sub">nhân sự đang làm</span></div>'+
+        '<div class="card"><div id="cs-dept" class="ec ec-tall"></div></div></div>'+
+    '</div>'+
+
+    '<div class="grid-3">'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Loại hợp đồng</span></div><div class="card"><div id="cs-hd" class="ec"></div></div></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Giới tính</span></div><div class="card"><div id="cs-gender" class="ec"></div></div></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Tình trạng</span></div><div class="card"><div id="cs-status" class="ec"></div></div></div>'+
+    '</div>'+
+
+    '<div class="grid-2">'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Phân bố thâm niên</span><span class="sec-sub">nhân sự đang làm</span></div>'+
+        '<div class="card"><div id="cs-tenure" class="ec"></div></div></div>'+
+      '<div class="sec" style="margin:0"><div class="callout" style="height:100%"><div class="callout-k"><i class="ti ti-bulb"></i>Đánh giá tự động</div><div class="empty-list">'+insights+'</div></div></div>'+
+    '</div>';
+}
+
 /* ---- Router ---- */
 var currentTab = null;
 function go(id){
@@ -736,6 +857,7 @@ function go(id){
   else if(id==='hop-dong') content.innerHTML=renderHopDong();
   else if(id==='tuyen-dung') content.innerHTML=renderTuyenDung();
   else if(id==='pt-tuyen-dung') content.innerHTML=renderPhanTichTuyenDung();
+  else if(id==='pt-chi-so') content.innerHTML=renderChiSo();
   else if(id==='kho-cv') content.innerHTML=renderKhoCV();
   else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
