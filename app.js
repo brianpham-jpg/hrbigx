@@ -959,7 +959,7 @@ function renderBienDong(){
   if(undated>0) notes.push(undated+'/'+nghi+' người nghỉ chưa có <b>ngày nghỉ</b> → không nằm trong biểu đồ "theo tháng" & "thâm niên khi nghỉ" (vẫn tính ở tổng nghỉ & theo phòng ban).');
   var lyEmpty=nghi-leav.filter(function(e){return String(e.lyDoNghi||'').trim()!=='';}).length;
   if(lyEmpty>0) notes.push('Lý do nghỉ mới ghi '+(nghi-lyEmpty)+'/'+nghi+' → chưa đủ để phân tích nguyên nhân. Ghi thêm cột "Lý do nghỉ" sẽ mở được biểu đồ nguyên nhân.');
-  var noteHtml=notes.length?('<div class="pt-note" style="margin-top:14px"><i class="ti ti-info-circle"></i> '+notes.join('<br><i class="ti ti-info-circle" style="visibility:hidden"></i> ')+'</div>'):'';
+  var noteHtml=notes.map(function(n){return '<div class="pt-note"><i class="ti ti-info-circle"></i><span>'+n+'</span></div>';}).join('');
 
   setTimeout(bdInit,30);
 
