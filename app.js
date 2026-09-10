@@ -1021,9 +1021,12 @@ function ovBirthdays(){
 function ovCountUp(){
   document.querySelectorAll('.ov-num[data-to]').forEach(function(el){
     var to=parseFloat(el.getAttribute('data-to'))||0, dec=el.getAttribute('data-dec')==='1', suf=el.getAttribute('data-suf')||'';
+    var fin=(dec?(Math.round(to*10)/10).toFixed(1):Math.round(to))+suf;
+    el.textContent=fin; // giá trị đúng ngay (phòng khi rAF bị tạm dừng lúc tab nền)
+    if(document.hidden || typeof requestAnimationFrame!=='function') return;
     var dur=900, t0=null;
     function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=1-Math.pow(1-p,3); var v=to*e;
-      el.textContent=(dec?(Math.round(v*10)/10).toFixed(1):Math.round(v))+suf; if(p<1) requestAnimationFrame(step); }
+      el.textContent=(p>=1?fin:((dec?(Math.round(v*10)/10).toFixed(1):Math.round(v))+suf)); if(p<1) requestAnimationFrame(step); }
     requestAnimationFrame(step);
   });
 }
