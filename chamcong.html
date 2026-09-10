@@ -1315,7 +1315,7 @@ const STATUS_CODES = {
 };
 const SIMPLE_STATUSES = ['1','T-S','T-S-P','T-C-P','N-S','P','P-KL','K','NL'];
 const RESIGNED_IDS = new Set(['NV027','NV037','NV040','NV031']); // NV031 = Brian (admin)
-const RESIGNED_FROM = {'NV028':'2026-07-04','NV047':'2026-07-04'}; // ẩn khỏi 'Chưa điểm danh' từ ngày này
+const RESIGNED_FROM = {'NV028':'2026-07-04','NV047':'2026-07-04','NV053':'2026-09-07'}; // ẩn khỏi 'Chưa điểm danh' từ ngày này
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
                 'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 
@@ -2056,7 +2056,7 @@ function renderAbsentList(){
   const all=getAttendance();
   const presentIds=new Set((all[today]||[]).map(r=>r.id));
   const dismissed=new Set(getDismissed());
-  const emps=getEmployees().filter(e=>!RESIGNED_IDS.has(e.id)&&!(RESIGNED_FROM[e.id]&&todayStr()>=RESIGNED_FROM[e.id])&&!presentIds.has(e.id)&&!dismissed.has(e.id));
+  const emps=getEmployees().filter(e=>!RESIGNED_IDS.has(e.id)&&!(RESIGNED_FROM[e.id]&&todayStr()>=RESIGNED_FROM[e.id])&&ccStatusToday(e.id)!=='ĐÃ NGHỈ'&&!presentIds.has(e.id)&&!dismissed.has(e.id));
   const el=document.getElementById('absent-list');
   const cnt=document.getElementById('absent-count');
   if(!el) return;
@@ -2825,6 +2825,16 @@ body.guest-mode .cc-login-guest{display:inline-flex}
 </style>
 <script>
 function ccShowLogin(){var a=document.getElementById('app'),l=document.getElementById('login-screen');if(a)a.style.display='none';if(l)l.style.display='flex';var e=document.getElementById('login-email');if(e){try{e.focus();}catch(_){}}}
+/* Trạng thái bảng chấm công của NV hôm nay (để loại người ĐÃ NGHỈ khỏi ô Chưa điểm danh) */
+function ccStatusToday(id){
+  try{
+    var t=todayStr(); var p=t.split('-').map(Number), ty=p[0], tm=p[1], td=p[2];
+    var cy=ty, cm=tm; if(td>=25){ cm=(tm===12?1:tm+1); cy=(tm===12?ty+1:ty); }
+    var cc=getCCData(); var rec=cc[id+'_'+cy+'_'+cm] && cc[id+'_'+cy+'_'+cm][t];
+    if(!rec) return '';
+    return (typeof rec==='string') ? rec : (rec.status||'');
+  }catch(e){ return ''; }
+}
 /* Dán ảnh Ctrl+V để chấm công (dùng lại pipeline OCR sẵn có) */
 async function ccOcrPasted(file){
   var session='sang';
