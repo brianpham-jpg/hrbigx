@@ -8,40 +8,40 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --purple:#5b21b6;--purple-l:#7c3aed;--purple-bg:#f5f3ff;--purple-bd:#ddd6fe;
-  --yellow:#FFE033;--cream:#FFF8EC;
-  --green:#16a34a;--green-bg:#dcfce7;
-  --amber:#d97706;--amber-bg:#fef9c3;
-  --red:#dc2626;--red-bg:#fee2e2;
-  --blue:#1d4ed8;--blue-bg:#eff6ff;--blue-bd:#bfdbfe;
-  --gray:#6b7280;--gray-light:#f9fafb;--gray-bd:#e5e7eb;
+  --purple:#274b43;--purple-l:#35655B;--purple-bg:#F6F3EC;--purple-bd:#DCD3BE;
+  --yellow:#FFE033;--cream:#F6F0E2;
+  --green:#35655B;--green-bg:#dcebe4;
+  --amber:#B07A43;--amber-bg:#EFE3D0;
+  --red:#A65A4B;--red-bg:#F0DED8;
+  --blue:#3f7669;--blue-bg:#eef4f1;--blue-bd:#cfe0da;
+  --gray:#8B897E;--gray-light:#FBFAF6;--gray-bd:#E4DECF;
 }
-body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;min-height:100vh}
+body{font-family:'Be Vietnam Pro',sans-serif;background:#FBFAF6;color:#21303B;min-height:100vh}
 
 /* ===== LOGIN ===== */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--cream)}
 .login-card{background:#fff;border-radius:20px;width:360px;overflow:hidden;border:1px solid var(--gray-bd);box-shadow:0 4px 24px rgba(0,0,0,.07)}
 .login-head{background:var(--yellow);padding:28px 32px 24px;text-align:center}
-.login-logo{font-size:32px;font-weight:700;color:#111;letter-spacing:-1px}
-.login-logo-sub{font-size:11px;color:#555;letter-spacing:1.5px;font-weight:600;margin-top:2px}
+.login-logo{font-size:32px;font-weight:700;color:#21303B;letter-spacing:-1px}
+.login-logo-sub{font-size:11px;color:#414B54;letter-spacing:1.5px;font-weight:600;margin-top:2px}
 .login-body{padding:24px 28px 28px}
-.login-title{font-size:17px;font-weight:700;color:#111;margin-bottom:4px}
+.login-title{font-size:17px;font-weight:700;color:#21303B;margin-bottom:4px}
 .login-sub{font-size:12px;color:var(--gray);margin-bottom:20px}
 .login-label{font-size:11px;font-weight:600;color:var(--gray);letter-spacing:.5px;display:block;margin-bottom:5px}
-.login-input-wrap{display:flex;align-items:center;gap:8px;border:1.5px solid var(--gray-bd);border-radius:10px;padding:10px 12px;background:#fafafa;transition:border-color .2s}
+.login-input-wrap{display:flex;align-items:center;gap:8px;border:1.5px solid var(--gray-bd);border-radius:10px;padding:10px 12px;background:#FBFAF6;transition:border-color .2s}
 .login-input-wrap:focus-within{border-color:var(--purple);background:#fff}
-.login-input{border:none;background:transparent;font-family:inherit;font-size:14px;color:#111;outline:none;width:100%}
-.login-input::placeholder{color:#9ca3af}
+.login-input{border:none;background:transparent;font-family:inherit;font-size:14px;color:#21303B;outline:none;width:100%}
+.login-input::placeholder{color:#8B897E}
 .login-error{color:var(--red);font-size:12px;margin-top:5px;display:none}
-.login-btn{width:100%;margin-top:14px;padding:12px;background:#111;color:var(--yellow);border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s}
+.login-btn{width:100%;margin-top:14px;padding:12px;background:#21303B;color:var(--yellow);border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s}
 .login-btn:hover{opacity:.85}
-.login-note{text-align:center;font-size:11px;color:#9ca3af;margin-top:14px}
+.login-note{text-align:center;font-size:11px;color:#8B897E;margin-top:14px}
 
 /* ===== APP SHELL ===== */
 #app{display:none;min-height:100vh;flex-direction:column}
 .topbar{background:var(--purple);padding:0 20px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
 .topbar-left{display:flex;align-items:center;gap:10px}
-.topbar-logo{background:var(--yellow);color:#111;font-size:13px;font-weight:700;padding:3px 9px;border-radius:6px}
+.topbar-logo{background:var(--yellow);color:#21303B;font-size:13px;font-weight:700;padding:3px 9px;border-radius:6px}
 .topbar-title{color:rgba(255,255,255,.7);font-size:12px;font-weight:500}
 .topbar-right{display:flex;align-items:center;gap:10px}
 .topbar-user{font-size:12px;color:rgba(255,255,255,.6)}
@@ -52,7 +52,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 .main-tabs{background:#fff;border-bottom:1px solid var(--gray-bd);padding:0 20px;display:flex;position:sticky;top:50px;z-index:100}
 .main-tab{padding:12px 20px;font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
 .main-tab.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:600}
-.main-tab:hover:not(.active){color:#374151}
+.main-tab:hover:not(.active){color:#2c3944}
 
 /* ===== CONTENT ===== */
 .content{flex:1;padding:16px 20px;max-width:1200px;margin:0 auto;width:100%}
@@ -63,11 +63,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 .card:last-child{margin-bottom:0}
 .card-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
 .card-head-icon{width:28px;height:28px;background:var(--purple-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--purple);font-size:15px;flex-shrink:0}
-.card-head-title{font-size:13px;font-weight:600;color:#374151}
+.card-head-title{font-size:13px;font-weight:600;color:#2c3944}
 .card-head-sub{font-size:11px;color:var(--gray);margin-top:1px}
 
 /* ===== UPLOAD ===== */
-.upload-zone{border:2px dashed var(--purple-bd);border-radius:10px;padding:24px;text-align:center;background:#fafafe;cursor:pointer;transition:border-color .2s}
+.upload-zone{border:2px dashed var(--purple-bd);border-radius:10px;padding:24px;text-align:center;background:#FBFAF6;cursor:pointer;transition:border-color .2s}
 .upload-zone:hover{border-color:var(--purple)}
 .upload-zone-icon{font-size:28px;color:var(--purple-l);margin-bottom:8px}
 .upload-zone-title{font-size:13px;font-weight:600;color:var(--purple)}
@@ -99,15 +99,15 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 .att-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--gray-bd)}
 .att-row:last-child{border-bottom:none}
 .att-avatar{width:30px;height:30px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--purple);flex-shrink:0}
-.att-avatar.manual{background:#fef9c3;color:#a16207}
-.att-name{font-size:13px;font-weight:500;color:#111;flex:1}
-.att-manual-tag{font-size:10px;color:#6366f1;font-style:italic}
+.att-avatar.manual{background:#EFE3D0;color:#9A7B3F}
+.att-name{font-size:13px;font-weight:500;color:#21303B;flex:1}
+.att-manual-tag{font-size:10px;color:#4A8375;font-style:italic}
 .att-time{font-size:11px;color:var(--gray);min-width:38px}
 .s-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
 .s-ok{background:var(--green-bg);color:var(--green)}
 .s-late{background:var(--amber-bg);color:var(--amber)}
 .s-abs{background:var(--red-bg);color:var(--red)}
-.s-manual{background:#e0e7ff;color:#4338ca}
+.s-manual{background:#e7ecea;color:#35655B}
 .att-actions{display:flex;gap:3px}
 .att-action{width:24px;height:24px;border-radius:6px;border:1px solid var(--gray-bd);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);font-size:13px}
 .att-action:hover{background:var(--purple-bg);color:var(--purple)}
@@ -122,7 +122,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 .hist-pill:hover{background:var(--purple-bd)}
 
 /* ===== SUB TABS BAR ===== */
-.sub-bar{background:#f8f7ff;border-bottom:1px solid var(--gray-bd);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:98px;z-index:90}
+.sub-bar{background:#FBFAF6;border-bottom:1px solid var(--gray-bd);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:98px;z-index:90}
 .sub-tabs{display:flex;gap:5px;flex-wrap:wrap;flex:1}
 .sub-tab{padding:4px 12px;font-size:12px;font-weight:500;color:var(--gray);border-radius:20px;border:1px solid var(--gray-bd);background:#fff;cursor:pointer;white-space:nowrap;transition:all .2s}
 .sub-tab.active{background:var(--purple);color:var(--yellow);border-color:var(--purple);font-weight:600}
@@ -134,14 +134,14 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 
 /* ===== BANG CHAM CONG ===== */
 .bcc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
-.bcc-title{font-size:14px;font-weight:600;color:#111}
+.bcc-title{font-size:14px;font-weight:600;color:#21303B}
 .bcc-sub{font-size:12px;color:var(--gray);font-weight:400;margin-left:6px}
 .export-group{display:flex;align-items:center;gap:8px}
 .exp-btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;font-family:inherit;white-space:nowrap}
-.exp-excel{background:#f0fdf4;color:var(--green);border-color:#bbf7d0}
-.exp-excel:hover{background:#dcfce7}
+.exp-excel{background:#eef4f1;color:var(--green);border-color:#c4dcd4}
+.exp-excel:hover{background:#dcebe4}
 .exp-sheet{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-bd)}
-.exp-sheet:hover{background:#dbeafe}
+.exp-sheet:hover{background:#dfe9e5}
 .div-v{width:1px;height:20px;background:var(--gray-bd)}
 
 /* ===== EMPLOYEE TABLE ===== */
@@ -149,23 +149,23 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 .emp-table{width:100%;border-collapse:collapse;font-size:13px}
 .emp-table thead tr{background:var(--purple-bg)}
 .emp-table th{padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--purple);letter-spacing:.3px;white-space:nowrap}
-.emp-table td{padding:9px 14px;border-bottom:1px solid var(--gray-bd);color:#111;vertical-align:middle}
+.emp-table td{padding:9px 14px;border-bottom:1px solid var(--gray-bd);color:#21303B;vertical-align:middle}
 .emp-table tr:last-child > td:not(.cal-expand-td){border-bottom:none}
 .emp-table tr.has-expand > td{border-bottom:none}
 .emp-avatar-sm{width:28px;height:28px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--purple);flex-shrink:0}
 .emp-name-cell{display:flex;align-items:center;gap:8px}
-.dept-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#f1f5f9;color:#475569;font-weight:500;white-space:nowrap}
+.dept-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#EDE8DC;color:#414B54;font-weight:500;white-space:nowrap}
 .view-btn{display:inline-flex;align-items:center;gap:5px;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd);border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .view-btn.active-btn{background:var(--purple);color:var(--yellow);border-color:var(--purple)}
 .view-btn:hover:not(.active-btn){background:var(--purple-bd)}
 
 /* ===== CALENDAR EXPAND ===== */
-.cal-expand-td{padding:0;background:#fafafe}
+.cal-expand-td{padding:0;background:#FBFAF6}
 .cal-expand-inner{padding:14px 16px}
 .cal-exp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
 .cal-emp-info{display:flex;align-items:center;gap:8px}
 .cal-emp-avatar{width:32px;height:32px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--purple)}
-.cal-emp-name{font-size:13px;font-weight:600;color:#111}
+.cal-emp-name{font-size:13px;font-weight:600;color:#21303B}
 .cal-emp-sub{font-size:11px;color:var(--gray)}
 .cal-nav{display:flex;align-items:center;gap:6px}
 .cal-nav-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--gray-bd);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);font-size:12px}
@@ -186,7 +186,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 .sum-ext-row{display:flex;align-items:center;gap:14px;padding:7px 12px;background:var(--purple-bg);border-radius:8px;margin-bottom:12px;flex-wrap:wrap}
 .sum-ext-item{display:flex;align-items:center;gap:6px;font-size:12px}
 .sum-ext-lbl{color:var(--gray)}
-.sum-ext-val{font-weight:600;color:#111;font-size:13px}
+.sum-ext-val{font-weight:600;color:#21303B;font-size:13px}
 .sum-ext-val.neg{color:var(--red)}
 .sum-ext-sep{width:1px;height:16px;background:var(--gray-bd);flex-shrink:0}
 .sum-ext-bar-wrap{display:flex;align-items:center;gap:5px}
@@ -199,14 +199,14 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .day-head{text-align:center;font-size:10px;font-weight:700;color:var(--gray);padding:5px 0;letter-spacing:.3px}
 .day-head.wknd{color:var(--red)}
-.day-cell{min-height:56px;border-radius:7px;border:1px solid var(--gray-bd);background:#fafafa;padding:5px 6px;display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:border-color .15s}
+.day-cell{min-height:56px;border-radius:7px;border:1px solid var(--gray-bd);background:#FBFAF6;padding:5px 6px;display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:border-color .15s}
 .day-cell:hover{border-color:var(--purple)}
 .day-cell.today-cell{border:2px solid var(--purple);background:var(--purple-bg)}
-.day-cell.wknd-cell{background:#f9fafb}
+.day-cell.wknd-cell{background:#FBFAF6}
 .day-cell.empty-cell{background:transparent;border-color:transparent;cursor:default}
 .day-cell.empty-cell:hover{border-color:transparent}
-.day-num{font-size:10px;font-weight:500;color:#374151}
-.day-num.wknd-num{color:#9ca3af}
+.day-num{font-size:10px;font-weight:500;color:#2c3944}
+.day-num.wknd-num{color:#8B897E}
 .day-status{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px;width:fit-content}
 .late-min{font-size:9px;font-weight:600;color:var(--amber)}
 .day-note{font-size:9px;color:var(--gray);margin-top:2px;line-height:1.3;word-break:break-word;font-style:italic}
@@ -225,9 +225,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 .modal-body{padding:16px 18px}
 .form-group{margin-bottom:12px}
 .form-label{font-size:11px;font-weight:600;color:var(--gray);display:block;margin-bottom:5px;letter-spacing:.3px}
-.form-input{width:100%;border:1.5px solid var(--gray-bd);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;color:#111;outline:none;transition:border-color .2s}
+.form-input{width:100%;border:1.5px solid var(--gray-bd);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;color:#21303B;outline:none;transition:border-color .2s}
 .form-input:focus{border-color:var(--purple)}
-.form-select{width:100%;border:1.5px solid var(--gray-bd);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;color:#111;outline:none;background:#fff;cursor:pointer}
+.form-select{width:100%;border:1.5px solid var(--gray-bd);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;color:#21303B;outline:none;background:#fff;cursor:pointer}
 .form-select:focus{border-color:var(--purple)}
 .modal-footer{padding:12px 18px;border-top:1px solid var(--gray-bd);display:flex;gap:8px;justify-content:flex-end}
 .btn-cancel{background:#fff;border:1px solid var(--gray-bd);color:var(--gray);border-radius:8px;padding:8px 16px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
@@ -249,7 +249,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;mi
 
 /* ===== GUEST MODE ===== */
 body.guest-mode .admin-only{display:none!important}
-.publish-btn{background:var(--yellow);color:#111;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
+.publish-btn{background:var(--yellow);color:#21303B;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
 .publish-btn:hover{opacity:.85}
 /* ===== RESPONSIVE ===== */
 @media(max-width:760px){
@@ -272,7 +272,7 @@ body.guest-mode .admin-only{display:none!important}
       <div class="login-sub">Dành cho nhân sự BigX Agency</div>
       <label class="login-label">EMAIL CÔNG TY</label>
       <div class="login-input-wrap">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#9ca3af;flex-shrink:0"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#8B897E;flex-shrink:0"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
         <input class="login-input" id="login-email" type="email" placeholder="ten@bigx.vn" autocomplete="email">
       </div>
       <div class="login-error" id="login-error">Email phải thuộc domain @bigx.vn</div>
@@ -341,9 +341,9 @@ body.guest-mode .admin-only{display:none!important}
 
             <!-- ── BUỔI SÁNG ── -->
             <div class="card" style="padding:0;overflow:hidden">
-              <div style="background:#f0fdf4;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d1fae5">
-                <span style="font-size:12px;font-weight:700;color:#15803d;letter-spacing:1px">🌅 BUỔI SÁNG</span>
-                <span id="att-count-sang" style="font-size:11px;font-weight:600;color:#15803d;background:#dcfce7;padding:2px 8px;border-radius:20px">0</span>
+              <div style="background:#eef4f1;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d5e8e1">
+                <span style="font-size:12px;font-weight:700;color:#274b43;letter-spacing:1px">🌅 BUỔI SÁNG</span>
+                <span id="att-count-sang" style="font-size:11px;font-weight:600;color:#274b43;background:#dcebe4;padding:2px 8px;border-radius:20px">0</span>
               </div>
               <div style="padding:12px">
                 <div class="upload-zone" style="padding:10px 8px;margin-bottom:8px" onclick="document.getElementById(&#39;file-input-sang&#39;).click()">
@@ -358,9 +358,9 @@ body.guest-mode .admin-only{display:none!important}
 
             <!-- ── BUỔI CHIỀU ── -->
             <div class="card" style="padding:0;overflow:hidden">
-              <div style="background:#eff6ff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #bfdbfe">
-                <span style="font-size:12px;font-weight:700;color:#1d4ed8;letter-spacing:1px">🌆 BUỔI CHIỀU</span>
-                <span id="att-count-chieu" style="font-size:11px;font-weight:600;color:#1d4ed8;background:#dbeafe;padding:2px 8px;border-radius:20px">0</span>
+              <div style="background:#eef4f1;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #cfe0da">
+                <span style="font-size:12px;font-weight:700;color:#3f7669;letter-spacing:1px">🌆 BUỔI CHIỀU</span>
+                <span id="att-count-chieu" style="font-size:11px;font-weight:600;color:#3f7669;background:#dfe9e5;padding:2px 8px;border-radius:20px">0</span>
               </div>
               <div style="padding:12px">
                 <div class="upload-zone" style="padding:10px 8px;margin-bottom:8px" onclick="document.getElementById(&#39;file-input-chieu&#39;).click()">
@@ -374,7 +374,7 @@ body.guest-mode .admin-only{display:none!important}
             </div>
 
           </div>
-          <div class="card" style="margin-top:14px"><div style="font-weight:700;font-size:14px;margin-bottom:10px">💸 Bảng trừ lương — đi trễ (chu kỳ này)</div><div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start"><div id="fine-table" style="flex:2;min-width:300px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody><tr style="color:var(--gray);text-align:left"><th style="padding:4px">Nhân viên</th><th>Số lần</th><th>Tổng phút</th><th>Trừ 0,5 công</th><th style="text-align:right">Tiền phạt</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Nguyễn Thụy Thanh Trinh</td><td>1</td><td>23'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">50.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Vũ Đào Trang Nhi</td><td>1</td><td>5'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Trần Diễm Chi</td><td>1</td><td>4'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Nguyễn Ngọc Thảo Vy</td><td>1</td><td>4'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr></tbody></table></div><div style="flex:1;min-width:230px"><div style="font-size:11px;font-weight:700;color:var(--gray);margin-bottom:6px">QUY ĐỊNH PHẠT ĐI TRỄ</div><table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid var(--gray-bd);border-radius:8px;overflow:hidden"><tbody><tr style="background:#f8fafc;color:var(--gray);text-align:left"><th style="padding:8px 10px;font-size:11px">THỜI GIAN TRỄ</th><th style="padding:8px 10px;font-size:11px">HÌNH THỨC PHẠT</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">03 – 20 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#fef2f2">20.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">21 – 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#fef2f2">50.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">Trên 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#fef2f2">Tính nghỉ 01 buổi sáng</td></tr></tbody></table></div></div></div>
+          <div class="card" style="margin-top:14px"><div style="font-weight:700;font-size:14px;margin-bottom:10px">💸 Bảng trừ lương — đi trễ (chu kỳ này)</div><div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start"><div id="fine-table" style="flex:2;min-width:300px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody><tr style="color:var(--gray);text-align:left"><th style="padding:4px">Nhân viên</th><th>Số lần</th><th>Tổng phút</th><th>Trừ 0,5 công</th><th style="text-align:right">Tiền phạt</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Nguyễn Thụy Thanh Trinh</td><td>1</td><td>23'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">50.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Vũ Đào Trang Nhi</td><td>1</td><td>5'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Trần Diễm Chi</td><td>1</td><td>4'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Nguyễn Ngọc Thảo Vy</td><td>1</td><td>4'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr></tbody></table></div><div style="flex:1;min-width:230px"><div style="font-size:11px;font-weight:700;color:var(--gray);margin-bottom:6px">QUY ĐỊNH PHẠT ĐI TRỄ</div><table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid var(--gray-bd);border-radius:8px;overflow:hidden"><tbody><tr style="background:#F6F3EC;color:var(--gray);text-align:left"><th style="padding:8px 10px;font-size:11px">THỜI GIAN TRỄ</th><th style="padding:8px 10px;font-size:11px">HÌNH THỨC PHẠT</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">03 – 20 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">20.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">21 – 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">50.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">Trên 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">Tính nghỉ 01 buổi sáng</td></tr></tbody></table></div></div></div>
 <!-- legacy ids for backward compat -->
           <div id="att-list" style="display:none"></div>
           
@@ -386,224 +386,224 @@ body.guest-mode .admin-only{display:none!important}
           <div class="card" style="margin-bottom:14px">
             <div class="att-header" style="margin-bottom:10px">
               <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-weight:600;font-size:14px;color:#111">Chưa điểm danh</span>
+                <span style="font-weight:600;font-size:14px;color:#21303B">Chưa điểm danh</span>
                 <span id="absent-count" style="background:var(--red-bg);color:var(--red);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">24</span>
               </div>
             </div>
-            <div id="absent-list" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto"><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+            <div id="absent-list" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto"><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TĐ</div>
-        <span style="font-size:13px;color:#111">Phan Thụy Trúc Đào</span>
+        <span style="font-size:13px;color:#21303B">Phan Thụy Trúc Đào</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV039&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV039&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV039&#39;,&#39;Phan Thụy Trúc Đào&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NP</div>
-        <span style="font-size:13px;color:#111">Trịnh Thị Ngọc Phụng</span>
+        <span style="font-size:13px;color:#21303B">Trịnh Thị Ngọc Phụng</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV042&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV042&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV042&#39;,&#39;Trịnh Thị Ngọc Phụng&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
-        <span style="font-size:13px;color:#111">Phạm Thị Thu Thủy</span>
+        <span style="font-size:13px;color:#21303B">Phạm Thị Thu Thủy</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV043&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV043&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV043&#39;,&#39;Phạm Thị Thu Thủy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
-        <span style="font-size:13px;color:#111">Nguyễn Thụy Thanh Trinh</span>
+        <span style="font-size:13px;color:#21303B">Nguyễn Thụy Thanh Trinh</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV050&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV050&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV050&#39;,&#39;Nguyễn Thụy Thanh Trinh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TN</div>
-        <span style="font-size:13px;color:#111">Vũ Đào Trang Nhi</span>
+        <span style="font-size:13px;color:#21303B">Vũ Đào Trang Nhi</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV051&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV051&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV051&#39;,&#39;Vũ Đào Trang Nhi&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">MH</div>
-        <span style="font-size:13px;color:#111">Phạm Mai Hân</span>
+        <span style="font-size:13px;color:#21303B">Phạm Mai Hân</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV053&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV053&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV053&#39;,&#39;Phạm Mai Hân&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TH</div>
-        <span style="font-size:13px;color:#111">Nguyễn Thị Thu Hương</span>
+        <span style="font-size:13px;color:#21303B">Nguyễn Thị Thu Hương</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV038&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV038&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV038&#39;,&#39;Nguyễn Thị Thu Hương&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TU</div>
-        <span style="font-size:13px;color:#111">Nguyễn Thị Thu Uyên</span>
+        <span style="font-size:13px;color:#21303B">Nguyễn Thị Thu Uyên</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV008&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV008&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV008&#39;,&#39;Nguyễn Thị Thu Uyên&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">DC</div>
-        <span style="font-size:13px;color:#111">Trần Diễm Chi</span>
+        <span style="font-size:13px;color:#21303B">Trần Diễm Chi</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV044&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV044&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV044&#39;,&#39;Trần Diễm Chi&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TD</div>
-        <span style="font-size:13px;color:#111">Nguyễn Tiến Duyệt</span>
+        <span style="font-size:13px;color:#21303B">Nguyễn Tiến Duyệt</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV049&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV049&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV049&#39;,&#39;Nguyễn Tiến Duyệt&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TP</div>
-        <span style="font-size:13px;color:#111">Phan Thanh Phú</span>
+        <span style="font-size:13px;color:#21303B">Phan Thanh Phú</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV052&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV052&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV052&#39;,&#39;Phan Thanh Phú&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">KD</div>
-        <span style="font-size:13px;color:#111">Tống Thị Kim Dung</span>
+        <span style="font-size:13px;color:#21303B">Tống Thị Kim Dung</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV020&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV020&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV020&#39;,&#39;Tống Thị Kim Dung&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TB</div>
-        <span style="font-size:13px;color:#111">Nguyễn Thị Bé</span>
+        <span style="font-size:13px;color:#21303B">Nguyễn Thị Bé</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV045&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV045&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV045&#39;,&#39;Nguyễn Thị Bé&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NN</div>
-        <span style="font-size:13px;color:#111">Võ Thị Na Na</span>
+        <span style="font-size:13px;color:#21303B">Võ Thị Na Na</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV025&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV025&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV025&#39;,&#39;Võ Thị Na Na&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TV</div>
-        <span style="font-size:13px;color:#111">Nguyễn Ngọc Thảo Vy</span>
+        <span style="font-size:13px;color:#21303B">Nguyễn Ngọc Thảo Vy</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV046&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV046&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV046&#39;,&#39;Nguyễn Ngọc Thảo Vy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TQ</div>
-        <span style="font-size:13px;color:#111">Trần Quang</span>
+        <span style="font-size:13px;color:#21303B">Trần Quang</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV048&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV048&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV048&#39;,&#39;Trần Quang&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NV</div>
-        <span style="font-size:13px;color:#111">Trần Nguyễn Ngọc Việt</span>
+        <span style="font-size:13px;color:#21303B">Trần Nguyễn Ngọc Việt</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV016&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV016&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV016&#39;,&#39;Trần Nguyễn Ngọc Việt&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">DK</div>
-        <span style="font-size:13px;color:#111">Lê Doãn Khánh</span>
+        <span style="font-size:13px;color:#21303B">Lê Doãn Khánh</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV023&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV023&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV023&#39;,&#39;Lê Doãn Khánh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">VN</div>
-        <span style="font-size:13px;color:#111">Lê Văn Nguyên</span>
+        <span style="font-size:13px;color:#21303B">Lê Văn Nguyên</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV030&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV030&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV030&#39;,&#39;Lê Văn Nguyên&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">HH</div>
-        <span style="font-size:13px;color:#111">Nguyễn Hoàng Huy</span>
+        <span style="font-size:13px;color:#21303B">Nguyễn Hoàng Huy</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV034&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV034&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV034&#39;,&#39;Nguyễn Hoàng Huy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NH</div>
-        <span style="font-size:13px;color:#111">Ngô Huy</span>
+        <span style="font-size:13px;color:#21303B">Ngô Huy</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV035&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV035&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV035&#39;,&#39;Ngô Huy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">QM</div>
-        <span style="font-size:13px;color:#111">Trần Quang Minh</span>
+        <span style="font-size:13px;color:#21303B">Trần Quang Minh</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV036&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV036&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV036&#39;,&#39;Trần Quang Minh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">HN</div>
-        <span style="font-size:13px;color:#111">Nguyễn Hoài Nam</span>
+        <span style="font-size:13px;color:#21303B">Nguyễn Hoài Nam</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV054&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV054&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV054&#39;,&#39;Nguyễn Hoài Nam&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
-        <span style="font-size:13px;color:#111">Trần Thị Tâm</span>
+        <span style="font-size:13px;color:#21303B">Trần Thị Tâm</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV019&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent(&#39;NV019&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance(&#39;NV019&#39;,&#39;Trần Thị Tâm&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
     </div></div>
@@ -696,17 +696,15 @@ body.guest-mode .admin-only{display:none!important}
         </div>
         <div class="export-group">
           <span style="font-size:11px;color:var(--gray)">Xuất tổng nhân sự:</span>
-          <button class="exp-btn exp-excel" onclick="exportExcel()">↓ Tải Excel</button>
-          <div class="div-v"></div>
           <button class="exp-btn exp-sheet" onclick="openGSheet()">⊞ Mở Google Sheet</button>
           <div class="div-v"></div>
-          <button class="exp-btn" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1" onclick="exportBackup()">↓ Backup</button>
-          <button class="exp-btn" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1" onclick="document.getElementById(&#39;import-file-input&#39;).click()">↑ Restore</button>
+          <button class="exp-btn" style="background:#EDE8DC;color:#414B54;border:1px solid #D4CBB6" onclick="exportBackup()">↓ Backup</button>
+          <button class="exp-btn" style="background:#EDE8DC;color:#414B54;border:1px solid #D4CBB6" onclick="document.getElementById(&#39;import-file-input&#39;).click()">↑ Restore</button>
           <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importBackup(event)">
         </div>
       </div>
 
-      <div style="margin: 0px 0px 10px;"><input id="bx-name-search" type="text" placeholder="🔍 Tìm nhân viên theo tên..." style="width:280px;max-width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;outline:none"></div><div class="emp-table-wrap">
+      <div style="margin: 0px 0px 10px;"><input id="bx-name-search" type="text" placeholder="🔍 Tìm nhân viên theo tên..." style="width:280px;max-width:100%;padding:8px 12px;border:1px solid #DCD3BE;border-radius:8px;font-size:14px;outline:none"></div><div class="emp-table-wrap">
         <table class="emp-table">
           <thead>
             <tr>
@@ -718,7 +716,7 @@ body.guest-mode .admin-only{display:none!important}
               <th>Bảng chấm công</th>
             </tr>
           </thead>
-          <tbody id="emp-tbody"><tr><td colspan="6" style="padding:7px 14px;background:#E6F1FB;color:#0C447C;font-size:12px;font-weight:600;letter-spacing:.2px">Team TSP · 1 người</td></tr>
+          <tbody id="emp-tbody"><tr><td colspan="6" style="padding:7px 14px;background:#e6f0ec;color:#274b43;font-size:12px;font-weight:600;letter-spacing:.2px">Team TSP · 1 người</td></tr>
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">TT</div>
@@ -726,8 +724,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV019</td>
         
-        <td><select onchange="changeDept(&#39;NV019&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP" selected="">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV019&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP" selected="">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV019&#39;)">
             ▦ Xem bảng
@@ -735,7 +733,7 @@ body.guest-mode .admin-only{display:none!important}
         </td>
       </tr>
       
-    <tr><td colspan="6" style="padding:7px 14px;background:#EEEDFE;color:#3C3489;font-size:12px;font-weight:600;letter-spacing:.2px">Team Booking KOC/KOLs · 6 người</td></tr>
+    <tr><td colspan="6" style="padding:7px 14px;background:#EDE8DC;color:#274b43;font-size:12px;font-weight:600;letter-spacing:.2px">Team Booking KOC/KOLs · 6 người</td></tr>
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">PĐ</div>
@@ -743,8 +741,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV039</td>
         
-        <td><select onchange="changeDept(&#39;NV039&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>1.5/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV039&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>1.5/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV039&#39;)">
             ▦ Xem bảng
@@ -760,8 +758,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV042</td>
         
-        <td><select onchange="changeDept(&#39;NV042&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV042&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV042&#39;)">
             ▦ Xem bảng
@@ -777,8 +775,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV043</td>
         
-        <td><select onchange="changeDept(&#39;NV043&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV043&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV043&#39;)">
             ▦ Xem bảng
@@ -790,12 +788,12 @@ body.guest-mode .admin-only{display:none!important}
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">NT</div>
-          Nguyễn Thụy Thanh Trinh<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+          Nguyễn Thụy Thanh Trinh<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV050</td>
         
-        <td><select onchange="changeDept(&#39;NV050&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#A32D2D;font-weight:500">1 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV050&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#A65A4B;font-weight:500">1 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV050&#39;)">
             ▦ Xem bảng
@@ -807,12 +805,12 @@ body.guest-mode .admin-only{display:none!important}
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">VN</div>
-          Vũ Đào Trang Nhi<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+          Vũ Đào Trang Nhi<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV051</td>
         
-        <td><select onchange="changeDept(&#39;NV051&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#A32D2D;font-weight:500">1 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV051&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#A65A4B;font-weight:500">1 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV051&#39;)">
             ▦ Xem bảng
@@ -824,12 +822,12 @@ body.guest-mode .admin-only{display:none!important}
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">PH</div>
-          Phạm Mai Hân<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+          Phạm Mai Hân<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV053</td>
         
-        <td><select onchange="changeDept(&#39;NV053&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>1.5/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV053&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>1.5/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV053&#39;)">
             ▦ Xem bảng
@@ -837,7 +835,7 @@ body.guest-mode .admin-only{display:none!important}
         </td>
       </tr>
       
-    <tr><td colspan="6" style="padding:7px 14px;background:#EAF3DE;color:#27500A;font-size:12px;font-weight:600;letter-spacing:.2px">Team Performance · 7 người</td></tr>
+    <tr><td colspan="6" style="padding:7px 14px;background:#e6efdd;color:#274b43;font-size:12px;font-weight:600;letter-spacing:.2px">Team Performance · 7 người</td></tr>
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">TV</div>
@@ -845,8 +843,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV016</td>
         
-        <td><select onchange="changeDept(&#39;NV016&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV016&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV016&#39;)">
             ▦ Xem bảng
@@ -862,8 +860,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV023</td>
         
-        <td><select onchange="changeDept(&#39;NV023&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV023&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV023&#39;)">
             ▦ Xem bảng
@@ -879,8 +877,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV030</td>
         
-        <td><select onchange="changeDept(&#39;NV030&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV030&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV030&#39;)">
             ▦ Xem bảng
@@ -896,8 +894,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV034</td>
         
-        <td><select onchange="changeDept(&#39;NV034&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV034&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV034&#39;)">
             ▦ Xem bảng
@@ -913,8 +911,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV035</td>
         
-        <td><select onchange="changeDept(&#39;NV035&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV035&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV035&#39;)">
             ▦ Xem bảng
@@ -926,12 +924,12 @@ body.guest-mode .admin-only{display:none!important}
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">TM</div>
-          Trần Quang Minh<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#0369a1;background:#e0f2fe">Part-time</span>
+          Trần Quang Minh<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#35655B;background:#e2efe9">Part-time</span>
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV036</td>
         
-        <td><select onchange="changeDept(&#39;NV036&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV036&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV036&#39;)">
             ▦ Xem bảng
@@ -947,8 +945,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV054</td>
         
-        <td><select onchange="changeDept(&#39;NV054&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV054&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV054&#39;)">
             ▦ Xem bảng
@@ -956,7 +954,7 @@ body.guest-mode .admin-only{display:none!important}
         </td>
       </tr>
       
-    <tr><td colspan="6" style="padding:7px 14px;background:#FAEEDA;color:#633806;font-size:12px;font-weight:600;letter-spacing:.2px">Team Customer Account Manager · 1 người</td></tr>
+    <tr><td colspan="6" style="padding:7px 14px;background:#EFE3D0;color:#6b4f28;font-size:12px;font-weight:600;letter-spacing:.2px">Team Customer Account Manager · 1 người</td></tr>
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">NH</div>
@@ -964,8 +962,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV038</td>
         
-        <td><select onchange="changeDept(&#39;NV038&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager" selected="">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV038&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager" selected="">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV038&#39;)">
             ▦ Xem bảng
@@ -973,7 +971,7 @@ body.guest-mode .admin-only{display:none!important}
         </td>
       </tr>
       
-    <tr><td colspan="6" style="padding:7px 14px;background:#E1F5EE;color:#085041;font-size:12px;font-weight:600;letter-spacing:.2px">Team E - Com · 3 người</td></tr>
+    <tr><td colspan="6" style="padding:7px 14px;background:#e2efe9;color:#213f39;font-size:12px;font-weight:600;letter-spacing:.2px">Team E - Com · 3 người</td></tr>
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">NU</div>
@@ -981,8 +979,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV008</td>
         
-        <td><select onchange="changeDept(&#39;NV008&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV008&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV008&#39;)">
             ▦ Xem bảng
@@ -998,8 +996,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV044</td>
         
-        <td><select onchange="changeDept(&#39;NV044&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#A32D2D;font-weight:500">1 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV044&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#A65A4B;font-weight:500">1 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV044&#39;)">
             ▦ Xem bảng
@@ -1011,12 +1009,12 @@ body.guest-mode .admin-only{display:none!important}
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">ND</div>
-          Nguyễn Tiến Duyệt<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+          Nguyễn Tiến Duyệt<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV049</td>
         
-        <td><select onchange="changeDept(&#39;NV049&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>1/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV049&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>1/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV049&#39;)">
             ▦ Xem bảng
@@ -1024,7 +1022,7 @@ body.guest-mode .admin-only{display:none!important}
         </td>
       </tr>
       
-    <tr><td colspan="6" style="padding:7px 14px;background:#FBEAF0;color:#72243E;font-size:12px;font-weight:600;letter-spacing:.2px">Team Kế toán - Nhân sự · 3 người</td></tr>
+    <tr><td colspan="6" style="padding:7px 14px;background:#F0DED8;color:#7a3b32;font-size:12px;font-weight:600;letter-spacing:.2px">Team Kế toán - Nhân sự · 3 người</td></tr>
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">TD</div>
@@ -1032,8 +1030,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV020</td>
         
-        <td><select onchange="changeDept(&#39;NV020&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV020&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV020&#39;)">
             ▦ Xem bảng
@@ -1049,8 +1047,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV045</td>
         
-        <td><select onchange="changeDept(&#39;NV045&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV045&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV045&#39;)">
             ▦ Xem bảng
@@ -1066,8 +1064,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV031</td>
         
-        <td><select onchange="changeDept(&#39;NV031&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV031&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV031&#39;)">
             ▦ Xem bảng
@@ -1075,7 +1073,7 @@ body.guest-mode .admin-only{display:none!important}
         </td>
       </tr>
       
-    <tr><td colspan="6" style="padding:7px 14px;background:#FAECE7;color:#712B13;font-size:12px;font-weight:600;letter-spacing:.2px">Team Kinh Doanh · 3 người</td></tr>
+    <tr><td colspan="6" style="padding:7px 14px;background:#F0DED8;color:#7a4a2e;font-size:12px;font-weight:600;letter-spacing:.2px">Team Kinh Doanh · 3 người</td></tr>
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">VN</div>
@@ -1083,8 +1081,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV025</td>
         
-        <td><select onchange="changeDept(&#39;NV025&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV025&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV025&#39;)">
             ▦ Xem bảng
@@ -1100,8 +1098,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV046</td>
         
-        <td><select onchange="changeDept(&#39;NV046&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#A32D2D;font-weight:500">1 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV046&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#A65A4B;font-weight:500">1 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV046&#39;)">
             ▦ Xem bảng
@@ -1117,8 +1115,8 @@ body.guest-mode .admin-only{display:none!important}
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV048</td>
         
-        <td><select onchange="changeDept(&#39;NV048&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV048&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV048&#39;)">
             ▦ Xem bảng
@@ -1126,16 +1124,16 @@ body.guest-mode .admin-only{display:none!important}
         </td>
       </tr>
       
-    <tr><td colspan="6" style="padding:7px 14px;background:#F1EFE8;color:#444441;font-size:12px;font-weight:600;letter-spacing:.2px">Team IT · 1 người</td></tr>
+    <tr><td colspan="6" style="padding:7px 14px;background:#EDE8DC;color:#414B54;font-size:12px;font-weight:600;letter-spacing:.2px">Team IT · 1 người</td></tr>
       <tr class="">
         <td><div class="emp-name-cell">
           <div class="emp-avatar-sm">PP</div>
-          Phan Thanh Phú<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+          Phan Thanh Phú<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
         </div></td>
         <td style="color:var(--gray);font-size:12px">NV052</td>
         
-        <td><select onchange="changeDept(&#39;NV052&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT" selected="">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td><select onchange="changeDept(&#39;NV052&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT" selected="">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
         <td>
           <button class="view-btn " onclick="toggleCalendar(&#39;NV052&#39;)">
             ▦ Xem bảng
@@ -1301,13 +1299,13 @@ const STATUS_CODES = {
   'T-S':  { label:'Trễ sáng',   bg:'var(--amber-bg)',  color:'var(--amber)' },
   'T-C':  { label:'Trễ chiều',  bg:'var(--amber-bg)',  color:'var(--amber)' },
   'T-C2': { label:'Đi trễ chiều', bg:'var(--amber-bg)',  color:'var(--amber)' },
-  'N-S':  { label:'Nửa ngày',   bg:'#e0e7ff',          color:'#4338ca' },
-  'N-C':  { label:'Nửa ngày',   bg:'#e0e7ff',          color:'#4338ca' },
+  'N-S':  { label:'Nửa ngày',   bg:'#e7ecea',          color:'#35655B' },
+  'N-C':  { label:'Nửa ngày',   bg:'#e7ecea',          color:'#35655B' },
   'P':    { label:'Phép',        bg:'var(--purple-bg)', color:'var(--purple)' },
-  'P-KL': { label:'Nghỉ ko trừ phép', bg:'#fef2f2', color:'#b91c1c' },
+  'P-KL': { label:'Nghỉ ko trừ phép', bg:'#F0DED8', color:'#8f4a3d' },
   'K':    { label:'Vắng',        bg:'var(--red-bg)',    color:'var(--red)' },
-  'NL':   { label:'Nghỉ lễ',    bg:'#f1f5f9',          color:'#475569' },
-  'ĐÃ NGHỈ':  { label:'ĐÃ NGHỈ',    bg:'#fce7f3',          color:'#9d174d' },
+  'NL':   { label:'Nghỉ lễ',    bg:'#EDE8DC',          color:'#414B54' },
+  'ĐÃ NGHỈ':  { label:'ĐÃ NGHỈ',    bg:'#F0DED8',          color:'#8f4a3d' },
   'T-S-P':{ label:'Xin đi trễ',  bg:'var(--amber-bg)',  color:'var(--amber)' },
   'T-C-P':{ label:'Xin về sớm',  bg:'var(--amber-bg)',  color:'var(--amber)' },
   'N-C-K':{ label:'Nửa+Vắng',  bg:'var(--red-bg)',    color:'var(--red)' },
@@ -1892,7 +1890,7 @@ function showOcrMatches(matched,rawLines,session='sang'){
   }
   const rawHtml=rawLines&&rawLines.length?
     `<details style="margin-top:8px;font-size:11px"><summary style="cursor:pointer;color:var(--gray)">Xem text OCR đọc được (${rawLines.length} dòng)</summary>
-    <div style="margin-top:4px;padding:6px;background:#f8f8f8;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#555">${rawLines.join('<br>')}</div></details>`:'';
+    <div style="margin-top:4px;padding:6px;background:#F6F3EC;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#414B54">${rawLines.join('<br>')}</div></details>`:'';
   if(!matched.length){
     box.innerHTML='<div style="color:var(--gray);text-align:center">Không nhận diện được tên nào. Vui lòng thêm thủ công.</div>'+rawHtml;
     return;
@@ -1900,19 +1898,19 @@ function showOcrMatches(matched,rawLines,session='sang'){
   const today=todayStr();
   const existIds=new Set((getAttendance()[today]||[]).filter(r=>(r.session||'sang')===session).map(r=>r.id));
   const newOnes=matched.filter(m=>!existIds.has(m.id));
-  let html=`<div style="font-weight:600;margin-bottom:8px;color:#111">🎯 Nhận diện được ${matched.length} người` +
+  let html=`<div style="font-weight:600;margin-bottom:8px;color:#21303B">🎯 Nhận diện được ${matched.length} người` +
     (newOnes.length<matched.length?` (${matched.length-newOnes.length} đã có)`:'')+`:</div>`;
   html+=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">`;
   for(const m of matched){
     const done=existIds.has(m.id);
-    html+=`<label style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:${done?'#e5e7eb':'#fff'};border-radius:6px;border:1px solid var(--gray-bd);cursor:${done?'default':'pointer'}">` +
+    html+=`<label style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:${done?'#E4DECF':'#fff'};border-radius:6px;border:1px solid var(--gray-bd);cursor:${done?'default':'pointer'}">` +
       `<input type="checkbox" data-id="${m.id}" data-name="${m.name}" ${done?'disabled checked':'checked'} style="accent-color:var(--purple)">` +
       `<span style="${done?'color:var(--gray);text-decoration:line-through':''}">${m.name}</span></label>`;
   }
   html+=`</div><div style="display:flex;gap:8px">` +
     `<button onclick="applyOcrMatches('${session}')" style="flex:1;padding:7px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">✅ Thêm vào điểm danh</button>` +
     `<button onclick="document.getElementById('ocr-result-box-${session}').remove()" style="padding:7px 12px;background:#fff;border:1px solid var(--gray-bd);border-radius:8px;font-size:12px;cursor:pointer">Bỏ</button></div>`;
-  box.innerHTML=html+(rawLines&&rawLines.length?`<details style='margin-top:8px;font-size:11px'><summary style='cursor:pointer;color:var(--gray)'>Text OCR đọc được</summary><div style='padding:6px;background:#f8f8f8;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#555'>${rawLines.join('<br>')}</div></details>`:'');
+  box.innerHTML=html+(rawLines&&rawLines.length?`<details style='margin-top:8px;font-size:11px'><summary style='cursor:pointer;color:var(--gray)'>Text OCR đọc được</summary><div style='padding:6px;background:#F6F3EC;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#414B54'>${rawLines.join('<br>')}</div></details>`:'');
 }
 function applyOcrMatches(session='sang'){
   const checks=document.querySelectorAll('#ocr-result-box-'+session+' input[type=checkbox]:not(:disabled):checked');
@@ -2067,13 +2065,13 @@ function renderAbsentList(){
   }
   el.innerHTML=emps.map(emp=>{
     const initials=emp.name.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase();
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${initials}</div>
-        <span style="font-size:13px;color:#111">${emp.name}</span>
+        <span style="font-size:13px;color:#21303B">${emp.name}</span>
       </div>
       <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent('${emp.id}')" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="dismissAbsent('${emp.id}')" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
         <button onclick="quickAddAttendance('${emp.id}','${emp.name.replace(/'/g,"&#39;")}')" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
     </div>`;
@@ -2182,7 +2180,7 @@ function getCycleLabel(year, month){
 function empTypeBadge(id){
   const ty = empType(id); if(ty==='official') return '';
   const lbl = ty==='parttime' ? 'Part-time' : (ty==='probation' ? 'Thử việc' : ty);
-  const st = ty==='parttime' ? 'color:#0369a1;background:#e0f2fe' : 'color:#b45309;background:#fef3c7';
+  const st = ty==='parttime' ? 'color:#35655B;background:#e2efe9' : 'color:#B07A43;background:#EFE3D0';
   return `<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;${st}">${lbl}</span>`;
 }
 const BIGX_DEPTS=["Team TSP","Team Booking KOC/KOLs","Team Performance","Team Customer Account Manager","Team E - Com","Team Kế toán - Nhân sự","Team Kinh Doanh","Team IT","Team Marketing"];
@@ -2222,7 +2220,7 @@ function makeOfficial(id){
   renderBangCC();
 }
 function lateDays(id,y,m){var cc=getEmpCCForCycle(id,y,m),n=0;getCycleDates(y,m).forEach(function(d){var dw=new Date(d).getDay();if(dw===0||dw===6)return;var v=cc[d];if(!v||!v.status)return;var s=v.status;if((s==='T-S'||s==='T-C'||s==='T-C2')&&(v.lateMin||0)>=3)n++;});return n;}
-function lateCell(id,y,m){var n=lateDays(id,y,m);return '<span style="color:'+(n>0?'#A32D2D':'#9ca3af')+';font-weight:'+(n>0?'500':'400')+'">'+n+' ngày</span>';}
+function lateCell(id,y,m){var n=lateDays(id,y,m);return '<span style="color:'+(n>0?'#A65A4B':'#8B897E')+';font-weight:'+(n>0?'500':'400')+'">'+n+' ngày</span>';}
 function renderBangCC(){
   const y=state.currentYear, m=state.currentMonth;
   document.getElementById('bcc-title').textContent=MONTHS[m-1];
@@ -2233,7 +2231,7 @@ function renderBangCC(){
     tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--gray);font-size:13px">Chưa có danh sách nhân viên.<br><small>Dữ liệu sẽ được cập nhật sau.</small></td></tr>`;
     return;
   }
-  var __by={},__ord=BIGX_DEPTS.concat([""]);emps.forEach(function(e){var d=(e.dept&&BIGX_DEPTS.indexOf(e.dept)>=0)?e.dept:"";(__by[d]=__by[d]||[]).push(e);});var __DC={"Team TSP":["#E6F1FB","#0C447C"],"Team Booking KOC/KOLs":["#EEEDFE","#3C3489"],"Team Performance":["#EAF3DE","#27500A"],"Team Customer Account Manager":["#FAEEDA","#633806"],"Team E - Com":["#E1F5EE","#085041"],"Team Kế toán - Nhân sự":["#FBEAF0","#72243E"],"Team Kinh Doanh":["#FAECE7","#712B13"]};function __row(emp){
+  var __by={},__ord=BIGX_DEPTS.concat([""]);emps.forEach(function(e){var d=(e.dept&&BIGX_DEPTS.indexOf(e.dept)>=0)?e.dept:"";(__by[d]=__by[d]||[]).push(e);});var __DC={"Team TSP":["#e6f0ec","#274b43"],"Team Booking KOC/KOLs":["#EDE8DC","#274b43"],"Team Performance":["#e6efdd","#274b43"],"Team Customer Account Manager":["#EFE3D0","#6b4f28"],"Team E - Com":["#e2efe9","#213f39"],"Team Kế toán - Nhân sự":["#F0DED8","#7a3b32"],"Team Kinh Doanh":["#F0DED8","#7a4a2e"]};function __row(emp){
     const workdays=getWorkdays(y,m);
     const empCC=getEmpCCForCycle(emp.id,y,m);
     const actualDays=countActualDays(empCC);
@@ -2246,7 +2244,7 @@ function renderBangCC(){
         </div></td>
         <td style="color:var(--gray);font-size:12px">${emp.id||'—'}</td>
         
-        <td><select onchange="changeDept('${emp.id}',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff">${deptOptions(emp.dept)}</select></td>
+        <td><select onchange="changeDept('${emp.id}',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff">${deptOptions(emp.dept)}</select></td>
         <td>${actualDays}/${workdays}</td><td>${lateCell(emp.id,y,m)}</td>
         <td>
           <button class="view-btn ${isExpanded?'active-btn':''}" onclick="toggleCalendar('${emp.id}')">
@@ -2256,7 +2254,7 @@ function renderBangCC(){
       </tr>
       ${isExpanded?`<tr><td class="cal-expand-td" colspan="6">${renderCalendarExpand(emp,y,m)}</td></tr>`:''}
     `;
-  }var __out="";__ord.forEach(function(d){var a=__by[d];if(!a||!a.length)return;var c=__DC[d]||["#F1EFE8","#444441"];var lbl=d||"Chưa gán phòng";__out+='<tr><td colspan="6" style="padding:7px 14px;background:'+c[0]+';color:'+c[1]+';font-size:12px;font-weight:600;letter-spacing:.2px">'+lbl+' · '+a.length+' người</td></tr>';a.forEach(function(e){__out+=__row(e);});});tbody.innerHTML=__out;
+  }var __out="";__ord.forEach(function(d){var a=__by[d];if(!a||!a.length)return;var c=__DC[d]||["#EDE8DC","#414B54"];var lbl=d||"Chưa gán phòng";__out+='<tr><td colspan="6" style="padding:7px 14px;background:'+c[0]+';color:'+c[1]+';font-size:12px;font-weight:600;letter-spacing:.2px">'+lbl+' · '+a.length+' người</td></tr>';a.forEach(function(e){__out+=__row(e);});});tbody.innerHTML=__out;
   bxApplyNameFilter();
 }
 // ---- Tìm nhân viên theo tên (đã gộp từ khối vá cũ vào script chính) ----
@@ -2273,7 +2271,7 @@ function initNameSearch(){
   var wrap=document.querySelector('.emp-table-wrap');
   if(!wrap||document.getElementById('bx-name-search')) return;
   var div=document.createElement('div'); div.style.cssText='margin:0 0 10px';
-  div.innerHTML='<input id="bx-name-search" type="text" placeholder="🔍 Tìm nhân viên theo tên..." style="width:280px;max-width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;outline:none">';
+  div.innerHTML='<input id="bx-name-search" type="text" placeholder="🔍 Tìm nhân viên theo tên..." style="width:280px;max-width:100%;padding:8px 12px;border:1px solid #DCD3BE;border-radius:8px;font-size:14px;outline:none">';
   wrap.parentNode.insertBefore(div,wrap);
   div.querySelector('input').addEventListener('input',bxApplyNameFilter);
 }
@@ -2428,28 +2426,28 @@ function renderCalendarExpand(emp, year, month){
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="cal-period">Chu kỳ: ${cycleLabel}</span>
           <div style="width:1px;height:18px;background:var(--gray-bd)"></div>
-          <button class="exp-btn exp-excel" onclick="exportEmpExcel('${emp.id}')">↓ Excel</button>
+          
           <button class="exp-btn exp-sheet" onclick="openGSheet()">⊞ Sheet</button>
         </div>
       </div>
-      <div class="hr-emp-ctrl" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 12px;padding:10px 12px;background:#faf9ff;border:1px solid #ece9fb;border-radius:10px">
-        <span style="font-size:11px;font-weight:700;color:#6b5bd0;letter-spacing:.3px">⚙ QUẢN LÝ NHÂN VIÊN</span>
-        <label style="font-size:12px;color:#374151">Loại:
-          <select onchange="setEmpType('${emp.id}',this.value)" style="margin-left:4px;font-size:12px;padding:3px 6px;border:1px solid #d1d5db;border-radius:6px;background:#fff">
+      <div class="hr-emp-ctrl" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 12px;padding:10px 12px;background:#FBFAF6;border:1px solid #EDE8DC;border-radius:10px">
+        <span style="font-size:11px;font-weight:700;color:#4A8375;letter-spacing:.3px">⚙ QUẢN LÝ NHÂN VIÊN</span>
+        <label style="font-size:12px;color:#2c3944">Loại:
+          <select onchange="setEmpType('${emp.id}',this.value)" style="margin-left:4px;font-size:12px;padding:3px 6px;border:1px solid #DCD3BE;border-radius:6px;background:#fff">
             <option value="official"${empType(emp.id)==='official'?' selected':''}>Chính thức</option>
             <option value="probation"${empType(emp.id)==='probation'?' selected':''}>Thử việc</option>
             <option value="parttime"${empType(emp.id)==='parttime'?' selected':''}>Part-time</option>
           </select>
         </label>
-        <label style="font-size:12px;color:#374151;display:inline-flex;align-items:center;gap:4px">
+        <label style="font-size:12px;color:#2c3944;display:inline-flex;align-items:center;gap:4px">
           <input type="checkbox" ${isNoLeave(emp.id)?'checked':''} onchange="setEmpNoLeave('${emp.id}',this.checked)"> Không có phép năm
         </label>
-        <span style="width:1px;height:18px;background:#e5e7eb"></span>
-        <label style="font-size:12px;color:#374151">Ngày phép còn lại:
-          <input id="lv-in-${emp.id}" type="number" step="0.5" value="${fmt(AQ)}" style="width:66px;margin-left:4px;font-size:12px;padding:3px 6px;border:1px solid #d1d5db;border-radius:6px">
+        <span style="width:1px;height:18px;background:#E4DECF"></span>
+        <label style="font-size:12px;color:#2c3944">Ngày phép còn lại:
+          <input id="lv-in-${emp.id}" type="number" step="0.5" value="${fmt(AQ)}" style="width:66px;margin-left:4px;font-size:12px;padding:3px 6px;border:1px solid #DCD3BE;border-radius:6px">
         </label>
-        <button onclick="setLeaveBalanceUI('${emp.id}')" style="font-size:12px;font-weight:600;padding:4px 10px;border:none;border-radius:6px;background:#6b5bd0;color:#fff;cursor:pointer">Lưu phép</button>
-        ${empType(emp.id)!=='official'?`<button onclick="makeOfficial('${emp.id}')" style="font-size:12px;font-weight:700;padding:4px 10px;border:none;border-radius:6px;background:#16a34a;color:#fff;cursor:pointer">✓ Chuyển chính thức</button>`:''}
+        <button onclick="setLeaveBalanceUI('${emp.id}')" style="font-size:12px;font-weight:600;padding:4px 10px;border:none;border-radius:6px;background:#4A8375;color:#fff;cursor:pointer">Lưu phép</button>
+        ${empType(emp.id)!=='official'?`<button onclick="makeOfficial('${emp.id}')" style="font-size:12px;font-weight:700;padding:4px 10px;border:none;border-radius:6px;background:#35655B;color:#fff;cursor:pointer">✓ Chuyển chính thức</button>`:''}
       </div>
       <div class="sum-strip">
         <div class="sum-pill">
@@ -2514,7 +2512,7 @@ function renderCalGrid(empId, year, month, empCC){
     const displayDate=parseInt(dd)+'/'+monthNum;
     let statusHtml='';
     if(!isWeekend&&cc&&cc.status){
-      const sc=STATUS_CODES[cc.status]||{bg:'#f1f5f9',color:'#475569'};
+      const sc=STATUS_CODES[cc.status]||{bg:'#EDE8DC',color:'#414B54'};
       let _dsp=cc.status;if((cc.status==='T-S-P'||cc.status==='T-C-P')&&cc.lateMin){const _c=tinhCongNgay(cc);_dsp=cc.status+' '+String(parseFloat(_c.toFixed(4)));}if((cc.status==='T-S'||cc.status==='T-C'||cc.status==='T-C2')&&cc.lateMin>45){_dsp=cc.status+' '+String(parseFloat(tinhCongNgay(cc).toFixed(4)));}statusHtml=`<span class="day-status" style="background:${sc.bg};color:${sc.color}">${_dsp}</span>`;
       if((cc.status==='T-S'||cc.status==='T-C'||cc.status==='T-C2')&&cc.lateMin){
         statusHtml+=`<div class="late-min">Trễ ${cc.lateMin} phút</div>`;
@@ -2550,7 +2548,7 @@ function openDayModal(empId, dateStr){
   // Build status grid
   const grid=document.getElementById('status-grid');
   grid.innerHTML=SIMPLE_STATUSES.map(code=>{
-    const sc=STATUS_CODES[code]||{bg:'#f1f5f9',color:'#475569',label:code};
+    const sc=STATUS_CODES[code]||{bg:'#EDE8DC',color:'#414B54',label:code};
     return `<div class="status-opt ${cur.status===code?'selected':''}" onclick="selectDayStatus('${code}')">
       <span class="status-opt-badge" style="background:${sc.bg};color:${sc.color}">${code}</span>
       <span class="status-opt-lbl">${sc.label}</span>
