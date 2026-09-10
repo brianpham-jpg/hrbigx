@@ -2732,33 +2732,7 @@ function openGSheet(){
   window.open('https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit','_blank');
 }
 
-// ============================
-// EXPORT EXCEL
-// ============================
-function exportEmpExcel(empId){
-  const emp=state.employees.find(e=>e.id===empId);
-  if(!emp) return;
-  const y=state.calViewYear||state.currentYear;
-  const m=state.calViewMonth||state.currentMonth;
-  const empCC=getEmpCCForCycle(empId,y,m);
-  const dates=getCycleDates(y,m);
-  const header=['Ngày','Thứ','Trạng thái','Phút trễ','Ghi chú'];
-  const rows=dates.map(d=>{
-    const dow=new Date(d).getDay();
-    const dayNames=['CN','T2','T3','T4','T5','T6','T7'];
-    const cc=empCC[d]||{};
-    return [d,dayNames[dow],cc.status||'',cc.lateMin||'',cc.note||''];
-  });
-  const csv=[header,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='chamcong_'+emp.name.replace(/\s/g,'_')+'_'+y+'_'+m+'.csv';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
-}
+// (đã gỡ rác: hàm exportEmpExcel — nút "Tải Excel" không còn dùng, không nơi nào gọi)
 
 
 // Auto-init on load
