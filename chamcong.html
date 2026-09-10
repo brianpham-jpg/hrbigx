@@ -293,6 +293,7 @@ body.guest-mode .admin-only{display:none!important}
     </div>
     <div class="topbar-right">
       <span class="topbar-user" id="topbar-user-email">brian.pham@bigx.vn</span>
+      <button class="cc-login-guest" onclick="ccShowLogin()">🔑 Đăng nhập</button>
       <button class="publish-btn admin-only" onclick="doPublish()">📤 Xuất bản</button>
       <button class="topbar-logout admin-only" id="topbar-logout-btn" onclick="doLogout()">Đăng xuất</button>
     </div>
@@ -2816,4 +2817,12 @@ function doPublish() {
      - Tinh phep: 1 ham calcPhepConLai duy nhat (da bo lop va phepPatchV2)
      - Day Google Sheet: qua syncToCloud + autoPushSheet(120s) - da bo override localStorage.setItem -->
 
+<style>
+.cc-login-guest{display:none;align-items:center;gap:6px;padding:7px 15px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
+body.guest-mode .cc-login-guest{display:inline-flex}
+.cc-login-guest:hover{background:rgba(255,255,255,.28)}
+</style>
+<script>
+function ccShowLogin(){var a=document.getElementById('app'),l=document.getElementById('login-screen');if(a)a.style.display='none';if(l)l.style.display='flex';var e=document.getElementById('login-email');if(e){try{e.focus();}catch(_){}}}
+</script>
 </body></html>
