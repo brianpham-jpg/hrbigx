@@ -75,19 +75,47 @@ const NAV = [
 var MAP = {};
 NAV.forEach(function(g){ g.items.forEach(function(it){ MAP[it.id]={item:it, group:g}; }); });
 
-/* ---- Data loader ---- */
+/* ---- Data loader (cache phía web + tự thử lại) ---- */
+var HR_CACHE_KEY = 'bigx_hr_cache_v1';
+
+function applyData(d, fromCache){
+  HR.loaded=true; HR.error=null;
+  HR.updated=d.updated||''; HR.nhansu=d.nhansu||[]; HR.tuyendung=d.tuyendung||[]; HR.viTriList=d.viTriList||[];
+  var up=document.getElementById('tb-note');
+  if(up) up.textContent = 'Cập nhật: '+HR.updated + (fromCache?' · đang làm mới…':'');
+  if(currentTab) go(currentTab);
+}
+
+function fetchHR(tries){
+  return fetch(API_URL,{cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .catch(function(e){
+      if(tries>0){ return new Promise(function(res){ setTimeout(res,1200); }).then(function(){ return fetchHR(tries-1); }); }
+      throw e;
+    });
+}
+
 function loadData(){
   HR.error=null;
-  fetch(API_URL)
-    .then(function(r){ return r.json(); })
+  /* 1) vẽ NGAY từ bản lưu trong trình duyệt (nếu có) để không phải chờ API */
+  try{
+    var raw=localStorage.getItem(HR_CACHE_KEY);
+    if(raw){ var c=JSON.parse(raw); if(c && c.nhansu) applyData(c, true); }
+  }catch(e){}
+
+  /* 2) gọi API nền (thử lại 2 lần), xong thì cập nhật + lưu cache */
+  fetchHR(2)
     .then(function(d){
-      HR.loaded=true; HR.updated=d.updated||''; HR.nhansu=d.nhansu||[]; HR.tuyendung=d.tuyendung||[]; HR.viTriList=d.viTriList||[];
-      var up=document.getElementById('tb-note'); if(up) up.textContent = 'Cập nhật: '+HR.updated;
-      if(currentTab) go(currentTab); // vẽ lại tab hiện tại khi data về
+      applyData(d, false);
+      try{ localStorage.setItem(HR_CACHE_KEY, JSON.stringify(d)); }catch(e){}
     })
     .catch(function(e){
-      HR.error = e.message||'Lỗi kết nối';
-      if(currentTab) go(currentTab);
+      if(HR.loaded){ // đã có cache → giữ nguyên, chỉ báo chưa làm mới được
+        var up=document.getElementById('tb-note'); if(up) up.textContent='Cập nhật: '+HR.updated+' · chưa làm mới được';
+      } else {
+        HR.error = e.message||'Lỗi kết nối';
+        if(currentTab) go(currentTab);
+      }
     });
 }
 
