@@ -1171,21 +1171,8 @@ function renderOverview(){
 var CC_APP_URL   = 'chamcong.html?cc=5'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
 
-function ccToggleFull(){
-  var w=document.querySelector('.cc-frame-wrap'); if(!w) return;
-  var on=!w.classList.contains('cc-full');
-  w.classList.toggle('cc-full', on);
-  document.body.style.overflow = on?'hidden':'';
-}
-document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ var w=document.querySelector('.cc-frame-wrap.cc-full'); if(w) ccToggleFull(); } });
-
 function renderChamCong(){
-  return ''+
-    '<div class="cc-frame-wrap cc-bare">'+
-      '<button class="cc-fs-btn" onclick="ccToggleFull()" title="Toàn màn hình"><i class="ti ti-arrows-maximize"></i></button>'+
-      '<button class="cc-exit" onclick="ccToggleFull()" title="Thu nhỏ (Esc)"><i class="ti ti-arrows-minimize"></i> Thu nhỏ</button>'+
-      '<iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe>'+
-    '</div>';
+  return '<div class="cc-frame-wrap"><iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe></div>';
 }
 
 /* ---- Router ---- */
