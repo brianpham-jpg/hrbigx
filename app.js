@@ -989,13 +989,15 @@ function renderBienDong(){
    TAB: TỔNG QUAN — Bảng điều khiển (động, ECharts, tự cập nhật)
    ============================================================ */
 function ovActive(){ return (HR.nhansu||[]).filter(function(e){return (e.tinhTrang||'').trim()!=='Nghỉ việc';}); }
-/* số bản HĐ đã ký = 0 / trống → cần ký */
+/* nhân viên đang làm, KHÔNG tính Ban giám đốc (BOD) — HĐLĐ không áp cho BOD */
+function ovStaff(){ return ovActive().filter(function(e){ return (e.phong||'').trim()!=='BOD'; }); }
+/* số bản HĐ đã ký = 0 / trống → cần ký (loại BOD) */
 function ovCanKy(){
-  return ovActive().filter(function(e){ var v=String(e.soBanKy==null?'':e.soBanKy).trim(); return v===''||v==='0'; });
+  return ovStaff().filter(function(e){ var v=String(e.soBanKy==null?'':e.soBanKy).trim(); return v===''||v==='0'; });
 }
-/* HĐ quá hạn / sắp hết hạn ≤30 ngày → cần ký lại (gia hạn) */
+/* HĐ quá hạn / sắp hết hạn ≤30 ngày → cần ký lại (gia hạn), loại BOD */
 function ovGiaHan(){
-  return ovActive().map(function(e){ return {e:e, n:conLaiNum(e.ngayConLai)}; })
+  return ovStaff().map(function(e){ return {e:e, n:conLaiNum(e.ngayConLai)}; })
     .filter(function(o){ return o.n!==null && o.n<=30; })
     .sort(function(a,b){ return a.n-b.n; });
 }
