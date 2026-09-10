@@ -1,0 +1,2821 @@
+<!DOCTYPE html>
+<!-- saved from url=(0033)https://bigx-chamcong.vercel.app/ -->
+<html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BigX – Quản lý Chấm Công</title>
+<link href="./BigX – Quản lý Chấm Công_files/css2" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --purple:#5b21b6;--purple-l:#7c3aed;--purple-bg:#f5f3ff;--purple-bd:#ddd6fe;
+  --yellow:#FFE033;--cream:#FFF8EC;
+  --green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef9c3;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --blue:#1d4ed8;--blue-bg:#eff6ff;--blue-bd:#bfdbfe;
+  --gray:#6b7280;--gray-light:#f9fafb;--gray-bd:#e5e7eb;
+}
+body{font-family:'Be Vietnam Pro',sans-serif;background:#f8f7ff;color:#1f2937;min-height:100vh}
+
+/* ===== LOGIN ===== */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--cream)}
+.login-card{background:#fff;border-radius:20px;width:360px;overflow:hidden;border:1px solid var(--gray-bd);box-shadow:0 4px 24px rgba(0,0,0,.07)}
+.login-head{background:var(--yellow);padding:28px 32px 24px;text-align:center}
+.login-logo{font-size:32px;font-weight:700;color:#111;letter-spacing:-1px}
+.login-logo-sub{font-size:11px;color:#555;letter-spacing:1.5px;font-weight:600;margin-top:2px}
+.login-body{padding:24px 28px 28px}
+.login-title{font-size:17px;font-weight:700;color:#111;margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--gray);margin-bottom:20px}
+.login-label{font-size:11px;font-weight:600;color:var(--gray);letter-spacing:.5px;display:block;margin-bottom:5px}
+.login-input-wrap{display:flex;align-items:center;gap:8px;border:1.5px solid var(--gray-bd);border-radius:10px;padding:10px 12px;background:#fafafa;transition:border-color .2s}
+.login-input-wrap:focus-within{border-color:var(--purple);background:#fff}
+.login-input{border:none;background:transparent;font-family:inherit;font-size:14px;color:#111;outline:none;width:100%}
+.login-input::placeholder{color:#9ca3af}
+.login-error{color:var(--red);font-size:12px;margin-top:5px;display:none}
+.login-btn{width:100%;margin-top:14px;padding:12px;background:#111;color:var(--yellow);border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s}
+.login-btn:hover{opacity:.85}
+.login-note{text-align:center;font-size:11px;color:#9ca3af;margin-top:14px}
+
+/* ===== APP SHELL ===== */
+#app{display:none;min-height:100vh;flex-direction:column}
+.topbar{background:var(--purple);padding:0 20px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{background:var(--yellow);color:#111;font-size:13px;font-weight:700;padding:3px 9px;border-radius:6px}
+.topbar-title{color:rgba(255,255,255,.7);font-size:12px;font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-user{font-size:12px;color:rgba(255,255,255,.6)}
+.topbar-logout{background:rgba(255,255,255,.15);color:var(--yellow);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
+.topbar-logout:hover{background:rgba(255,255,255,.25)}
+
+/* ===== MAIN TABS ===== */
+.main-tabs{background:#fff;border-bottom:1px solid var(--gray-bd);padding:0 20px;display:flex;position:sticky;top:50px;z-index:100}
+.main-tab{padding:12px 20px;font-size:13px;font-weight:500;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.main-tab.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:600}
+.main-tab:hover:not(.active){color:#374151}
+
+/* ===== CONTENT ===== */
+.content{flex:1;padding:16px 20px;max-width:1200px;margin:0 auto;width:100%}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ===== CARDS ===== */
+.card{background:#fff;border-radius:14px;border:1px solid var(--gray-bd);padding:16px;margin-bottom:14px}
+.card:last-child{margin-bottom:0}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.card-head-icon{width:28px;height:28px;background:var(--purple-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--purple);font-size:15px;flex-shrink:0}
+.card-head-title{font-size:13px;font-weight:600;color:#374151}
+.card-head-sub{font-size:11px;color:var(--gray);margin-top:1px}
+
+/* ===== UPLOAD ===== */
+.upload-zone{border:2px dashed var(--purple-bd);border-radius:10px;padding:24px;text-align:center;background:#fafafe;cursor:pointer;transition:border-color .2s}
+.upload-zone:hover{border-color:var(--purple)}
+.upload-zone-icon{font-size:28px;color:var(--purple-l);margin-bottom:8px}
+.upload-zone-title{font-size:13px;font-weight:600;color:var(--purple)}
+.upload-zone-sub{font-size:11px;color:var(--gray);margin-top:4px}
+.upload-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:var(--purple);color:var(--yellow);border:none;border-radius:8px;padding:8px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.upload-btn:hover{opacity:.9}
+#file-input{display:none}
+
+/* ===== TODAY LAYOUT ===== */
+.today-grid{display:grid;grid-template-columns:1fr 280px;gap:14px;align-items:start}
+
+/* ===== STATS ROW ===== */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat-box{background:#fff;border:1px solid var(--gray-bd);border-radius:10px;padding:10px 14px;text-align:center}
+.stat-num{font-size:22px;font-weight:600}
+.stat-num.green{color:var(--green)}
+.stat-num.amber{color:var(--amber)}
+.stat-num.red{color:var(--red)}
+.stat-num.purple{color:var(--purple)}
+.stat-lbl{font-size:10px;color:var(--gray);margin-top:2px}
+
+/* ===== ATTENDANCE LIST ===== */
+.att-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.att-date{background:var(--purple-bg);color:var(--purple);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.att-count{font-size:11px;color:var(--gray)}
+.add-manual-btn{display:inline-flex;align-items:center;gap:5px;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd);border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.add-manual-btn:hover{background:var(--purple-bd)}
+.att-list{max-height:340px;overflow-y:auto}
+.att-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--gray-bd)}
+.att-row:last-child{border-bottom:none}
+.att-avatar{width:30px;height:30px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--purple);flex-shrink:0}
+.att-avatar.manual{background:#fef9c3;color:#a16207}
+.att-name{font-size:13px;font-weight:500;color:#111;flex:1}
+.att-manual-tag{font-size:10px;color:#6366f1;font-style:italic}
+.att-time{font-size:11px;color:var(--gray);min-width:38px}
+.s-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.s-ok{background:var(--green-bg);color:var(--green)}
+.s-late{background:var(--amber-bg);color:var(--amber)}
+.s-abs{background:var(--red-bg);color:var(--red)}
+.s-manual{background:#e0e7ff;color:#4338ca}
+.att-actions{display:flex;gap:3px}
+.att-action{width:24px;height:24px;border-radius:6px;border:1px solid var(--gray-bd);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);font-size:13px}
+.att-action:hover{background:var(--purple-bg);color:var(--purple)}
+.att-action.del:hover{background:var(--red-bg);color:var(--red)}
+.att-empty{text-align:center;padding:20px;color:var(--gray);font-size:13px}
+
+/* ===== HISTORY SIDEBAR ===== */
+.hist-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--gray-bd);font-size:12px}
+.hist-row:last-child{border-bottom:none}
+.hist-date{color:var(--gray)}
+.hist-pill{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--purple-bg);color:var(--purple);font-weight:600;cursor:pointer}
+.hist-pill:hover{background:var(--purple-bd)}
+
+/* ===== SUB TABS BAR ===== */
+.sub-bar{background:#f8f7ff;border-bottom:1px solid var(--gray-bd);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:98px;z-index:90}
+.sub-tabs{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+.sub-tab{padding:4px 12px;font-size:12px;font-weight:500;color:var(--gray);border-radius:20px;border:1px solid var(--gray-bd);background:#fff;cursor:pointer;white-space:nowrap;transition:all .2s}
+.sub-tab.active{background:var(--purple);color:var(--yellow);border-color:var(--purple);font-weight:600}
+.sub-tab:hover:not(.active){background:var(--purple-bg);color:var(--purple)}
+.year-sw{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.yr-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--gray-bd);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);font-size:13px}
+.yr-btn:hover{background:var(--purple-bg);color:var(--purple)}
+.yr-label{font-size:13px;font-weight:700;color:var(--purple);min-width:36px;text-align:center}
+
+/* ===== BANG CHAM CONG ===== */
+.bcc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.bcc-title{font-size:14px;font-weight:600;color:#111}
+.bcc-sub{font-size:12px;color:var(--gray);font-weight:400;margin-left:6px}
+.export-group{display:flex;align-items:center;gap:8px}
+.exp-btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;font-family:inherit;white-space:nowrap}
+.exp-excel{background:#f0fdf4;color:var(--green);border-color:#bbf7d0}
+.exp-excel:hover{background:#dcfce7}
+.exp-sheet{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-bd)}
+.exp-sheet:hover{background:#dbeafe}
+.div-v{width:1px;height:20px;background:var(--gray-bd)}
+
+/* ===== EMPLOYEE TABLE ===== */
+.emp-table-wrap{background:#fff;border-radius:14px;border:1px solid var(--gray-bd);overflow:hidden}
+.emp-table{width:100%;border-collapse:collapse;font-size:13px}
+.emp-table thead tr{background:var(--purple-bg)}
+.emp-table th{padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--purple);letter-spacing:.3px;white-space:nowrap}
+.emp-table td{padding:9px 14px;border-bottom:1px solid var(--gray-bd);color:#111;vertical-align:middle}
+.emp-table tr:last-child > td:not(.cal-expand-td){border-bottom:none}
+.emp-table tr.has-expand > td{border-bottom:none}
+.emp-avatar-sm{width:28px;height:28px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--purple);flex-shrink:0}
+.emp-name-cell{display:flex;align-items:center;gap:8px}
+.dept-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#f1f5f9;color:#475569;font-weight:500;white-space:nowrap}
+.view-btn{display:inline-flex;align-items:center;gap:5px;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd);border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.view-btn.active-btn{background:var(--purple);color:var(--yellow);border-color:var(--purple)}
+.view-btn:hover:not(.active-btn){background:var(--purple-bd)}
+
+/* ===== CALENDAR EXPAND ===== */
+.cal-expand-td{padding:0;background:#fafafe}
+.cal-expand-inner{padding:14px 16px}
+.cal-exp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.cal-emp-info{display:flex;align-items:center;gap:8px}
+.cal-emp-avatar{width:32px;height:32px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--purple)}
+.cal-emp-name{font-size:13px;font-weight:600;color:#111}
+.cal-emp-sub{font-size:11px;color:var(--gray)}
+.cal-nav{display:flex;align-items:center;gap:6px}
+.cal-nav-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--gray-bd);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);font-size:12px}
+.cal-period{font-size:12px;font-weight:600;color:var(--purple)}
+.cal-header-actions{display:flex;align-items:center;gap:6px}
+
+/* ===== SUMMARY STRIP ===== */
+.sum-strip{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.sum-pill{background:#fff;border:1px solid var(--gray-bd);border-radius:8px;padding:6px 12px;text-align:center;min-width:72px}
+.sum-pill-num{font-size:16px;font-weight:600}
+.sum-pill-lbl{font-size:10px;color:var(--gray);margin-top:1px}
+.leave-pill{background:var(--purple-bg);border:1px solid var(--purple-bd);border-radius:8px;padding:6px 14px;display:flex;align-items:center;gap:8px;margin-left:auto}
+.leave-num{font-size:18px;font-weight:700;color:var(--purple)}
+.leave-lbl{font-size:11px;font-weight:600;color:var(--purple)}
+.leave-sub{font-size:9px;color:var(--purple-l)}
+
+/* ===== SUMMARY EXT ROW ===== */
+.sum-ext-row{display:flex;align-items:center;gap:14px;padding:7px 12px;background:var(--purple-bg);border-radius:8px;margin-bottom:12px;flex-wrap:wrap}
+.sum-ext-item{display:flex;align-items:center;gap:6px;font-size:12px}
+.sum-ext-lbl{color:var(--gray)}
+.sum-ext-val{font-weight:600;color:#111;font-size:13px}
+.sum-ext-val.neg{color:var(--red)}
+.sum-ext-sep{width:1px;height:16px;background:var(--gray-bd);flex-shrink:0}
+.sum-ext-bar-wrap{display:flex;align-items:center;gap:5px}
+.sum-ext-bar{width:60px;height:4px;background:var(--gray-bd);border-radius:2px;overflow:hidden}
+.sum-ext-bar-fill{height:100%;border-radius:2px;background:var(--green)}
+.sum-ext-bar-fill.low{background:var(--red)}
+.sum-ext-hint{font-size:10px;color:var(--gray)}
+
+/* ===== CALENDAR GRID ===== */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.day-head{text-align:center;font-size:10px;font-weight:700;color:var(--gray);padding:5px 0;letter-spacing:.3px}
+.day-head.wknd{color:var(--red)}
+.day-cell{min-height:56px;border-radius:7px;border:1px solid var(--gray-bd);background:#fafafa;padding:5px 6px;display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:border-color .15s}
+.day-cell:hover{border-color:var(--purple)}
+.day-cell.today-cell{border:2px solid var(--purple);background:var(--purple-bg)}
+.day-cell.wknd-cell{background:#f9fafb}
+.day-cell.empty-cell{background:transparent;border-color:transparent;cursor:default}
+.day-cell.empty-cell:hover{border-color:transparent}
+.day-num{font-size:10px;font-weight:500;color:#374151}
+.day-num.wknd-num{color:#9ca3af}
+.day-status{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px;width:fit-content}
+.late-min{font-size:9px;font-weight:600;color:var(--amber)}
+.day-note{font-size:9px;color:var(--gray);margin-top:2px;line-height:1.3;word-break:break-word;font-style:italic}
+
+/* ===== LEGEND ===== */
+.cal-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--gray-bd)}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--gray)}
+
+/* ===== MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;width:340px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.modal-head{background:var(--purple-bg);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:14px;font-weight:700;color:var(--purple)}
+.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray);line-height:1}
+.modal-body{padding:16px 18px}
+.form-group{margin-bottom:12px}
+.form-label{font-size:11px;font-weight:600;color:var(--gray);display:block;margin-bottom:5px;letter-spacing:.3px}
+.form-input{width:100%;border:1.5px solid var(--gray-bd);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;color:#111;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--purple)}
+.form-select{width:100%;border:1.5px solid var(--gray-bd);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;color:#111;outline:none;background:#fff;cursor:pointer}
+.form-select:focus{border-color:var(--purple)}
+.modal-footer{padding:12px 18px;border-top:1px solid var(--gray-bd);display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{background:#fff;border:1px solid var(--gray-bd);color:var(--gray);border-radius:8px;padding:8px 16px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.btn-save{background:var(--purple);border:none;color:var(--yellow);border-radius:8px;padding:8px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.btn-save:hover{opacity:.9}
+
+/* ===== STATUS EDIT MODAL ===== */
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.status-opt{border:1.5px solid var(--gray-bd);border-radius:8px;padding:7px 6px;text-align:center;cursor:pointer;transition:all .15s}
+.status-opt:hover{border-color:var(--purple);background:var(--purple-bg)}
+.status-opt.selected{border-color:var(--purple);background:var(--purple-bg)}
+.status-opt-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:4px}
+.status-opt-lbl{font-size:10px;color:var(--gray);display:block}
+
+/* ===== UPLOAD PROCESSING ===== */
+.upload-processing{text-align:center;padding:20px;color:var(--purple)}
+.upload-processing-icon{font-size:32px;margin-bottom:8px;animation:spin 1.5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== GUEST MODE ===== */
+body.guest-mode .admin-only{display:none!important}
+.publish-btn{background:var(--yellow);color:#111;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
+.publish-btn:hover{opacity:.85}
+/* ===== RESPONSIVE ===== */
+@media(max-width:760px){
+  .today-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen" style="display:none">
+  <div class="login-card">
+    <div class="login-head">
+      <div class="login-logo">BigX</div>
+      <div class="login-logo-sub">QUẢN LÝ CHẤM CÔNG</div>
+    </div>
+    <div class="login-body">
+      <div class="login-title">Đăng nhập</div>
+      <div class="login-sub">Dành cho nhân sự BigX Agency</div>
+      <label class="login-label">EMAIL CÔNG TY</label>
+      <div class="login-input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#9ca3af;flex-shrink:0"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+        <input class="login-input" id="login-email" type="email" placeholder="ten@bigx.vn" autocomplete="email">
+      </div>
+      <div class="login-error" id="login-error">Email phải thuộc domain @bigx.vn</div>
+      <button class="login-btn" onclick="doLogin()">Đăng nhập →</button>
+      <div class="login-note">🔒 Chỉ dành cho quản trị nhân sự</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" style="display:flex;flex-direction:column">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">BigX</span>
+      <span class="topbar-title">Quản lý Chấm Công</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbar-user-email">brian.pham@bigx.vn</span>
+      <button class="publish-btn admin-only" onclick="doPublish()">📤 Xuất bản</button>
+      <button class="topbar-logout admin-only" id="topbar-logout-btn" onclick="doLogout()">Đăng xuất</button>
+    </div>
+  </div>
+
+  <!-- Main Tabs -->
+  <div class="main-tabs">
+    <div class="main-tab active admin-only" onclick="switchMainTab(0)">Điểm danh hôm nay</div>
+    <div class="main-tab" onclick="switchMainTab(1)">Bảng chấm công</div>
+  </div>
+
+  <!-- ===== TAB 1: ĐIỂM DANH ===== -->
+  <div class="tab-panel active" id="tab-diemdanh">
+    <div class="content">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num green" id="stat-present">0</div>
+          <div class="stat-lbl">Có mặt</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num red" id="stat-absent">25</div>
+          <div class="stat-lbl">Vắng</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num amber" id="stat-late">0</div>
+          <div class="stat-lbl">Đi trễ</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num purple" id="stat-total">25</div>
+          <div class="stat-lbl">Tổng NV</div>
+        </div>
+      </div>
+
+      <div class="today-grid">
+        <div>
+          <!-- HÔM NAY header -->
+          <div style="margin-bottom:8px">
+            <span class="att-date" id="today-date-label">Thứ 5, ngày 27 tháng 8 năm 2026</span>
+            <span class="att-count" id="att-count" style="margin-left:8px">0 nhân viên</span>
+          </div>
+
+          <!-- 2-session grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+            <!-- ── BUỔI SÁNG ── -->
+            <div class="card" style="padding:0;overflow:hidden">
+              <div style="background:#f0fdf4;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d1fae5">
+                <span style="font-size:12px;font-weight:700;color:#15803d;letter-spacing:1px">🌅 BUỔI SÁNG</span>
+                <span id="att-count-sang" style="font-size:11px;font-weight:600;color:#15803d;background:#dcfce7;padding:2px 8px;border-radius:20px">0</span>
+              </div>
+              <div style="padding:12px">
+                <div class="upload-zone" style="padding:10px 8px;margin-bottom:8px" onclick="document.getElementById(&#39;file-input-sang&#39;).click()">
+                  <div style="font-size:12px;color:var(--gray);text-align:center">📷 Upload ảnh check in sáng</div>
+                </div>
+                <input type="file" id="file-input-sang" accept="image/*" multiple="" style="display:none" onchange="handleFileUpload(event,&#39;sang&#39;)">
+                <div id="upload-status-sang" style="display:none;margin-bottom:8px;padding:8px;background:var(--purple-bg);border-radius:8px;font-size:11px;color:var(--purple);text-align:center"></div>
+                <div class="att-list" id="att-list-sang" style="max-height:260px"><div class="att-empty">Chưa có dữ liệu</div></div>
+                <button class="add-manual-btn" admin-only="" style="width:100%;margin-top:8px;justify-content:center" onclick="openAddModal(null,&#39;sang&#39;)">+ Thêm thủ công</button>
+              </div>
+            </div>
+
+            <!-- ── BUỔI CHIỀU ── -->
+            <div class="card" style="padding:0;overflow:hidden">
+              <div style="background:#eff6ff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #bfdbfe">
+                <span style="font-size:12px;font-weight:700;color:#1d4ed8;letter-spacing:1px">🌆 BUỔI CHIỀU</span>
+                <span id="att-count-chieu" style="font-size:11px;font-weight:600;color:#1d4ed8;background:#dbeafe;padding:2px 8px;border-radius:20px">0</span>
+              </div>
+              <div style="padding:12px">
+                <div class="upload-zone" style="padding:10px 8px;margin-bottom:8px" onclick="document.getElementById(&#39;file-input-chieu&#39;).click()">
+                  <div style="font-size:12px;color:var(--gray);text-align:center">📷 Upload ảnh check in chiều</div>
+                </div>
+                <input type="file" id="file-input-chieu" accept="image/*" multiple="" style="display:none" onchange="handleFileUpload(event,&#39;chieu&#39;)">
+                <div id="upload-status-chieu" style="display:none;margin-bottom:8px;padding:8px;background:var(--purple-bg);border-radius:8px;font-size:11px;color:var(--purple);text-align:center"></div>
+                <div class="att-list" id="att-list-chieu" style="max-height:260px"><div class="att-empty">Chưa có dữ liệu</div></div>
+                <button class="add-manual-btn" admin-only="" style="width:100%;margin-top:8px;justify-content:center" onclick="openAddModal(null,&#39;chieu&#39;)">+ Thêm thủ công</button>
+              </div>
+            </div>
+
+          </div>
+          <div class="card" style="margin-top:14px"><div style="font-weight:700;font-size:14px;margin-bottom:10px">💸 Bảng trừ lương — đi trễ (chu kỳ này)</div><div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start"><div id="fine-table" style="flex:2;min-width:300px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody><tr style="color:var(--gray);text-align:left"><th style="padding:4px">Nhân viên</th><th>Số lần</th><th>Tổng phút</th><th>Trừ 0,5 công</th><th style="text-align:right">Tiền phạt</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Nguyễn Thụy Thanh Trinh</td><td>1</td><td>23'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">50.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Vũ Đào Trang Nhi</td><td>1</td><td>5'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Trần Diễm Chi</td><td>1</td><td>4'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Nguyễn Ngọc Thảo Vy</td><td>1</td><td>4'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr></tbody></table></div><div style="flex:1;min-width:230px"><div style="font-size:11px;font-weight:700;color:var(--gray);margin-bottom:6px">QUY ĐỊNH PHẠT ĐI TRỄ</div><table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid var(--gray-bd);border-radius:8px;overflow:hidden"><tbody><tr style="background:#f8fafc;color:var(--gray);text-align:left"><th style="padding:8px 10px;font-size:11px">THỜI GIAN TRỄ</th><th style="padding:8px 10px;font-size:11px">HÌNH THỨC PHẠT</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">03 – 20 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#fef2f2">20.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">21 – 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#fef2f2">50.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">Trên 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#fef2f2">Tính nghỉ 01 buổi sáng</td></tr></tbody></table></div></div></div>
+<!-- legacy ids for backward compat -->
+          <div id="att-list" style="display:none"></div>
+          
+        </div>
+
+        <!-- History Sidebar -->
+        <div>
+          <!-- Chưa điểm danh card -->
+          <div class="card" style="margin-bottom:14px">
+            <div class="att-header" style="margin-bottom:10px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-weight:600;font-size:14px;color:#111">Chưa điểm danh</span>
+                <span id="absent-count" style="background:var(--red-bg);color:var(--red);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">24</span>
+              </div>
+            </div>
+            <div id="absent-list" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto"><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TĐ</div>
+        <span style="font-size:13px;color:#111">Phan Thụy Trúc Đào</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV039&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV039&#39;,&#39;Phan Thụy Trúc Đào&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NP</div>
+        <span style="font-size:13px;color:#111">Trịnh Thị Ngọc Phụng</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV042&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV042&#39;,&#39;Trịnh Thị Ngọc Phụng&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
+        <span style="font-size:13px;color:#111">Phạm Thị Thu Thủy</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV043&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV043&#39;,&#39;Phạm Thị Thu Thủy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
+        <span style="font-size:13px;color:#111">Nguyễn Thụy Thanh Trinh</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV050&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV050&#39;,&#39;Nguyễn Thụy Thanh Trinh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TN</div>
+        <span style="font-size:13px;color:#111">Vũ Đào Trang Nhi</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV051&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV051&#39;,&#39;Vũ Đào Trang Nhi&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">MH</div>
+        <span style="font-size:13px;color:#111">Phạm Mai Hân</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV053&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV053&#39;,&#39;Phạm Mai Hân&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TH</div>
+        <span style="font-size:13px;color:#111">Nguyễn Thị Thu Hương</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV038&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV038&#39;,&#39;Nguyễn Thị Thu Hương&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TU</div>
+        <span style="font-size:13px;color:#111">Nguyễn Thị Thu Uyên</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV008&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV008&#39;,&#39;Nguyễn Thị Thu Uyên&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">DC</div>
+        <span style="font-size:13px;color:#111">Trần Diễm Chi</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV044&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV044&#39;,&#39;Trần Diễm Chi&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TD</div>
+        <span style="font-size:13px;color:#111">Nguyễn Tiến Duyệt</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV049&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV049&#39;,&#39;Nguyễn Tiến Duyệt&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TP</div>
+        <span style="font-size:13px;color:#111">Phan Thanh Phú</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV052&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV052&#39;,&#39;Phan Thanh Phú&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">KD</div>
+        <span style="font-size:13px;color:#111">Tống Thị Kim Dung</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV020&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV020&#39;,&#39;Tống Thị Kim Dung&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TB</div>
+        <span style="font-size:13px;color:#111">Nguyễn Thị Bé</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV045&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV045&#39;,&#39;Nguyễn Thị Bé&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NN</div>
+        <span style="font-size:13px;color:#111">Võ Thị Na Na</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV025&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV025&#39;,&#39;Võ Thị Na Na&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TV</div>
+        <span style="font-size:13px;color:#111">Nguyễn Ngọc Thảo Vy</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV046&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV046&#39;,&#39;Nguyễn Ngọc Thảo Vy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TQ</div>
+        <span style="font-size:13px;color:#111">Trần Quang</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV048&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV048&#39;,&#39;Trần Quang&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NV</div>
+        <span style="font-size:13px;color:#111">Trần Nguyễn Ngọc Việt</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV016&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV016&#39;,&#39;Trần Nguyễn Ngọc Việt&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">DK</div>
+        <span style="font-size:13px;color:#111">Lê Doãn Khánh</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV023&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV023&#39;,&#39;Lê Doãn Khánh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">VN</div>
+        <span style="font-size:13px;color:#111">Lê Văn Nguyên</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV030&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV030&#39;,&#39;Lê Văn Nguyên&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">HH</div>
+        <span style="font-size:13px;color:#111">Nguyễn Hoàng Huy</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV034&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV034&#39;,&#39;Nguyễn Hoàng Huy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NH</div>
+        <span style="font-size:13px;color:#111">Ngô Huy</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV035&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV035&#39;,&#39;Ngô Huy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">QM</div>
+        <span style="font-size:13px;color:#111">Trần Quang Minh</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV036&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV036&#39;,&#39;Trần Quang Minh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">HN</div>
+        <span style="font-size:13px;color:#111">Nguyễn Hoài Nam</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV054&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV054&#39;,&#39;Nguyễn Hoài Nam&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
+        <span style="font-size:13px;color:#111">Trần Thị Tâm</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent(&#39;NV019&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance(&#39;NV019&#39;,&#39;Trần Thị Tâm&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div class="card-head-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              </div>
+              <div class="card-head-title">Lịch sử gần đây</div>
+            </div>
+            <div id="history-list"><div class="hist-row">
+      <span class="hist-date">26/08</span>
+      <span style="font-size:12px;font-weight:500">26 có mặt</span>
+      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-26&#39;)">Xem</span>
+    </div><div class="hist-row">
+      <span class="hist-date">25/08</span>
+      <span style="font-size:12px;font-weight:500">26 có mặt</span>
+      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-25&#39;)">Xem</span>
+    </div><div class="hist-row">
+      <span class="hist-date">24/08</span>
+      <span style="font-size:12px;font-weight:500">26 có mặt</span>
+      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-24&#39;)">Xem</span>
+    </div><div class="hist-row">
+      <span class="hist-date">21/08</span>
+      <span style="font-size:12px;font-weight:500">26 có mặt</span>
+      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-21&#39;)">Xem</span>
+    </div><div class="hist-row">
+      <span class="hist-date">20/08</span>
+      <span style="font-size:12px;font-weight:500">26 có mặt</span>
+      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-20&#39;)">Xem</span>
+    </div><div class="hist-row">
+      <span class="hist-date">19/08</span>
+      <span style="font-size:12px;font-weight:500">25 có mặt</span>
+      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-19&#39;)">Xem</span>
+    </div><div class="hist-row">
+      <span class="hist-date">18/08</span>
+      <span style="font-size:12px;font-weight:500">26 có mặt</span>
+      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-18&#39;)">Xem</span>
+    </div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 2: BẢNG CHẤM CÔNG ===== -->
+  <div class="tab-panel" id="tab-bangcc">
+
+    <!-- Sub tabs + year switcher -->
+    <div class="sub-bar">
+      <div class="sub-tabs" id="sub-tabs">
+    <button class="sub-tab " onclick="switchMonth(1)">Tháng 1</button>
+  
+    <button class="sub-tab " onclick="switchMonth(2)">Tháng 2</button>
+  
+    <button class="sub-tab " onclick="switchMonth(3)">Tháng 3</button>
+  
+    <button class="sub-tab " onclick="switchMonth(4)">Tháng 4</button>
+  
+    <button class="sub-tab " onclick="switchMonth(5)">Tháng 5</button>
+  
+    <button class="sub-tab " onclick="switchMonth(6)">Tháng 6</button>
+  
+    <button class="sub-tab " onclick="switchMonth(7)">Tháng 7</button>
+  
+    <button class="sub-tab " onclick="switchMonth(8)">Tháng 8</button>
+  
+    <button class="sub-tab active" onclick="switchMonth(9)">Tháng 9</button>
+  
+    <button class="sub-tab " onclick="switchMonth(10)">Tháng 10</button>
+  
+    <button class="sub-tab " onclick="switchMonth(11)">Tháng 11</button>
+  
+    <button class="sub-tab " onclick="switchMonth(12)">Tháng 12</button>
+  </div>
+      <div class="year-sw">
+        <button class="yr-btn" onclick="changeYear(-1)">‹</button>
+        <span class="yr-label" id="yr-label">2026</span>
+        <button class="yr-btn" onclick="changeYear(1)">›</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="bcc-top">
+        <div>
+          <span class="bcc-title" id="bcc-title">Tháng 9</span>
+          <span class="bcc-sub" id="bcc-sub">2026 · Chu kỳ: 25/08 – 24/09/2026 · 23 ngày làm việc</span>
+        </div>
+        <div class="export-group">
+          <span style="font-size:11px;color:var(--gray)">Xuất tổng nhân sự:</span>
+          <button class="exp-btn exp-excel" onclick="exportExcel()">↓ Tải Excel</button>
+          <div class="div-v"></div>
+          <button class="exp-btn exp-sheet" onclick="openGSheet()">⊞ Mở Google Sheet</button>
+          <div class="div-v"></div>
+          <button class="exp-btn" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1" onclick="exportBackup()">↓ Backup</button>
+          <button class="exp-btn" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1" onclick="document.getElementById(&#39;import-file-input&#39;).click()">↑ Restore</button>
+          <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importBackup(event)">
+        </div>
+      </div>
+
+      <div style="margin: 0px 0px 10px;"><input id="bx-name-search" type="text" placeholder="🔍 Tìm nhân viên theo tên..." style="width:280px;max-width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;outline:none"></div><div class="emp-table-wrap">
+        <table class="emp-table">
+          <thead>
+            <tr>
+              <th>Họ tên</th>
+              <th>Mã NV</th>
+              
+              <th>Phòng ban ✎</th>
+              <th>Ngày công</th><th>Đi trễ</th>
+              <th>Bảng chấm công</th>
+            </tr>
+          </thead>
+          <tbody id="emp-tbody"><tr><td colspan="6" style="padding:7px 14px;background:#E6F1FB;color:#0C447C;font-size:12px;font-weight:600;letter-spacing:.2px">Team TSP · 1 người</td></tr>
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">TT</div>
+          Trần Thị Tâm
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV019</td>
+        
+        <td><select onchange="changeDept(&#39;NV019&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP" selected="">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV019&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    <tr><td colspan="6" style="padding:7px 14px;background:#EEEDFE;color:#3C3489;font-size:12px;font-weight:600;letter-spacing:.2px">Team Booking KOC/KOLs · 6 người</td></tr>
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">PĐ</div>
+          Phan Thụy Trúc Đào
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV039</td>
+        
+        <td><select onchange="changeDept(&#39;NV039&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>1.5/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV039&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">TP</div>
+          Trịnh Thị Ngọc Phụng
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV042</td>
+        
+        <td><select onchange="changeDept(&#39;NV042&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV042&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">PT</div>
+          Phạm Thị Thu Thủy
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV043</td>
+        
+        <td><select onchange="changeDept(&#39;NV043&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV043&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">NT</div>
+          Nguyễn Thụy Thanh Trinh<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV050</td>
+        
+        <td><select onchange="changeDept(&#39;NV050&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#A32D2D;font-weight:500">1 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV050&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">VN</div>
+          Vũ Đào Trang Nhi<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV051</td>
+        
+        <td><select onchange="changeDept(&#39;NV051&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#A32D2D;font-weight:500">1 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV051&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">PH</div>
+          Phạm Mai Hân<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV053</td>
+        
+        <td><select onchange="changeDept(&#39;NV053&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>1.5/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV053&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    <tr><td colspan="6" style="padding:7px 14px;background:#EAF3DE;color:#27500A;font-size:12px;font-weight:600;letter-spacing:.2px">Team Performance · 7 người</td></tr>
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">TV</div>
+          Trần Nguyễn Ngọc Việt
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV016</td>
+        
+        <td><select onchange="changeDept(&#39;NV016&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV016&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">LK</div>
+          Lê Doãn Khánh
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV023</td>
+        
+        <td><select onchange="changeDept(&#39;NV023&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV023&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">LN</div>
+          Lê Văn Nguyên
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV030</td>
+        
+        <td><select onchange="changeDept(&#39;NV030&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV030&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">NH</div>
+          Nguyễn Hoàng Huy
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV034</td>
+        
+        <td><select onchange="changeDept(&#39;NV034&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV034&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">NH</div>
+          Ngô Huy
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV035</td>
+        
+        <td><select onchange="changeDept(&#39;NV035&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV035&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">TM</div>
+          Trần Quang Minh<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#0369a1;background:#e0f2fe">Part-time</span>
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV036</td>
+        
+        <td><select onchange="changeDept(&#39;NV036&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV036&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">NN</div>
+          Nguyễn Hoài Nam
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV054</td>
+        
+        <td><select onchange="changeDept(&#39;NV054&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV054&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    <tr><td colspan="6" style="padding:7px 14px;background:#FAEEDA;color:#633806;font-size:12px;font-weight:600;letter-spacing:.2px">Team Customer Account Manager · 1 người</td></tr>
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">NH</div>
+          Nguyễn Thị Thu Hương
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV038</td>
+        
+        <td><select onchange="changeDept(&#39;NV038&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager" selected="">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV038&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    <tr><td colspan="6" style="padding:7px 14px;background:#E1F5EE;color:#085041;font-size:12px;font-weight:600;letter-spacing:.2px">Team E - Com · 3 người</td></tr>
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">NU</div>
+          Nguyễn Thị Thu Uyên
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV008</td>
+        
+        <td><select onchange="changeDept(&#39;NV008&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV008&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">TC</div>
+          Trần Diễm Chi
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV044</td>
+        
+        <td><select onchange="changeDept(&#39;NV044&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#A32D2D;font-weight:500">1 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV044&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">ND</div>
+          Nguyễn Tiến Duyệt<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV049</td>
+        
+        <td><select onchange="changeDept(&#39;NV049&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>1/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV049&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    <tr><td colspan="6" style="padding:7px 14px;background:#FBEAF0;color:#72243E;font-size:12px;font-weight:600;letter-spacing:.2px">Team Kế toán - Nhân sự · 3 người</td></tr>
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">TD</div>
+          Tống Thị Kim Dung
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV020</td>
+        
+        <td><select onchange="changeDept(&#39;NV020&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV020&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">NB</div>
+          Nguyễn Thị Bé
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV045</td>
+        
+        <td><select onchange="changeDept(&#39;NV045&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV045&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">PA</div>
+          Phạm Nguyễn Quế An
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV031</td>
+        
+        <td><select onchange="changeDept(&#39;NV031&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV031&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    <tr><td colspan="6" style="padding:7px 14px;background:#FAECE7;color:#712B13;font-size:12px;font-weight:600;letter-spacing:.2px">Team Kinh Doanh · 3 người</td></tr>
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">VN</div>
+          Võ Thị Na Na
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV025</td>
+        
+        <td><select onchange="changeDept(&#39;NV025&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV025&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">NV</div>
+          Nguyễn Ngọc Thảo Vy
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV046</td>
+        
+        <td><select onchange="changeDept(&#39;NV046&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#A32D2D;font-weight:500">1 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV046&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">TQ</div>
+          Trần Quang
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV048</td>
+        
+        <td><select onchange="changeDept(&#39;NV048&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV048&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    <tr><td colspan="6" style="padding:7px 14px;background:#F1EFE8;color:#444441;font-size:12px;font-weight:600;letter-spacing:.2px">Team IT · 1 người</td></tr>
+      <tr class="">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">PP</div>
+          Phan Thanh Phú<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#b45309;background:#fef3c7">Thử việc</span>
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">NV052</td>
+        
+        <td><select onchange="changeDept(&#39;NV052&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT" selected="">Team IT</option></select></td>
+        <td>2/23</td><td><span style="color:#9ca3af;font-weight:400">0 ngày</span></td>
+        <td>
+          <button class="view-btn " onclick="toggleCalendar(&#39;NV052&#39;)">
+            ▦ Xem bảng
+          </button>
+        </td>
+      </tr>
+      
+    </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+<!-- ===== MODAL: THÊM/SỬA ĐIỂM DANH ===== -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-add-title">Thêm điểm danh</span>
+      <button class="modal-close" onclick="closeModal(&#39;modal-add&#39;)">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">TÊN NHÂN VIÊN</label>
+        <select class="form-select" id="modal-name" style="max-height:200px">
+          <option value="">-- Chọn nhân viên --</option>
+        </select>
+      </div>
+      <div class="form-group" id="time-group">
+        <label class="form-label">GIỜ CHECK-IN</label>
+        <input class="form-input" id="modal-time" type="time" value="09:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">TRẠNG THÁI</label>
+        <select class="form-select" id="modal-status" onchange="toggleModalFields()">
+          <option value="1">✓ Đúng giờ</option>
+          <option value="T-S">↑ Đi trễ sáng</option>
+          <option value="T-C2">↑ Đi trễ chiều</option>
+          <option value="T-C">↩ Về sớm (chiều)</option>
+          <option value="T-S-P">📝 Xin đi trễ (trừ phép)</option>
+          <option value="T-C-P">📝 Xin về sớm (trừ phép)</option>
+          <option value="N-S">◑ Nghỉ nửa buổi sáng</option>
+          <option value="N-C">◑ Nghỉ nửa buổi chiều</option>
+          <option value="P">🌿 Nghỉ phép</option>
+          <option value="P-KL">🍂 Nghỉ ko trừ phép (ko tính công)</option>
+          <option value="K">✗ Vắng không phép</option>
+          <option value="ĐÃ NGHỈ">🔄 ĐÃ NGHỈ</option>
+        </select>
+      </div>
+      <div class="form-group" id="late-min-group" style="display:none">
+        <label class="form-label">SỐ PHÚT TRỄ / VỀ SỚM</label>
+        <input class="form-input" id="modal-late-min" type="number" min="1" max="480" placeholder="VD: 30, 60, 120...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">GHI CHÚ (tùy chọn)</label>
+        <input class="form-input" id="modal-note" type="text" placeholder="VD: xin về sớm 2 tiếng, họp ngoài...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal(&#39;modal-add&#39;)">Huỷ</button>
+      <button class="btn-save" onclick="saveAttendance()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: SỬA NGÀY TRONG LỊCH ===== -->
+<div class="modal-overlay" id="modal-day">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-day-title">Chấm công ngày</span>
+      <button class="modal-close" onclick="closeModal(&#39;modal-day&#39;)">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="status-grid" id="status-grid"></div>
+      <div class="form-group" id="day-late-group" style="display:none">
+        <label class="form-label">SỐ PHÚT TRỄ</label>
+        <input class="form-input" id="day-late-min" type="number" min="1" max="480" placeholder="Nhập số phút trễ">
+      </div>
+      <div class="form-group">
+        <label class="form-label">GHI CHÚ</label>
+        <input class="form-input" id="day-note" type="text" placeholder="Ví dụ: về sớm 2 tiếng, off từ 16h...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal(&#39;modal-day&#39;)">Huỷ</button>
+      <button class="btn-save" onclick="saveDayStatus()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================
+// CLOUD SYNC (JSONBlob)
+// ============================
+const FIREBASE_URL = 'https://bigx-chamcong-hr-default-rtdb.firebaseio.com/public.json';
+
+let _syncTimer = null;
+let _lastSync = 0;
+
+async function loadFromCloud() {
+  try {
+    const resp = await fetch(FIREBASE_URL);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (!data) return;
+    if (data.attendance && Object.keys(data.attendance).length)
+      localStorage.setItem('bigx_attendance', JSON.stringify(data.attendance));
+    if (data.employees && data.employees.length)
+      localStorage.setItem('bigx_employees', JSON.stringify(data.employees));
+    if (data.cc_data && typeof data.cc_data==='object' && !Array.isArray(data.cc_data) && Object.keys(data.cc_data).length)
+      localStorage.setItem('bigx_cc', JSON.stringify(data.cc_data));
+    if (data.dismissed) {
+      Object.entries(data.dismissed).forEach(([k,v]) => localStorage.setItem('bigx_dismissed_'+k, JSON.stringify(v)));
+    }
+    if (data.cc_summary) {
+      // Mốc phép: hợp nhất — giữ mốc của máy này, chỉ THÊM mốc từ cloud (không xoá của ai)
+      let locSum={}; try{locSum=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}');}catch(e){}
+      localStorage.setItem('bigx_cc_summary', JSON.stringify(Object.assign({}, data.cc_summary, locSum)));
+    }
+    // Cloud vừa ghi đè bigx_employees (không có field phân loại) → backfill lại ngay
+    try{ if(typeof migrateEmpMeta==='function') migrateEmpMeta(); }catch(e){}
+    // Gộp NV trùng mã (VD Nam NV022→NV054) sau khi kéo dữ liệu cloud
+    try{ if(typeof mergeDuplicateIds==='function') mergeDuplicateIds(); }catch(e){}
+    try{ if(typeof cleanupData==='function') cleanupData(); }catch(e){}
+  } catch(e) { console.warn('Cloud load error:', e); }
+}
+
+function syncToCloud() {
+  if (window._guestMode) return;
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(async () => {
+    try {
+      const dismissed = {};
+      Object.keys(localStorage).filter(k=>k.startsWith('bigx_dismissed_')).forEach(k => {
+        const date = k.replace('bigx_dismissed_','');
+        dismissed[date] = JSON.parse(localStorage.getItem(k)||'[]');
+      });
+      const payload = {
+        attendance: JSON.parse(localStorage.getItem('bigx_attendance')||'{}'),
+        employees: JSON.parse(localStorage.getItem('bigx_employees')||'[]'),
+        cc_data: JSON.parse(localStorage.getItem('bigx_cc')||'{}'),
+        cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
+        dismissed
+      };
+      await fetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      _lastSync = Date.now(); bxPushSheet();
+    } catch(e) { console.warn('Cloud sync error:', e); }
+  }, 1500);
+}
+
+// Auto-refresh mỗi 30s để kế toán thấy data mới
+setInterval(async () => {
+  await loadFromCloud();
+  renderTodayAttendance(); renderAbsentList(); updateStats();
+}, 30000);
+
+// ============================
+// DATA & STATE
+// ============================
+const STATUS_CODES = {
+  '1':    { label:'Đủ công',     bg:'var(--green-bg)',  color:'var(--green)' },
+  'T-S':  { label:'Trễ sáng',   bg:'var(--amber-bg)',  color:'var(--amber)' },
+  'T-C':  { label:'Trễ chiều',  bg:'var(--amber-bg)',  color:'var(--amber)' },
+  'T-C2': { label:'Đi trễ chiều', bg:'var(--amber-bg)',  color:'var(--amber)' },
+  'N-S':  { label:'Nửa ngày',   bg:'#e0e7ff',          color:'#4338ca' },
+  'N-C':  { label:'Nửa ngày',   bg:'#e0e7ff',          color:'#4338ca' },
+  'P':    { label:'Phép',        bg:'var(--purple-bg)', color:'var(--purple)' },
+  'P-KL': { label:'Nghỉ ko trừ phép', bg:'#fef2f2', color:'#b91c1c' },
+  'K':    { label:'Vắng',        bg:'var(--red-bg)',    color:'var(--red)' },
+  'NL':   { label:'Nghỉ lễ',    bg:'#f1f5f9',          color:'#475569' },
+  'ĐÃ NGHỈ':  { label:'ĐÃ NGHỈ',    bg:'#fce7f3',          color:'#9d174d' },
+  'T-S-P':{ label:'Xin đi trễ',  bg:'var(--amber-bg)',  color:'var(--amber)' },
+  'T-C-P':{ label:'Xin về sớm',  bg:'var(--amber-bg)',  color:'var(--amber)' },
+  'N-C-K':{ label:'Nửa+Vắng',  bg:'var(--red-bg)',    color:'var(--red)' },
+  'N-S-K':{ label:'Nửa+Vắng',  bg:'var(--red-bg)',    color:'var(--red)' },
+};
+const SIMPLE_STATUSES = ['1','T-S','T-S-P','T-C-P','N-S','P','P-KL','K','NL'];
+const RESIGNED_IDS = new Set(['NV027','NV037','NV040','NV031']); // NV031 = Brian (admin)
+const RESIGNED_FROM = {'NV028':'2026-07-04','NV047':'2026-07-04'}; // ẩn khỏi 'Chưa điểm danh' từ ngày này
+const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
+                'Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+
+let state = {
+  currentUser: null,
+  currentYear: (()=>{ const d=new Date(); return (d.getDate()>=25&&d.getMonth()===11)?d.getFullYear()+1:d.getFullYear(); })(),
+  currentMonth: (()=>{ const d=new Date(); const m=d.getMonth()+1; return d.getDate()>=25?(m===12?1:m+1):m; })(), // cycle month: 25th → next
+  expandedEmpId: null,
+  calViewMonth: null, // month shown in expanded calendar
+  calViewYear: null,
+  editingId: null,    // for today modal
+  editingSession: 'sang', // 'sang'|'chieu'
+  editingDayKey: null // for day modal
+};
+
+// localStorage keys
+const LS_ATTENDANCE = 'bigx_attendance';   // { 'YYYY-MM-DD': [{id,name,time,status,lateMin,manual}] }
+const LS_EMPLOYEES  = 'bigx_employees';    // [{id,name,position,dept,leaveBalance}]
+const LS_CC_DATA    = 'bigx_cc';           // { 'empId_YYYY_M': { 'YYYY-MM-DD': {status,lateMin} } }
+const LS_USER       = 'bigx_user';
+
+function getAttendance(){ try{return JSON.parse(localStorage.getItem(LS_ATTENDANCE))||{}}catch(e){return{}} }
+function setAttendance(d){ localStorage.setItem(LS_ATTENDANCE, JSON.stringify(d)); syncToCloud(); syncAllAttToCC(); }
+function setAttendanceAndSync(d, dateStr){ setAttendance(d); if(dateStr) syncAttToCC(dateStr); }
+const DEFAULT_EMPLOYEES = [{"dept": "Phòng MKT", "id": "NV008", "leaveBalance": {"remaining": -2}, "name": "Nguyễn Thị Thu Uyên", "position": ""}, {"dept": "Phòng MKT", "id": "NV022", "leaveBalance": {"remaining": -4.5}, "name": "Nguyễn Hoài Nam", "position": ""}, {"dept": "Phòng MKT", "id": "NV016", "leaveBalance": {"remaining": 0.78}, "name": "Trần Nguyễn Ngọc Việt", "position": ""}, {"dept": "Phòng MKT", "id": "NV023", "leaveBalance": {"remaining": 2.5}, "name": "Lê Doãn Khánh", "position": ""}, {"dept": "Phòng MKT", "id": "NV030", "leaveBalance": {"remaining": 3.75}, "name": "Lê Văn Nguyên", "position": ""}, {"dept": "Phòng MKT", "id": "NV033", "leaveBalance": {"remaining": 3.5}, "name": "Hồ Bảo Trung", "position": ""}, {"dept": "Phòng MKT", "id": "NV034", "leaveBalance": {"remaining": 2}, "name": "Nguyễn Hoàng Huy", "position": ""}, {"dept": "Phòng MKT", "id": "NV035", "leaveBalance": {"remaining": 3.3}, "name": "Ngô Huy", "position": ""}, {"dept": "Phòng MKT", "id": "NV036", "leaveBalance": {"remaining": -11}, "name": "Trần Quang Minh", "position": ""}, {"dept": "Booking KOC/KOL", "id": "NV039", "leaveBalance": {"remaining": 1}, "name": "Phan Thụy Trúc Đào", "position": ""}, {"dept": "Booking KOC/KOL", "id": "NV042", "leaveBalance": {"remaining": 0}, "name": "Trịnh Thị Ngọc Phụng", "position": ""}, {"dept": "Booking KOC/KOL", "id": "NV043", "leaveBalance": {"remaining": 0}, "name": "Phạm Thị Thu Thủy", "position": ""}, {"dept": "Account", "id": "NV038", "leaveBalance": {"remaining": 1}, "name": "Nguyễn Thị Thu Hương", "position": "Account"}, {"dept": "Creative", "id": "NV041", "leaveBalance": {"remaining": 0}, "name": "Huỳnh Công Nghĩa", "position": "Senior Edit Capcat"}, {"dept": "Creative", "id": "NV044", "leaveBalance": {"remaining": 1.75}, "name": "Trần Diễm Chi", "position": "Creative Video Content Exec"}, {"dept": "Phòng BD", "id": "NV019", "leaveBalance": {"remaining": 1}, "name": "Trần Thị Tâm", "position": ""}, {"dept": "Phòng Kế toán", "id": "NV020", "leaveBalance": {"remaining": -6.5}, "name": "Tống Thị Kim Dung", "position": ""}, {"dept": "Phòng Kế toán", "id": "NV037", "leaveBalance": {"remaining": 0}, "name": "Nguyễn Thị Thiết", "position": ""}, {"dept": "Phòng Kế toán", "id": "NV045", "leaveBalance": {"remaining": -1}, "name": "Nguyễn Thị Bé", "position": ""}, {"dept": "Phòng Sales", "id": "NV025", "leaveBalance": {"remaining": -2}, "name": "Võ Thị Na Na", "position": ""}, {"dept": "Phòng Sales", "id": "NV027", "leaveBalance": {"remaining": 0}, "name": "Trần Nhật Vi", "position": ""}, {"dept": "Phòng Sales", "id": "NV028", "leaveBalance": {"remaining": 3}, "name": "Lê Thị Hồng Cúc", "position": ""}, {"dept": "Phòng Sales", "id": "NV040", "leaveBalance": {"remaining": 0}, "name": "Nguyễn Kim Hưng", "position": ""}, {"dept": "Phòng Sales", "id": "NV046", "leaveBalance": {"remaining": 1}, "name": "Nguyễn Ngọc Thảo Vy", "position": ""}, {"dept": "Phòng Sales", "id": "NV047", "leaveBalance": {"remaining": -1}, "name": "Lê Minh Thiện", "position": ""}, {"dept": "Phòng Sales", "id": "NV048", "leaveBalance": {"remaining": -5}, "name": "Trần Quang", "position": ""}, {"dept": "Phòng tuyển dụng", "id": "NV031", "leaveBalance": {"remaining": 3.5}, "name": "Phạm Nguyễn Quế An", "position": ""}];
+function getEmployees(){
+  try{
+    const d=JSON.parse(localStorage.getItem(LS_EMPLOYEES));
+    const all=(d&&d.length)?d:DEFAULT_EMPLOYEES;
+    if(!d||!d.length) localStorage.setItem(LS_EMPLOYEES,JSON.stringify(DEFAULT_EMPLOYEES));
+    // Ẩn NV đã nghỉ khỏi chu kỳ hiện tại trở đi
+    const cycM=(typeof state!=='undefined'&&state.currentMonth)?state.currentMonth:((d=>{const m=d.getMonth()+1;return d.getDate()>=25?(m===12?1:m+1):m;})(new Date()));
+    const cycY=(typeof state!=='undefined'&&state.currentYear)?state.currentYear:new Date().getFullYear();
+    return all.filter(e=>!e.lastCycle||e.lastCycleYear>cycY||(e.lastCycleYear===cycY&&e.lastCycle>=cycM))
+      .sort(function(x,y){return (x.dept||'￿').localeCompare(y.dept||'￿','vi');}); // sắp theo phòng ban
+  }catch(e){return DEFAULT_EMPLOYEES}
+}
+function setEmployees(d){ localStorage.setItem(LS_EMPLOYEES, JSON.stringify(d)); syncToCloud(); }
+function getCCData(){ try{return JSON.parse(localStorage.getItem(LS_CC_DATA))||{}}catch(e){return{}} }
+function setCCData(d){ localStorage.setItem(LS_CC_DATA, JSON.stringify(d)); syncToCloud(); }
+
+// ============================================================
+// DATA-DRIVEN NHÂN VIÊN — Loại / Phép năm / Ngày chính thức
+// Mỗi NV tự mang: type ('official'|'probation'|'parttime'),
+//   noLeave (không tích lũy phép năm), officialFrom ('YYYY-M').
+// Phép năm dùng CHUNG 1 rule cho mọi NV — không còn rule accrual riêng.
+// Bảng EMP_META_SEED CHỈ dùng 1 lần để điền đúng trạng thái cũ
+// khi bản mới lần đầu chạy — sau đó chỉnh trực tiếp trên giao diện.
+// ============================================================
+const EMP_META_SEED = {
+  NV036:{type:'parttime', noLeave:true},
+  NV041:{type:'official',  noLeave:true},                 // không badge, không phép năm
+  NV049:{type:'probation', noLeave:true},
+  NV050:{type:'probation', noLeave:true},
+  NV051:{type:'probation', noLeave:true},
+  NV052:{type:'probation', noLeave:true},
+  NV053:{type:'probation', noLeave:true},
+  NV042:{type:'official',  noLeave:false, officialFrom:'2026-9'},
+  NV043:{type:'official',  noLeave:false, officialFrom:'2026-9'},
+  NV045:{type:'official',  noLeave:false, officialFrom:'2026-8'},
+  NV048:{type:'official',  noLeave:false, officialFrom:'2026-8'},
+  NV054:{type:'official',  noLeave:false}   // NV chính thức bình thường — rule phép chung như mọi người
+};
+function migrateEmpMeta(){
+  try{
+    var raw=localStorage.getItem(LS_EMPLOYEES); if(!raw) return;
+    var list=JSON.parse(raw); if(!list||!list.length) return;
+    var changed=false;
+    list.forEach(function(e){
+      var s=EMP_META_SEED[e.id]||{};
+      if(e.type==null){ e.type=s.type||'official'; changed=true; }
+      if(e.noLeave==null){ e.noLeave=(s.noLeave!=null?s.noLeave:false); changed=true; }
+      if(e.officialFrom===undefined){ e.officialFrom=(s.officialFrom||null); changed=true; }
+      // Gỡ rule phép riêng (accrual) nếu còn sót từ bản cũ → mọi NV dùng chung 1 rule
+      if(e.accrueFrom!=null || e.accruePerMonth!=null){ delete e.accrueFrom; delete e.accruePerMonth; changed=true; }
+    });
+    if(changed) localStorage.setItem(LS_EMPLOYEES, JSON.stringify(list));
+  }catch(e){ console.warn('migrateEmpMeta', e); }
+}
+try{ migrateEmpMeta(); }catch(e){}
+function empRec(id){ try{var l=JSON.parse(localStorage.getItem(LS_EMPLOYEES)||'[]');for(var i=0;i<l.length;i++)if(l[i].id===id)return l[i];}catch(e){} return null; }
+// Đọc field phân loại: ưu tiên dữ liệu đã lưu của NV; nếu chưa có (VD: cloud ghi đè),
+// fallback về EMP_META_SEED → phân loại LUÔN đúng, không phụ thuộc thứ tự load.
+function _meta(id,field){ var r=empRec(id); if(r&&r[field]!=null) return r[field]; var s=EMP_META_SEED[id]; return s?s[field]:undefined; }
+function empType(id){ return _meta(id,'type')||'official'; }
+function isNoLeave(id){ return !!_meta(id,'noLeave'); }
+function empOfficialFrom(id){ var of=_meta(id,'officialFrom'); if(!of)return null; var p=String(of).split('-'); return {y:+p[0],m:+p[1]}; }
+function isResigned(id){ var r=empRec(id); return !!(r&&r.lastCycle!=null); }
+// Số phép năm đã dùng trong chu kỳ (đọc từ bigx_attendance) — dùng cho tính phép hợp nhất
+function leaveCycleWindow(y,m){ var sm=m===1?12:m-1, sy=m===1?y-1:y; var pad=function(n){return n<10?'0'+n:''+n;}; return [sy+'-'+pad(sm)+'-25', y+'-'+pad(m)+'-24']; }
+function leaveUsedFromAtt(id,y,m){ var att; try{att=JSON.parse(localStorage.getItem('bigx_attendance')||'{}');}catch(e){att={};} var w=leaveCycleWindow(y,m),s0=w[0],e0=w[1],sum=0; for(var d in att){ if(d>=s0&&d<=e0){ var arr=att[d]||[]; for(var i=0;i<arr.length;i++){ if(arr[i].id===id){ sum+=window.tinhNgay(String(arr[i].status||''),arr[i].lateMin,false).phep; break; } } } } return sum; }
+// Phép đã dùng tính theo BẢNG chấm công (bigx_cc = chỗ user sửa tay/chốt), KHÔNG theo điểm danh gốc.
+// → sửa ô trong bảng là phép tự trừ đúng rules. Điểm danh chỉ để ghi nhận.
+function leaveUsedFromBang(id,y,m){ var cc; try{cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}');}catch(e){cc={};} var cd=cc[id+'_'+y+'_'+m]||{}; var w=leaveCycleWindow(y,m),s0=w[0],e0=w[1],sum=0; for(var dt in cd){ if(dt>=s0&&dt<=e0){ var v=cd[dt]; if(v&&v.status){ sum+=window.tinhNgay(String(v.status),v.lateMin,false).phep; } } } return Math.round(sum*1000)/1000; }
+
+// ============================================================
+// GỘP NV BỊ TRÙNG MÃ (1 người mang 2 mã NV)
+// VD: Nguyễn Hoài Nam có mã cũ NV022 (đã rời roster) + mã hiện tại NV054.
+// Gộp chấm công/cc của mã cũ sang mã mới → điểm danh không bị "chẻ đôi".
+// Chạy sau khi load cloud; khi dữ liệu đã sạch thì tự động bỏ qua.
+// ============================================================
+const DUP_MERGES = [ {from:'NV022', to:'NV054'} ];
+function mergeDuplicateIds(){
+  try{
+    var att=JSON.parse(localStorage.getItem('bigx_attendance')||'{}');
+    var cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}');
+    var summ=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}');
+    var changed=false;
+    DUP_MERGES.forEach(function(m){
+      Object.keys(att).forEach(function(d){
+        var arr=att[d]||[], touched=false;
+        arr.forEach(function(r){ if(r.id===m.from){ r.id=m.to; touched=true; changed=true; } });
+        if(touched){ var seen={}, kept=[]; arr.forEach(function(r){ if(r.id===m.to){ var k=(r.session||'')+''; if(seen[k]) return; seen[k]=true; } kept.push(r); }); att[d]=kept; }
+      });
+      Object.keys(cc).forEach(function(k){
+        if(k.indexOf(m.from+'_')!==0) return;
+        var tgt=m.to+'_'+k.slice((m.from+'_').length);
+        cc[tgt]=cc[tgt]||{}; var src=cc[k]||{};
+        Object.keys(src).forEach(function(day){ if(cc[tgt][day]==null) cc[tgt][day]=src[day]; });
+        delete cc[k]; changed=true;
+      });
+      Object.keys(summ).forEach(function(k){ if(k.indexOf(m.from+'_')===0){ delete summ[k]; changed=true; } });
+    });
+    if(changed){
+      localStorage.setItem('bigx_attendance', JSON.stringify(att));
+      localStorage.setItem('bigx_cc', JSON.stringify(cc));
+      localStorage.setItem('bigx_cc_summary', JSON.stringify(summ));
+      try{ if(typeof syncToCloud==='function') syncToCloud(); }catch(e){}
+    }
+    return changed;
+  }catch(e){ console.warn('mergeDuplicateIds', e); return false; }
+}
+
+// ============================================================
+// DỌN RÁC DỮ LIỆU (một lần, có bảo vệ — sạch rồi thì tự bỏ qua)
+//  · Gán trả bản ghi mồ côi (id tạm att_) về NV đúng
+//  · Xoá hẳn dữ liệu (chấm công/cc/mốc phép) của NV đã nghỉ
+// ============================================================
+const ORPHAN_REATTACH = { 'att_1782094078419':'NV046' };   // Vy → NV046 (đang làm)
+const RESIGNED_PURGE  = ['NV027','NV037','NV028','NV047'];  // đã nghỉ — xoá dữ liệu cũ
+function cleanupData(){
+  try{
+    var att=JSON.parse(localStorage.getItem('bigx_attendance')||'{}');
+    var cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}');
+    var summ=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}');
+    var changed=false;
+    var isPurge=function(id){ return RESIGNED_PURGE.indexOf(id)>=0; };
+    // Attendance: gán trả mồ côi có chủ; bỏ mồ côi vô chủ + NV đã nghỉ
+    Object.keys(att).forEach(function(d){
+      var arr=att[d]||[], kept=[];
+      arr.forEach(function(r){
+        var id=r.id||'';
+        if(ORPHAN_REATTACH[id]){ r.id=ORPHAN_REATTACH[id]; changed=true; kept.push(r); return; }
+        if(id.indexOf('att')===0){ changed=true; return; }   // mồ côi vô chủ (VD Cúc đã nghỉ)
+        if(isPurge(id)){ changed=true; return; }               // NV đã nghỉ
+        kept.push(r);
+      });
+      if(kept.length) att[d]=kept; else delete att[d];
+    });
+    // CC: chuyển cc mồ côi của Vy → NV046; xoá cc mồ côi khác + NV đã nghỉ
+    Object.keys(cc).forEach(function(k){
+      if(k.indexOf('att_1782094078419_')===0){ var tgt='NV046_'+k.slice('att_1782094078419_'.length); cc[tgt]=cc[tgt]||{}; var src=cc[k]||{}; Object.keys(src).forEach(function(day){ if(cc[tgt][day]==null) cc[tgt][day]=src[day]; }); delete cc[k]; changed=true; return; }
+      var id=k.split('_')[0];
+      if(id.indexOf('att')===0 || isPurge(id)){ delete cc[k]; changed=true; }
+    });
+    // Mốc phép: xoá của NV đã nghỉ + mồ côi
+    Object.keys(summ).forEach(function(k){ var id=k.split('_')[0]; if(id.indexOf('att')===0 || isPurge(id)){ delete summ[k]; changed=true; } });
+    // Nam (NV054) theo rule chung: đặt mốc phép đầu kỳ (cuối T8 = 1) nếu chưa có → giữ số hiện tại = 2, tích lũy +1/tháng như mọi NV
+    if(empRec('NV054') && summ['NV054_2026_8']==null){ summ['NV054_2026_8']={AQ:1}; changed=true; }
+    if(changed){
+      localStorage.setItem('bigx_attendance', JSON.stringify(att));
+      localStorage.setItem('bigx_cc', JSON.stringify(cc));
+      localStorage.setItem('bigx_cc_summary', JSON.stringify(summ));
+      try{ if(typeof syncToCloud==='function') syncToCloud(); }catch(e){}
+    }
+    return changed;
+  }catch(e){ console.warn('cleanupData', e); return false; }
+}
+
+// Sync attendance records for a date → CC data
+function syncAttToCC(dateStr){
+  const att = getAttendance();
+  const records = att[dateStr] || [];
+  if(!records.length) return;
+  const [y, m] = dateStr.split('-');
+  const year = parseInt(y), month = parseInt(m);
+  const all = getCCData();
+  const day = parseInt(dateStr.split('-')[2]);
+  let cycleYear = year, cycleMonth = month;
+  if(day >= 25) {
+    cycleMonth = month === 12 ? 1 : month + 1;
+    cycleYear = month === 12 ? year + 1 : year;
+  }
+  // Group records by employee id — merge sang+chieu into 1 CC entry per day
+  // For orphan att_ records, resolve to real NV ID by name match
+  const employees = getEmployees();
+  const nameToId = {};
+  employees.forEach(e => { nameToId[e.name.trim().toLowerCase()] = e.id; });
+  const byId = {};
+  records.forEach(r => {
+    if(!r.id) return;
+    let resolvedId = r.id;
+    if(r.id.startsWith('att_') && r.name) {
+      const matched = nameToId[r.name.trim().toLowerCase()];
+      if(matched) resolvedId = matched;
+    }
+    if(!byId[resolvedId]) byId[resolvedId] = [];
+    byId[resolvedId].push(r);
+  });
+  function toCC(r){
+    return STATUS_CODES[r.status] ? r.status : (r.status==='ok'?'1':r.status==='late'?(((r.lateMin||0)<3)?'1':'T-S'):'K');
+  }
+  // Merge 2 sessions into 1 daily status
+  function mergeSessions(recs){
+    if(recs.length === 1) {
+      const r = recs[0];
+      return { status: toCC(r), lateMin: r.lateMin||0, note: r.note||'' };
+    }
+    // Sort: sang first, chieu second
+    const sang = recs.find(r=>(r.session||'sang')==='sang');
+    const chieu = recs.find(r=>r.session==='chieu');
+    const sStatus = sang ? toCC(sang) : null;
+    const cStatus = chieu ? toCC(chieu) : null;
+    // Merge logic
+    let status = '1';
+    if(sStatus && cStatus) {
+      if(sStatus==='1' && cStatus==='1') status='1';
+      else if(sStatus!=='1' && cStatus==='1') status=sStatus;
+      else if(sStatus==='1' && cStatus!=='1') status=cStatus;
+      else status=sStatus; // both special — sang takes priority, note has detail
+    } else {
+      status = sStatus || cStatus || '1';
+    }
+    const lateMin = (sang&&sang.lateMin||0) + (chieu&&chieu.lateMin||0);
+    const notes = [sang&&sang.note, chieu&&chieu.note].filter(Boolean).join(' | ');
+    return { status, lateMin, note: notes };
+  }
+  Object.keys(byId).forEach(id => {
+    const key = id + '_' + cycleYear + '_' + cycleMonth;
+    if(!all[key]) all[key] = {};
+    // KHÔNG ghi đè ngày đã chỉnh sửa bằng tay (manualOverride) — giữ dữ liệu HR nhập
+    if(all[key][dateStr] && all[key][dateStr].manualOverride) return;
+    const merged = mergeSessions(byId[id]);
+    all[key][dateStr] = merged;
+  });
+  setCCData(all);
+}
+
+// Sync ALL attendance dates to CC (run once on init)
+function syncAllAttToCC(){
+  const att = getAttendance();
+  Object.keys(att).forEach(dateStr => syncAttToCC(dateStr));
+}
+
+// ============================
+// AUTH
+// ============================
+function doLogin(){
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const err = document.getElementById('login-error');
+  if(!email.endsWith('@bigx.vn')){
+    err.style.display='block'; return;
+  }
+  err.style.display='none';
+  localStorage.setItem(LS_USER, email);
+  state.currentUser = email;
+  document.getElementById('topbar-user-email').textContent = email;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  initApp();
+}
+document.getElementById('login-email').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+function doLogout(){
+  localStorage.removeItem(LS_USER);
+  state.currentUser = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-email').value='';
+}
+
+// ============================
+// INIT
+// ============================
+function fixOrphanRecords(){
+  // One-time cleanup per date: remove incorrect auto-K entries, re-sync from attendance
+  const FIXED_KEY = 'bigx_cc_fixed_v2';
+  const fixed = JSON.parse(localStorage.getItem(FIXED_KEY)||'{}');
+  const att = getAttendance();
+  const cc = getCCData();
+  function toCC(r){ return STATUS_CODES[r.status]?r.status:(r.status==='ok'?'1':r.status==='late'?(((r.lateMin||0)<3)?'1':'T-S'):'K'); }
+  let changed=false;
+  Object.keys(att).forEach(dateStr=>{
+    if(fixed[dateStr]) return; // already fixed this date
+    const records = att[dateStr]||[];
+    if(!records.length) return;
+    // Clear ALL CC entries for this date
+    Object.keys(cc).forEach(key=>{ if(cc[key][dateStr]!==undefined){ delete cc[key][dateStr]; changed=true; } });
+    // Re-sync from attendance only
+    const [y,m,d]=dateStr.split('-');
+    const day=parseInt(d), month=parseInt(m), year=parseInt(y);
+    let cycleMonth=month, cycleYear=year;
+    if(day>=25){ cycleMonth=month===12?1:month+1; cycleYear=month===12?year+1:year; }
+    const byId={};
+    records.forEach(r=>{ if(!r.id) return; if(!byId[r.id]) byId[r.id]=[]; byId[r.id].push(r); });
+    Object.keys(byId).forEach(id=>{
+      const key=id+'_'+cycleYear+'_'+cycleMonth;
+      if(!cc[key]) cc[key]={};
+      const recs=byId[id]; const r=recs[0];
+      cc[key][dateStr]={status:toCC(r),lateMin:r.lateMin||0,note:r.note||''};
+    });
+    fixed[dateStr]=true;
+  });
+  if(changed){ setCCData(cc); localStorage.setItem(FIXED_KEY, JSON.stringify(fixed)); }
+}
+function repair20260905(){
+  try{
+    if(localStorage.getItem('bigx_repair_20260905')) return;
+    var att=getAttendance(); if(Object.keys(att).length<10) return;
+    var raw=localStorage.getItem('bigx_cc'); var okObj=false;
+    try{ var p=JSON.parse(raw); okObj=(p&&typeof p==='object'&&!Array.isArray(p)); }catch(e){}
+    if(!okObj){ localStorage.setItem('bigx_cc','{}'); }
+    syncAllAttToCC();
+    var c=getCCData();
+    Object.keys(c).filter(function(k){return k.slice(-7)==='_2026_9';}).forEach(function(k){
+      c[k]['2026-09-01']={status:'NL',lateMin:0,note:'',manualOverride:true};
+      c[k]['2026-09-02']={status:'NL',lateMin:0,note:'',manualOverride:true};
+    });
+    var hk='NV053_2026_9'; c[hk]=c[hk]||{};
+    [7,8,9,10,11,14,15,16,17,18,21,22,23,24].forEach(function(d){ var ds='2026-09-'+(d<10?'0'+d:d); c[hk][ds]={status:'ĐÃ NGHỈ',lateMin:0,note:'',manualOverride:true}; });
+    setCCData(c);
+    var e=JSON.parse(localStorage.getItem('bigx_employees')||'[]'); var h=e.find(function(x){return x.id==='NV053';}); if(h){h.lastCycle=9;h.lastCycleYear=2026;} setEmployees(e);
+    localStorage.setItem('bigx_repair_20260905','1');
+    console.log('repair20260905 done: cc keys',Object.keys(c).length);
+  }catch(err){ console.warn('repair20260905', err); }
+}
+function initApp(){
+  initNameSearch();
+  try{ var _cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}'); if(!_cc||typeof _cc!=='object'||Array.isArray(_cc)) localStorage.setItem('bigx_cc','{}'); }catch(e){ localStorage.setItem('bigx_cc','{}'); }
+  fixOrphanRecords();
+  syncAllAttToCC();
+  loadFromCloud().then(()=>{ syncAllAttToCC(); try{repair20260905();}catch(e){} renderTodayAttendance(); renderAbsentList(); updateStats(); renderBangCC(); });
+  renderTodayDate();
+  renderTodayAttendance();
+  renderAbsentList();
+  renderHistory();
+  renderSubTabs();
+  renderYearLabel();
+  renderBangCC();
+  updateStats();
+}
+
+// Set user state if session exists (initApp handled by auto-init below)
+(function(){
+  const saved = localStorage.getItem(LS_USER);
+  if(saved){
+    state.currentUser = saved;
+    document.getElementById('topbar-user-email').textContent = saved;
+  }
+})();
+
+// ============================
+// TAB SWITCHING
+// ============================
+function switchMainTab(idx){
+  document.querySelectorAll('.main-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.getElementById('tab-diemdanh').classList.toggle('active', idx===0);
+  document.getElementById('tab-bangcc').classList.toggle('active', idx===1);
+}
+
+// ============================
+// TODAY DATE HELPERS
+// ============================
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function formatDateVI(str){
+  const [y,m,d]=str.split('-');
+  const days=['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+  const dow=days[new Date(str).getDay()];
+  return `${dow}, ngày ${parseInt(d)} tháng ${parseInt(m)} năm ${y}`;
+}
+function renderTodayDate(){
+  document.getElementById('today-date-label').textContent = formatDateVI(todayStr());
+}
+
+// ============================
+// ATTENDANCE - TODAY
+// ============================
+function getInitials(name){
+  const parts = name.trim().split(' ');
+  if(parts.length===1) return parts[0].substring(0,2).toUpperCase();
+  return (parts[0][0]+(parts[parts.length-1][0])).toUpperCase();
+}
+function renderFineTable(){
+  const el=document.getElementById('fine-table'); if(!el) return;
+  const y=state.currentYear,m=state.currentMonth;
+  const rows=[];
+  getEmployees().forEach(emp=>{
+    const empCC=getEmpCCForCycle(emp.id,y,m);
+    let cnt=0,mins=0,fine=0,halfDays=0;
+    getCycleDates(y,m).forEach(d=>{
+      const v=empCC[d]; if(!v||!v.status) return;
+      if(v.status==='T-S'||v.status==='T-C'||v.status==='T-C2'){
+        const lm=v.lateMin||0; if(lm<3) return;
+        cnt++; mins+=lm; fine+=tinhPhatNgay(v); if(lm>45) halfDays++;
+      }
+    });
+    if(cnt>0) rows.push({name:emp.name,cnt,mins,fine,halfDays});
+  });
+  if(!rows.length){ el.innerHTML='<div class="att-empty">Chu kỳ này chưa ai bị phạt 🎉</div>'; return; }
+  rows.sort((a,b)=>b.fine-a.fine||b.mins-a.mins);
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--gray);text-align:left"><th style="padding:4px">Nhân viên</th><th>Số lần</th><th>Tổng phút</th><th>Trừ 0,5 công</th><th style="text-align:right">Tiền phạt</th></tr>'+rows.map(r=>'<tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">'+r.name+'</td><td>'+r.cnt+'</td><td>'+r.mins+String.fromCharCode(39)+'</td><td>'+(r.halfDays||'—')+'</td><td style="text-align:right;font-weight:700;color:var(--red)">'+r.fine.toLocaleString('vi-VN')+'đ</td></tr>').join('')+'</table>';
+}
+function renderAttList(session, records){
+  renderFineTable();
+  const list = document.getElementById('att-list-'+session);
+  const countEl = document.getElementById('att-count-'+session);
+  if(!list) return;
+  countEl.textContent = records.length;
+  if(records.length===0){
+    list.innerHTML='<div class="att-empty">Chưa có dữ liệu</div>';
+    return;
+  }
+  list.innerHTML = records.map(r=>`
+    <div class="att-row" id="att-row-${r.id}">
+      <div class="att-avatar ${r.manual?'manual':''}">${getInitials(r.name)}</div>
+      <div style="flex:1">
+        <div class="att-name">${r.name}${r.manual?' <span class="att-manual-tag">· thủ công</span>':''}</div>
+        ${(['T-S','T-C'].includes(r.status))&&r.lateMin?`<div style="font-size:10px;color:var(--amber)">${r.status==='T-C'?'Về sớm':'Trễ'} ${r.lateMin} phút</div>`:''}
+        ${r.note?`<div style="font-size:10px;color:var(--gray)">${r.note}</div>`:''}
+      </div>
+      ${r.time&&r.time!=='--:--'?`<span class="att-time">${r.time}</span>`:''}
+      <span class="s-badge" style="background:${(STATUS_CODES[r.status]||STATUS_CODES['1']).bg};color:${(STATUS_CODES[r.status]||STATUS_CODES['1']).color}">
+        ${(STATUS_CODES[r.status]||{label:'?'}).label}
+      </span>
+      <div class="att-actions">
+        <button class="att-action" onclick="editAttendance('${r.id}','${r.session||'sang'}')" title="Sửa">✏</button>
+        <button class="att-action del" onclick="deleteAttendance('${r.id}')" title="Xoá">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+function renderTodayAttendance(){
+  const all = getAttendance();
+  const today = todayStr();
+  const records = all[today] || [];
+  const sang = records.filter(r=>(r.session||'sang')==='sang');
+  const chieu = records.filter(r=>r.session==='chieu');
+  renderAttList('sang', sang);
+  renderAttList('chieu', chieu);
+  const countEl = document.getElementById('att-count');
+  if(countEl) countEl.textContent = records.length + ' nhân viên';
+}
+function updateStats(){
+  const all = getAttendance();
+  const today = todayStr();
+  const records = all[today] || [];
+  const emps = getEmployees();
+  const presentIds=new Set(records.filter(r=>r.status!=='K').map(r=>r.id));
+  document.getElementById('stat-present').textContent = presentIds.size;
+  document.getElementById('stat-late').textContent    = records.filter(r=>(r.status==='T-S'||r.status==='T-C')&&(r.lateMin||0)>=3).length;
+  document.getElementById('stat-absent').textContent  = Math.max(0, emps.filter(e=>!presentIds.has(e.id)).length);
+  document.getElementById('stat-total').textContent   = emps.length || records.length;
+}
+
+// ============================
+// UPLOAD / OCR (Tesseract.js)
+// ============================
+function normalizeViet(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/đ/g,'d').replace(/Đ/g,'D')
+    .toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+function matchEmpInText(emp,normText){
+  const n=normalizeViet(emp.name);
+  // 1. Full name match
+  if(normText.includes(n)) return true;
+  const tokens=n.split(' ').filter(t=>t.length>1);
+  if(tokens.length<2) return false;
+  const givenName=tokens[tokens.length-1]; // last token = given name in Vietnamese
+  // 2. Given name (>=4 chars) as whole word in OCR text
+  if(givenName.length>=4){
+    const re=new RegExp('\\b'+givenName+'\\b');
+    if(re.test(normText)) return true;
+  }
+  // 3. Given name + any other token both present
+  if(givenName.length>=3&&normText.includes(givenName)){
+    for(let i=0;i<tokens.length-1;i++){
+      if(tokens[i].length>=3&&normText.includes(tokens[i])) return true;
+    }
+  }
+  // 4. Any 2 consecutive tokens from name both present
+  for(let i=0;i<tokens.length-1;i++){
+    if(tokens[i].length>=3&&tokens[i+1].length>=3&&
+       normText.includes(tokens[i])&&normText.includes(tokens[i+1])) return true;
+  }
+  return false;
+}
+let _tLoaded=false;
+async function loadTesseract(){
+  if(_tLoaded||window.Tesseract) return (_tLoaded=true);
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload=()=>{_tLoaded=true;res();};s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+function preprocessForOCR(file){
+  return new Promise(resolve=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.width; c.height=img.height;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0);
+      const id=ctx.getImageData(0,0,c.width,c.height);
+      const d=id.data;
+      for(let i=0;i<d.length;i+=4){
+        const br=(d[i]*299+d[i+1]*587+d[i+2]*114)/1000;
+        // white text (bright) -> black; dark bg -> white: invert + threshold
+        const v=br>140?0:255;
+        d[i]=d[i+1]=d[i+2]=v;
+      }
+      ctx.putImageData(id,0,0);
+      URL.revokeObjectURL(url);
+      c.toBlob(resolve,'image/png');
+    };
+    img.src=url;
+  });
+}
+async function handleFileUpload(e, session='sang'){
+  const files=Array.from(e.target.files);
+  if(!files.length) return;
+  const statusEl=document.getElementById('upload-status-'+session);
+  statusEl.style.display='block';
+  statusEl.style.background='var(--purple-bg)';
+  statusEl.style.color='var(--purple)';
+  statusEl.innerHTML='⏳ Đang tải OCR engine...';
+  e.target.value='';
+  try{
+    await loadTesseract();
+    const allLines=[];
+    for(let i=0;i<files.length;i++){
+      statusEl.innerHTML=`⏳ Đang đọc ảnh ${i+1}/${files.length}...`;
+      // Preprocess: convert to high-contrast B&W for better OCR on white-text-on-dark
+      const processed=await preprocessForOCR(files[i]);
+      const r=await Tesseract.recognize(processed,'vie+eng',{logger:()=>{}});
+      r.data.text.split('\n').map(l=>l.trim()).filter(l=>l.length>2).forEach(l=>allLines.push(l));
+    }
+    const normText=normalizeViet(allLines.join(' '));
+    const emps=getEmployees();
+    const matched=emps.filter(emp=>matchEmpInText(emp,normText));
+    console.log('[OCR lines]', allLines);
+    console.log('[OCR norm]', normText.slice(0,300));
+    console.log('[OCR matched]', matched.map(m=>m.name));
+    showOcrMatches(matched,allLines,session);
+    statusEl.style.display='none';
+  }catch(err){
+    statusEl.innerHTML=`❌ Lỗi OCR: ${err.message||err}`;
+  }
+}
+function showOcrMatches(matched,rawLines,session='sang'){
+  const boxId='ocr-result-box-'+session;
+  let box=document.getElementById(boxId);
+  if(!box){
+    box=document.createElement('div');
+    box.id=boxId;
+    box.style.cssText='margin-top:10px;padding:12px;background:var(--purple-bg);border-radius:10px;font-size:13px;';
+    document.getElementById('upload-status-'+session).insertAdjacentElement('afterend',box);
+  }
+  const rawHtml=rawLines&&rawLines.length?
+    `<details style="margin-top:8px;font-size:11px"><summary style="cursor:pointer;color:var(--gray)">Xem text OCR đọc được (${rawLines.length} dòng)</summary>
+    <div style="margin-top:4px;padding:6px;background:#f8f8f8;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#555">${rawLines.join('<br>')}</div></details>`:'';
+  if(!matched.length){
+    box.innerHTML='<div style="color:var(--gray);text-align:center">Không nhận diện được tên nào. Vui lòng thêm thủ công.</div>'+rawHtml;
+    return;
+  }
+  const today=todayStr();
+  const existIds=new Set((getAttendance()[today]||[]).filter(r=>(r.session||'sang')===session).map(r=>r.id));
+  const newOnes=matched.filter(m=>!existIds.has(m.id));
+  let html=`<div style="font-weight:600;margin-bottom:8px;color:#111">🎯 Nhận diện được ${matched.length} người` +
+    (newOnes.length<matched.length?` (${matched.length-newOnes.length} đã có)`:'')+`:</div>`;
+  html+=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">`;
+  for(const m of matched){
+    const done=existIds.has(m.id);
+    html+=`<label style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:${done?'#e5e7eb':'#fff'};border-radius:6px;border:1px solid var(--gray-bd);cursor:${done?'default':'pointer'}">` +
+      `<input type="checkbox" data-id="${m.id}" data-name="${m.name}" ${done?'disabled checked':'checked'} style="accent-color:var(--purple)">` +
+      `<span style="${done?'color:var(--gray);text-decoration:line-through':''}">${m.name}</span></label>`;
+  }
+  html+=`</div><div style="display:flex;gap:8px">` +
+    `<button onclick="applyOcrMatches('${session}')" style="flex:1;padding:7px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">✅ Thêm vào điểm danh</button>` +
+    `<button onclick="document.getElementById('ocr-result-box-${session}').remove()" style="padding:7px 12px;background:#fff;border:1px solid var(--gray-bd);border-radius:8px;font-size:12px;cursor:pointer">Bỏ</button></div>`;
+  box.innerHTML=html+(rawLines&&rawLines.length?`<details style='margin-top:8px;font-size:11px'><summary style='cursor:pointer;color:var(--gray)'>Text OCR đọc được</summary><div style='padding:6px;background:#f8f8f8;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#555'>${rawLines.join('<br>')}</div></details>`:'');
+}
+function applyOcrMatches(session='sang'){
+  const checks=document.querySelectorAll('#ocr-result-box-'+session+' input[type=checkbox]:not(:disabled):checked');
+  const today=todayStr(); const all=getAttendance();
+  if(!all[today]) all[today]=[];
+  const existIds=new Set(all[today].map(r=>r.id));
+  const time = session === 'chieu' ? '13:00' : '09:00';
+  let added=0;
+  checks.forEach(cb=>{
+    if(!existIds.has(cb.dataset.id)){
+      all[today].push({id:cb.dataset.id,name:cb.dataset.name,time,status:'1',lateMin:0,session});
+      added++;
+    }
+  });
+  setAttendance(all); renderTodayAttendance(); renderAbsentList(); updateStats(); renderBangCC();
+  document.getElementById('ocr-result-box-'+session).remove();
+  const s=document.getElementById('upload-status-'+session);
+  s.style.display='block';
+  s.innerHTML=`✅ Đã thêm ${added} nhân viên vào điểm danh.`;
+  setTimeout(()=>s.style.display='none',3000);
+}
+
+// ============================
+// MODAL: ADD/EDIT ATTENDANCE
+// ============================
+function openAddModal(editId=null, session='sang'){
+  state.editingId = editId; state.editingSession = session||'sang';
+  const title = document.getElementById('modal-add-title');
+  const nameEl = document.getElementById('modal-name');
+  const timeEl = document.getElementById('modal-time');
+  const statusEl = document.getElementById('modal-status');
+  const lateEl = document.getElementById('modal-late-min');
+  // Populate employee dropdown
+  const emps = getEmployees();
+  nameEl.innerHTML = '<option value="">-- Chọn nhân viên --</option>';
+  emps.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.dataset.name = e.name;
+    opt.textContent = e.name;
+    nameEl.appendChild(opt);
+  });
+  if(editId){
+    title.textContent = 'Sửa điểm danh';
+    const all = getAttendance(); const today=todayStr();
+    const rec = (all[today]||[]).find(r=>r.id===editId);
+    if(rec){
+      // Select the matching employee by id or by name
+      const matchOpt = Array.from(nameEl.options).find(o => o.value === rec.id || o.dataset.name === rec.name);
+      if(matchOpt) nameEl.value = matchOpt.value;
+      const noTime=['P','P-KL','K','OFF','N-S','N-C'];
+      timeEl.value=noTime.includes(rec.status)?'09:00':(rec.time==='--:--'?'09:00':rec.time||'09:00');
+      statusEl.value=rec.status;
+      lateEl.value=rec.lateMin||'';
+      const noteEl=document.getElementById('modal-note');
+      if(noteEl) noteEl.value=rec.note||'';
+    }
+  } else {
+    title.textContent = 'Thêm điểm danh';
+    nameEl.value=''; timeEl.value=(state.editingSession==='chieu'?'13:00':'09:00'); statusEl.value='1'; lateEl.value='';
+    const noteEl2=document.getElementById('modal-note'); if(noteEl2) noteEl2.value='';
+  }
+  toggleModalFields();
+  document.getElementById('modal-add').classList.add('show');
+  nameEl.focus();
+}
+function editAttendance(id, session){ openAddModal(id, session||'sang'); }
+function deleteAttendance(id){
+  if(!confirm('Xác nhận xoá?')) return;
+  const all=getAttendance(); const today=todayStr();
+  all[today]=(all[today]||[]).filter(r=>r.id!==id);
+  // Dọn "công ma": xoá entry chấm công của NV này cho hôm nay (trừ khi đã chỉnh tay)
+  try{
+    const p=today.split('-').map(Number); const ty=p[0],tm=p[1],td=p[2];
+    let cy=ty, cm=tm; if(td>=25){ cm=tm===12?1:tm+1; cy=tm===12?ty+1:ty; }
+    const cc=getCCData(); const key=id+'_'+cy+'_'+cm;
+    if(cc[key] && cc[key][today] && !cc[key][today].manualOverride){ delete cc[key][today]; setCCData(cc); }
+  }catch(e){}
+  setAttendance(all); renderTodayAttendance(); renderAbsentList(); updateStats(); renderHistory(); renderBangCC();
+}
+function toggleModalFields(){
+  const v=document.getElementById('modal-status').value;
+  const noTime=['P','P-KL','K','OFF','N-S','N-C'];
+  const showLate=['T-S','T-C','T-C2','T-S-P','T-C-P'];
+  document.getElementById('time-group').style.display=noTime.includes(v)?'none':'block';
+  document.getElementById('late-min-group').style.display=showLate.includes(v)?'block':'none';
+}
+function saveAttendance(){
+  const nameEl = document.getElementById('modal-name');
+  const empId = nameEl.value;
+  const name = nameEl.options[nameEl.selectedIndex] ? nameEl.options[nameEl.selectedIndex].dataset.name || '' : '';
+  if(!empId || !name){ alert('Vui lòng chọn nhân viên'); return; }
+  const status=document.getElementById('modal-status').value;
+  const noTime=['P','P-KL','K','OFF','N-S','N-C'];
+  const time=noTime.includes(status)?'--:--':document.getElementById('modal-time').value;
+  const lateMin=parseInt(document.getElementById('modal-late-min').value)||0;
+  const note=(document.getElementById('modal-note').value||'').trim();
+  const all=getAttendance(); const today=todayStr();
+  if(!all[today]) all[today]=[];
+  if(state.editingId){
+    const idx=all[today].findIndex(r=>r.id===state.editingId);
+    if(idx>=0) all[today][idx]={...all[today][idx],name,time,status,lateMin,note,manual:true,session:state.editingSession||'sang'};
+  } else {
+    // Use real NV ID from dropdown — guaranteed correct
+    const existIdx = all[today].findIndex(r => r.id === empId && (r.session||'sang') === (state.editingSession||'sang'));
+    if(existIdx >= 0) {
+      all[today][existIdx] = {...all[today][existIdx], name, time, status, lateMin, note, manual:true, session:state.editingSession||'sang'};
+    } else {
+      all[today].push({id:empId, name, time, status, lateMin, note, manual:true, session:state.editingSession||'sang'});
+    }
+  }
+  setAttendance(all);
+  closeModal('modal-add');
+  renderTodayAttendance(); renderAbsentList(); updateStats(); renderHistory();
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
+
+// ============================
+
+// ============================
+// ABSENT LIST — DISMISS
+// ============================
+function getDismissed(){
+  return JSON.parse(localStorage.getItem('bigx_dismissed_'+todayStr())||'[]');
+}
+function setDismissed(ids){
+  localStorage.setItem('bigx_dismissed_'+todayStr(),JSON.stringify(ids));
+}
+function dismissAbsent(id){
+  const ids=getDismissed();
+  if(!ids.includes(id)){ ids.push(id); setDismissed(ids); }
+  renderAbsentList();
+}
+
+// ============================
+// ABSENT LIST
+// ============================
+function renderAbsentList(){
+  const today=todayStr();
+  const all=getAttendance();
+  const presentIds=new Set((all[today]||[]).map(r=>r.id));
+  const dismissed=new Set(getDismissed());
+  const emps=getEmployees().filter(e=>!RESIGNED_IDS.has(e.id)&&!(RESIGNED_FROM[e.id]&&todayStr()>=RESIGNED_FROM[e.id])&&!presentIds.has(e.id)&&!dismissed.has(e.id));
+  const el=document.getElementById('absent-list');
+  const cnt=document.getElementById('absent-count');
+  if(!el) return;
+  cnt.textContent=emps.length;
+  if(!emps.length){
+    el.innerHTML='<div class="att-empty" style="color:var(--green);font-weight:600">✅ Check in đủ</div>';
+    return;
+  }
+  el.innerHTML=emps.map(emp=>{
+    const initials=emp.name.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase();
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#fafafa;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${initials}</div>
+        <span style="font-size:13px;color:#111">${emp.name}</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent('${emp.id}')" title="Bỏ qua" style="padding:3px 8px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance('${emp.id}','${emp.name.replace(/'/g,"&#39;")}')" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function quickAddAttendance(id,name){
+  const today=todayStr();
+  const all=getAttendance();
+  if(!all[today]) all[today]=[];
+  if(all[today].find(r=>r.id===id)) return;
+  const now=new Date();
+  const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  all[today].push({id,name,time,status:'1',lateMin:0,session:'sang'});
+  setAttendance(all);
+  renderTodayAttendance(); renderAbsentList(); updateStats(); renderHistory();
+}
+
+// ============================
+// HISTORY
+// ============================
+function renderHistory(){
+  const all=getAttendance();
+  const today=todayStr();
+  const dates=Object.keys(all).filter(d=>d!==today).sort((a,b)=>b.localeCompare(a)).slice(0,7);
+  const el=document.getElementById('history-list');
+  if(!dates.length){ el.innerHTML='<div class="att-empty">Chưa có lịch sử</div>'; return; }
+  el.innerHTML=dates.map(d=>{
+    const recs=all[d]||[];
+    const [y,m,dd]=d.split('-');
+    return `<div class="hist-row">
+      <span class="hist-date">${dd}/${m}</span>
+      <span style="font-size:12px;font-weight:500">${new Set(recs.map(r=>r.id||r.name)).size} có mặt</span>
+      <span class="hist-pill" onclick="viewHistoryDay('${d}')">Xem</span>
+    </div>`;
+  }).join('');
+}
+function viewHistoryDay(dateStr){
+  // Switch to today tab and highlight date (simple: just show alert with data)
+  const all=getAttendance();
+  const recs=all[dateStr]||[];
+  const [y,m,d]=dateStr.split('-');
+  if(!recs.length){ alert(`Ngày ${d}/${m}/${y}: Không có dữ liệu`); return; }
+  alert(`Ngày ${d}/${m}/${y} — ${recs.length} người:\n`+recs.map(r=>`• ${r.name} (${r.time}) — ${r.status==='ok'?'Đúng giờ':r.status==='late'?`Trễ ${r.lateMin} phút`:'Vắng'}`).join('\n'));
+}
+
+// ============================
+// BANG CHAM CONG - SUB TABS
+// ============================
+function renderSubTabs(){
+  const bar=document.getElementById('sub-tabs');
+  bar.innerHTML=MONTHS.map((m,i)=>`
+    <button class="sub-tab ${i+1===state.currentMonth?'active':''}" onclick="switchMonth(${i+1})">${m}</button>
+  `).join('');
+}
+function renderYearLabel(){
+  document.getElementById('yr-label').textContent=state.currentYear;
+}
+function changeYear(dir){
+  state.currentYear+=dir;
+  renderYearLabel();
+  renderBangCC();
+}
+function switchMonth(m){
+  state.currentMonth=m;
+  state.expandedEmpId=null;
+  renderSubTabs();
+  renderBangCC();
+}
+
+// ============================
+// CYCLE HELPERS (25 prev → 24 current)
+// ============================
+function getCycleDates(year, month){
+  // Returns array of date strings in cycle for given month
+  const dates=[];
+  const prevMonth=month===1?12:month-1;
+  const prevYear=month===1?year-1:year;
+  // 25 to end of prev month
+  const daysInPrev=new Date(prevYear,prevMonth,0).getDate();
+  for(let d=25;d<=daysInPrev;d++){
+    dates.push(`${prevYear}-${String(prevMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+  // 1 to 24 of current month
+  for(let d=1;d<=24;d++){
+    dates.push(`${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+  return dates;
+}
+function getWorkdays(year, month){
+  // Count Mon-Fri in cycle
+  return getCycleDates(year,month).filter(d=>{
+    const dow=new Date(d).getDay();
+    return dow>=1&&dow<=5;
+  }).length;
+}
+function getCycleLabel(year, month){
+  const prevMonth=month===1?12:month-1;
+  const prevYear=month===1?year-1:year;
+  const daysInPrev=new Date(prevYear,prevMonth,0).getDate();
+  return `25/${String(prevMonth).padStart(2,'0')} – 24/${String(month).padStart(2,'0')}/${year}`;
+}
+
+// ============================
+// BANG CHAM CONG RENDER
+// ============================
+function empTypeBadge(id){
+  const ty = empType(id); if(ty==='official') return '';
+  const lbl = ty==='parttime' ? 'Part-time' : (ty==='probation' ? 'Thử việc' : ty);
+  const st = ty==='parttime' ? 'color:#0369a1;background:#e0f2fe' : 'color:#b45309;background:#fef3c7';
+  return `<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;${st}">${lbl}</span>`;
+}
+const BIGX_DEPTS=["Team TSP","Team Booking KOC/KOLs","Team Performance","Team Customer Account Manager","Team E - Com","Team Kế toán - Nhân sự","Team Kinh Doanh","Team IT","Team Marketing"];
+function deptOptions(cur){return '<option value="">— Chọn phòng —</option>'+BIGX_DEPTS.map(function(d){return '<option value="'+d+'"'+(cur===d?' selected':'')+'>'+d+'</option>';}).join('');}
+function changeDept(id,val){if(!val)return;var list=JSON.parse(localStorage.getItem('bigx_employees')||'[]');var i=list.findIndex(function(x){return x.id===id;});if(i>=0){list[i].dept=val;setEmployees(list);renderBangCC();}}
+// ---- Nút quản lý NV (Loại / Phép / Chuyển chính thức) ----
+function _updEmp(id,fn){var list=JSON.parse(localStorage.getItem('bigx_employees')||'[]');var i=list.findIndex(function(x){return x.id===id;});if(i<0)return false;fn(list[i]);setEmployees(list);return true;}
+function setEmpType(id,v){_updEmp(id,function(e){e.type=v;});renderBangCC();}
+function setEmpNoLeave(id,v){_updEmp(id,function(e){e.noLeave=!!v;});renderBangCC();}
+// Đặt "ngày phép còn lại" của chu kỳ đang xem = x, bằng cách chốt anchor tháng trước
+// (đúng cách đã làm thủ công trước đây: AQ tháng trước = x - 1 + phép đã dùng chu kỳ này).
+function setLeaveBalanceForCurrentCycle(id,x){
+  var y=state.currentYear, m=state.currentMonth;
+  var py=m===1?y-1:y, pm=m===1?12:m-1;
+  var summ; try{summ=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}');}catch(e){summ={};}
+  var u=leaveUsedFromBang(id,y,m);
+  var prevKey=id+'_'+py+'_'+pm, curKey=id+'_'+y+'_'+m;
+  summ[prevKey]=Object.assign({},summ[prevKey],{AQ:Math.round((x-1+u)*1000)/1000});
+  if(summ[curKey]) summ[curKey]=Object.assign({},summ[curKey],{AQ:Math.round(x*1000)/1000});
+  localStorage.setItem('bigx_cc_summary', JSON.stringify(summ));
+  try{ if(typeof syncToCloud==='function') syncToCloud(); }catch(e){}
+}
+function setLeaveBalanceUI(id){
+  var el=document.getElementById('lv-in-'+id); if(!el) return;
+  var x=parseFloat(el.value); if(isNaN(x)){ alert('Nhập số ngày phép hợp lệ.'); return; }
+  if(isNoLeave(id)){ if(!confirm('NV này đang ở chế độ "Không có phép năm". Vẫn muốn đặt số phép? (Nên bỏ tick "Không có phép năm" trước.)')) return; }
+  setLeaveBalanceForCurrentCycle(id,x);
+  renderBangCC();
+}
+function makeOfficial(id){
+  var y=state.currentYear, m=state.currentMonth;
+  var el=document.getElementById('lv-in-'+id);
+  var x=el?parseFloat(el.value):NaN;
+  if(!confirm('Chuyển "'+id+'" thành CHÍNH THỨC từ chu kỳ T'+m+'/'+y+'?\n(Bỏ badge Thử việc, mở phép năm'+((!isNaN(x))?', đặt phép còn lại = '+x:'')+')')) return;
+  _updEmp(id,function(e){ e.type='official'; e.noLeave=false; e.officialFrom=y+'-'+m; });
+  if(!isNaN(x)) setLeaveBalanceForCurrentCycle(id,x);
+  renderBangCC();
+}
+function lateDays(id,y,m){var cc=getEmpCCForCycle(id,y,m),n=0;getCycleDates(y,m).forEach(function(d){var dw=new Date(d).getDay();if(dw===0||dw===6)return;var v=cc[d];if(!v||!v.status)return;var s=v.status;if((s==='T-S'||s==='T-C'||s==='T-C2')&&(v.lateMin||0)>=3)n++;});return n;}
+function lateCell(id,y,m){var n=lateDays(id,y,m);return '<span style="color:'+(n>0?'#A32D2D':'#9ca3af')+';font-weight:'+(n>0?'500':'400')+'">'+n+' ngày</span>';}
+function renderBangCC(){
+  const y=state.currentYear, m=state.currentMonth;
+  document.getElementById('bcc-title').textContent=MONTHS[m-1];
+  document.getElementById('bcc-sub').textContent=`${y} · Chu kỳ: ${getCycleLabel(y,m)} · ${getWorkdays(y,m)} ngày làm việc`;
+  const emps=getEmployees();
+  const tbody=document.getElementById('emp-tbody');
+  if(!emps.length){
+    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--gray);font-size:13px">Chưa có danh sách nhân viên.<br><small>Dữ liệu sẽ được cập nhật sau.</small></td></tr>`;
+    return;
+  }
+  var __by={},__ord=BIGX_DEPTS.concat([""]);emps.forEach(function(e){var d=(e.dept&&BIGX_DEPTS.indexOf(e.dept)>=0)?e.dept:"";(__by[d]=__by[d]||[]).push(e);});var __DC={"Team TSP":["#E6F1FB","#0C447C"],"Team Booking KOC/KOLs":["#EEEDFE","#3C3489"],"Team Performance":["#EAF3DE","#27500A"],"Team Customer Account Manager":["#FAEEDA","#633806"],"Team E - Com":["#E1F5EE","#085041"],"Team Kế toán - Nhân sự":["#FBEAF0","#72243E"],"Team Kinh Doanh":["#FAECE7","#712B13"]};function __row(emp){
+    const workdays=getWorkdays(y,m);
+    const empCC=getEmpCCForCycle(emp.id,y,m);
+    const actualDays=countActualDays(empCC);
+    const isExpanded=state.expandedEmpId===emp.id;
+    return `
+      <tr class="${isExpanded?'has-expand':''}">
+        <td><div class="emp-name-cell">
+          <div class="emp-avatar-sm">${getInitials(emp.name)}</div>
+          ${emp.name}${empTypeBadge(emp.id)}
+        </div></td>
+        <td style="color:var(--gray);font-size:12px">${emp.id||'—'}</td>
+        
+        <td><select onchange="changeDept('${emp.id}',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:6px;max-width:190px;background:#fff">${deptOptions(emp.dept)}</select></td>
+        <td>${actualDays}/${workdays}</td><td>${lateCell(emp.id,y,m)}</td>
+        <td>
+          <button class="view-btn ${isExpanded?'active-btn':''}" onclick="toggleCalendar('${emp.id}')">
+            ${isExpanded?'▲ Đóng':'▦ Xem bảng'}
+          </button>
+        </td>
+      </tr>
+      ${isExpanded?`<tr><td class="cal-expand-td" colspan="6">${renderCalendarExpand(emp,y,m)}</td></tr>`:''}
+    `;
+  }var __out="";__ord.forEach(function(d){var a=__by[d];if(!a||!a.length)return;var c=__DC[d]||["#F1EFE8","#444441"];var lbl=d||"Chưa gán phòng";__out+='<tr><td colspan="6" style="padding:7px 14px;background:'+c[0]+';color:'+c[1]+';font-size:12px;font-weight:600;letter-spacing:.2px">'+lbl+' · '+a.length+' người</td></tr>';a.forEach(function(e){__out+=__row(e);});});tbody.innerHTML=__out;
+  bxApplyNameFilter();
+}
+// ---- Tìm nhân viên theo tên (đã gộp từ khối vá cũ vào script chính) ----
+function bxStripVN(s){return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();}
+function bxApplyNameFilter(){
+  var el=document.getElementById('bx-name-search');
+  var q=bxStripVN((el&&el.value)||'').trim();
+  document.querySelectorAll('#emp-tbody tr').forEach(function(tr){
+    var name=tr.cells&&tr.cells[0]?tr.cells[0].textContent:'';
+    tr.style.display=(!q||bxStripVN(name).indexOf(q)>=0)?'':'none';
+  });
+}
+function initNameSearch(){
+  var wrap=document.querySelector('.emp-table-wrap');
+  if(!wrap||document.getElementById('bx-name-search')) return;
+  var div=document.createElement('div'); div.style.cssText='margin:0 0 10px';
+  div.innerHTML='<input id="bx-name-search" type="text" placeholder="🔍 Tìm nhân viên theo tên..." style="width:280px;max-width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;outline:none">';
+  wrap.parentNode.insertBefore(div,wrap);
+  div.querySelector('input').addEventListener('input',bxApplyNameFilter);
+}
+window.bxStripVN=bxStripVN; window.bxApplyNameFilter=bxApplyNameFilter;
+function getEmpCCForCycle(empId,year,month){
+  const all=getCCData();
+  return all[`${empId}_${year}_${month}`]||{};
+}
+window.selfCheck=function(){var out=[];try{var cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}');for(var key in cc){var id=key.split('_')[0];var isNL=isNoLeave(id);var rec=cc[key];for(var d in rec){var v=rec[d];if(!v||!v.status)continue;var r=window.tinhNgay(v.status,v.lateMin,isNL);if(isNL&&r.phep!==0)out.push(key+' '+d+': thu viec co phep '+r.phep);if(isNaN(r.cong)||isNaN(r.phep)||isNaN(r.phat)||isNaN(r.nghi))out.push(key+' '+d+': NaN');var s2=v.status;if((s2==='T-S-P'||s2==='T-C-P'||s2==='N-S'||s2==='N-C')&&!isNL){var tot=r.cong+r.phep;if(Math.abs(tot-1)>1e-9)out.push(key+' '+d+': cong+phep='+tot);}}}}catch(e){out.push('ERR '+e);}return {anomalies:out.length,list:out.slice(0,50)};};
+window.tinhNgay=function(st,mn,nl){var s=st||'',m=+mn||0,cong=0,phep=0,phat=0,nghi=0;if(s==='1')cong=1;else if(s==='N-S'||s==='N-C'||s==='N-S-K'||s==='N-C-K')cong=0.5;else if(s==='T-S-P'||s==='T-C-P')cong=Math.max(0,1-m/480);else if(s==='T-S'||s==='T-C'||s==='T-C2')cong=m>45?0.5:1;if(!nl){if(s==='P')phep=1;else if(s==='N-S'||s==='N-C')phep=0.5;else if(s==='T-S-P'||s==='T-C-P')phep=m/480;else if(s==='T-S'||s==='T-C'||s==='T-C2')phep=m>45?0.5:0;}if(s==='T-S'||s==='T-C'||s==='T-C2'){if(m>=3&&m<=20)phat=20000;else if(m>=21&&m<=45)phat=50000;}if(s==='P'||s==='K'||s==='P-KL')nghi=1;else if(s==='N-S'||s==='N-C'||s==='N-S-K'||s==='N-C-K')nghi=0.5;else if(s==='T-S-P'||s==='T-C-P')nghi=m/480;else if(s==='T-S'||s==='T-C'||s==='T-C2')nghi=m>45?0.5:0;return {cong:cong,phep:phep,phat:phat,nghi:nghi};};
+function tinhCongNgay(v){
+  if(!v||!v.status) return 0;
+  return window.tinhNgay(v.status, v.lateMin||0, false).cong;
+}
+function tinhPhatNgay(v){
+  if(!v||!v.status) return 0;
+  return window.tinhNgay(v.status, v.lateMin||0, false).phat;
+}
+function countActualDays(empCC){
+  return parseFloat(Object.values(empCC).reduce((t,v)=>t+tinhCongNgay(v),0).toFixed(2));
+}
+function toggleCalendar(empId){
+  state.expandedEmpId = state.expandedEmpId===empId ? null : empId;
+  if(state.expandedEmpId){
+    state.calViewYear=state.currentYear;
+    state.calViewMonth=state.currentMonth;
+  }
+  renderBangCC();
+}
+
+// ============================
+// CALENDAR EXPAND RENDER
+// ============================
+// ---- Tính phép (mốc cũ trước T6/2026) — dựa trên bigx_cc ----
+function calcPhepConLaiLegacy(empId, year, month){
+  if(isNoLeave(empId)) return 0;
+  const allSumm = JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}');
+  const py = month===1 ? year-1 : year;
+  const pm = month===1 ? 12 : month-1;
+  const prev = allSumm[empId+'_'+py+'_'+pm];
+  let base;
+  if(prev && prev.AQ!=null){ base = prev.AQ; }
+  else {
+    if(py<2026 || (py===2026 && pm<6)) return null; // mốc gốc: T6/2026 (số chốt từ sheet)
+    base = calcPhepConLaiLegacy(empId, py, pm);
+    if(base==null) return null;
+  }
+  const empCC = getEmpCCForCycle(empId, year, month);
+  let p = 0;
+  getCycleDates(year, month).forEach(d=>{
+    const dow = new Date(d).getDay();
+    if(dow===0||dow===6) return;
+    const v = empCC[d];
+    if(!v||!v.status) return;
+    if(v.status==='P') p++;
+    else if(v.status==='T-S-P'||v.status==='T-C-P'){ const m=v.lateMin||0; p+=m/480; } // 1 phép = 8h
+  });
+  return base + 1 - p;
+}
+// ---- Tính phép HỢP NHẤT — MỘT rule chung cho MỌI nhân viên ----
+// AQ chu kỳ = AQ chu kỳ trước + 1 (tích lũy) - phép đã dùng (đọc từ bigx_attendance).
+// NV không phép -> 0. NV đã nghỉ -> 0.
+function calcPhepConLai(empId, year, month){
+  if(year<2026 || (year===2026 && month<6)) return calcPhepConLaiLegacy(empId, year, month);
+  if(isNoLeave(empId)) return 0;
+  if(isResigned(empId)) return 0;
+  let summ; try{ summ=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'); }catch(e){ summ={}; }
+  function calc(yy,mm){
+    if(yy<2026 || (yy===2026 && mm<6)) return calcPhepConLaiLegacy(empId, yy, mm);
+    const py=mm===1?yy-1:yy, pm=mm===1?12:mm-1, pk=empId+'_'+py+'_'+pm;
+    let base;
+    if(summ[pk] && summ[pk].AQ!=null) base=summ[pk].AQ; else base=calc(py,pm);
+    if(base==null) return null;
+    return base + 1 - leaveUsedFromBang(empId, yy, mm);
+  }
+  let v=calc(year,month);
+  if(v==null) return v;
+  if(v<0) v=0;
+  return Math.round(v*1000)/1000;
+}
+function renderCalendarExpand(emp, year, month){
+  const empCC=getEmpCCForCycle(emp.id,year,month);
+  const cycleLabel=getCycleLabel(year,month);
+  const leave=emp.leaveBalance||{remaining:0};
+  const dates=getCycleDates(year,month);
+  let cntOk=0,cntLate=0,cntAbs=0,cntLeave=0,totalLateMin=0;
+  dates.forEach(d=>{
+    const dow=new Date(d).getDay();
+    if(dow===0||dow===6) return;
+    const v=empCC[d];
+    if(!v||!v.status) return;
+    if(v.status==='1') cntOk++;
+    else if(v.status==='T-S-P'||v.status==='T-C-P'){ const _p=window.tinhNgay(v.status,v.lateMin,isNoLeave(emp.id)).phep; if(_p>0){ cntLeave+=_p; } else { cntOk++; } } else if(v.status.startsWith('T')){ const lm=v.lateMin||0; if(lm<3){ cntOk++; } else { cntLate++; totalLateMin+=lm; } }
+    else if(v.status==='K') cntAbs++;
+    else if(v.status==='P'||v.status==='OFF'){ cntLeave+=window.tinhNgay(v.status,v.lateMin,isNoLeave(emp.id)).phep; }
+        else if(v.status==='N-S'||v.status==='N-C'){ cntLeave+=window.tinhNgay(v.status,v.lateMin,isNoLeave(emp.id)).phep; }
+  });
+  let tongCong=0, tienPhat=0, cntNL=0;
+  dates.forEach(d=>{ const dw=new Date(d).getDay(); if(dw===0||dw===6) return; const vv=empCC[d]; if(vv&&vv.status==='NL') cntNL++; tongCong+=tinhCongNgay(vv); tienPhat+=tinhPhatNgay(vv); });
+  tongCong=parseFloat(tongCong.toFixed(2));
+  // Summary ext row — read from bigx_cc_summary if available
+  const allSumm=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}');
+  const summ=allSumm[`${emp.id}_${year}_${month}`]||null;
+  const AI=summ!=null?summ.AI:tongCong;
+  const AL=summ!=null?summ.AL:cntNL;
+  const AM=summ!=null?summ.AM:0;
+  const AO=summ!=null?(summ.AO!=null?summ.AO:AI):parseFloat(Math.min(tongCong+cntLeave+cntNL,getWorkdays(year,month)).toFixed(2));
+  const aqLive=(isNoLeave(emp.id))?calcPhepConLai(emp.id,year,month):((summ!=null&&summ.AQ!=null)?summ.AQ:calcPhepConLai(emp.id,year,month)); const AQ=aqLive!=null?aqLive:(leave.remaining||0);
+  const AR=(summ!=null&&summ.AR!=null)?summ.AR:getWorkdays(year,month);
+  const fmt=v=>(v==null?'—':(v===Math.floor(v)?v:parseFloat(v.toFixed(2))));
+  const barPct=Math.min(Math.round((AO/AR)*100),100);
+  const aqNeg=AQ<0;
+  const summExtHtml=`
+    <div class="sum-ext-row">
+      <div class="sum-ext-item">
+        <span class="sum-ext-lbl">Ngày tính lương</span>
+        <span class="sum-ext-val">${fmt(AO)}</span>
+        <div class="sum-ext-bar-wrap">
+          <div class="sum-ext-bar"><div class="sum-ext-bar-fill${barPct<70?' low':''}" style="width:${barPct}%"></div></div>
+          <span class="sum-ext-hint">/ ${AR} chuẩn</span>
+        </div>
+      </div>
+      <div class="sum-ext-sep"></div>
+      <div class="sum-ext-item">
+        <span class="sum-ext-lbl">Ngày lễ</span>
+        <span class="sum-ext-val">${fmt(AL)}</span>
+      </div>
+      <div class="sum-ext-sep"></div>
+      <div class="sum-ext-item">
+        <span class="sum-ext-lbl">Phép 2025 còn</span>
+        <span class="sum-ext-val">${fmt(AM)}</span>
+      </div>
+      <div class="sum-ext-sep"></div>
+      <div class="sum-ext-item">
+        <span class="sum-ext-lbl">Phép 2026 còn</span>
+        <span class="sum-ext-val${aqNeg?' neg':''}">${fmt(AQ)}</span>
+      </div>
+      ${tienPhat>0?`<div class="sum-ext-sep"></div><div class="sum-ext-item"><span class="sum-ext-lbl">Phạt đi trễ</span><span class="sum-ext-val neg">${tienPhat.toLocaleString('vi-VN')}đ</span></div>`:''}
+    </div>`;
+  // Calendar grid
+  const calHtml=renderCalGrid(emp.id, year, month, empCC);
+  return `
+    <div class="cal-expand-inner">
+      <div class="cal-exp-header">
+        <div class="cal-emp-info">
+          <div class="cal-emp-avatar">${getInitials(emp.name)}</div>
+          <div>
+            <div class="cal-emp-name">${emp.name}</div>
+            <div class="cal-emp-sub">${emp.position||''} · ${emp.dept||''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="cal-period">Chu kỳ: ${cycleLabel}</span>
+          <div style="width:1px;height:18px;background:var(--gray-bd)"></div>
+          <button class="exp-btn exp-excel" onclick="exportEmpExcel('${emp.id}')">↓ Excel</button>
+          <button class="exp-btn exp-sheet" onclick="openGSheet()">⊞ Sheet</button>
+        </div>
+      </div>
+      <div class="hr-emp-ctrl" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 12px;padding:10px 12px;background:#faf9ff;border:1px solid #ece9fb;border-radius:10px">
+        <span style="font-size:11px;font-weight:700;color:#6b5bd0;letter-spacing:.3px">⚙ QUẢN LÝ NHÂN VIÊN</span>
+        <label style="font-size:12px;color:#374151">Loại:
+          <select onchange="setEmpType('${emp.id}',this.value)" style="margin-left:4px;font-size:12px;padding:3px 6px;border:1px solid #d1d5db;border-radius:6px;background:#fff">
+            <option value="official"${empType(emp.id)==='official'?' selected':''}>Chính thức</option>
+            <option value="probation"${empType(emp.id)==='probation'?' selected':''}>Thử việc</option>
+            <option value="parttime"${empType(emp.id)==='parttime'?' selected':''}>Part-time</option>
+          </select>
+        </label>
+        <label style="font-size:12px;color:#374151;display:inline-flex;align-items:center;gap:4px">
+          <input type="checkbox" ${isNoLeave(emp.id)?'checked':''} onchange="setEmpNoLeave('${emp.id}',this.checked)"> Không có phép năm
+        </label>
+        <span style="width:1px;height:18px;background:#e5e7eb"></span>
+        <label style="font-size:12px;color:#374151">Ngày phép còn lại:
+          <input id="lv-in-${emp.id}" type="number" step="0.5" value="${fmt(AQ)}" style="width:66px;margin-left:4px;font-size:12px;padding:3px 6px;border:1px solid #d1d5db;border-radius:6px">
+        </label>
+        <button onclick="setLeaveBalanceUI('${emp.id}')" style="font-size:12px;font-weight:600;padding:4px 10px;border:none;border-radius:6px;background:#6b5bd0;color:#fff;cursor:pointer">Lưu phép</button>
+        ${empType(emp.id)!=='official'?`<button onclick="makeOfficial('${emp.id}')" style="font-size:12px;font-weight:700;padding:4px 10px;border:none;border-radius:6px;background:#16a34a;color:#fff;cursor:pointer">✓ Chuyển chính thức</button>`:''}
+      </div>
+      <div class="sum-strip">
+        <div class="sum-pill">
+          <div class="sum-pill-num" style="color:var(--green)">${fmt(tongCong)}</div>
+          <div class="sum-pill-lbl">Số công</div>
+        </div>
+        <div class="sum-pill">
+          <div class="sum-pill-num" style="color:var(--amber)">${totalLateMin}'</div>
+          <div class="sum-pill-lbl">Tổng phút trễ</div>
+        </div>
+        <div class="sum-pill">
+          <div class="sum-pill-num" style="color:var(--red)">${cntAbs}</div>
+          <div class="sum-pill-lbl">Vắng</div>
+        </div>
+        <div class="sum-pill">
+          <div class="sum-pill-num" style="color:var(--purple)">${cntLeave}</div>
+          <div class="sum-pill-lbl">Nghỉ phép</div>
+        </div>
+        <div class="leave-pill">
+          <div>
+            <div style="display:flex;align-items:baseline;gap:4px">
+              <span class="leave-num">${fmt(AQ)}</span>
+              <span class="leave-lbl">ngày phép còn lại</span>
+            </div>
+            <div class="leave-sub">Phép năm ${year} · tính đến T${month}</div>
+          </div>
+        </div>
+      </div>
+      ${summExtHtml}
+      ${calHtml}
+      <div class="cal-legend">
+        ${Object.entries({
+          '1':'Đủ công','T-S':'Trễ sáng','T-C':'Trễ chiều',
+          'N-S':'Nửa ngày','N-C':'Nửa ngày','P':'Phép (trừ phép năm)','P-KL':'Nghỉ ko trừ phép (ko tính công)','K':'Vắng','NL':'Nghỉ lễ'
+        }).map(([code,lbl])=>`
+          <div class="leg-item">
+            <span class="day-status" style="background:${STATUS_CODES[code]?.bg};color:${STATUS_CODES[code]?.color};font-size:9px">${code}</span>
+            <span>${lbl}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderCalGrid(empId, year, month, empCC){
+  const dates=getCycleDates(year,month);
+  const today=todayStr();
+  // Find first date to determine starting day of week
+  const firstDate=dates[0];
+  const startDow=new Date(firstDate).getDay(); // 0=Sun
+  const DAYS=['CN','T2','T3','T4','T5','T6','T7'];
+  let html=`<div class="cal-grid">`;
+  DAYS.forEach((d,i)=>`${html+=`<div class="day-head ${i===0||i===6?'wknd':''}">${d}</div>`}`);
+  // Padding before first date
+  for(let i=0;i<startDow;i++) html+=`<div class="day-cell empty-cell"></div>`;
+  dates.forEach(d=>{
+    const dow=new Date(d).getDay();
+    const isWeekend=dow===0||dow===6;
+    const isToday=d===today;
+    const cc=empCC[d];
+    const [,, dd]=d.split('-');
+    const monthNum=parseInt(d.split('-')[1]);
+    const displayDate=parseInt(dd)+'/'+monthNum;
+    let statusHtml='';
+    if(!isWeekend&&cc&&cc.status){
+      const sc=STATUS_CODES[cc.status]||{bg:'#f1f5f9',color:'#475569'};
+      let _dsp=cc.status;if((cc.status==='T-S-P'||cc.status==='T-C-P')&&cc.lateMin){const _c=tinhCongNgay(cc);_dsp=cc.status+' '+String(parseFloat(_c.toFixed(4)));}if((cc.status==='T-S'||cc.status==='T-C'||cc.status==='T-C2')&&cc.lateMin>45){_dsp=cc.status+' '+String(parseFloat(tinhCongNgay(cc).toFixed(4)));}statusHtml=`<span class="day-status" style="background:${sc.bg};color:${sc.color}">${_dsp}</span>`;
+      if((cc.status==='T-S'||cc.status==='T-C'||cc.status==='T-C2')&&cc.lateMin){
+        statusHtml+=`<div class="late-min">Trễ ${cc.lateMin} phút</div>`;
+      }
+      if(cc.note&&!cc.note.toLowerCase().startsWith('trễ')){
+        statusHtml+=`<div class="day-note">${cc.note}</div>`;
+      }
+    }
+    html+=`<div class="day-cell ${isWeekend?'wknd-cell':''} ${isToday?'today-cell':''}"
+      onclick="${isWeekend?'':'openDayModal(\''+empId+'\',\''+d+'\')'}">
+      <div class="day-num ${isWeekend?'wknd-num':''}">${displayDate}</div>
+      ${statusHtml}
+    </div>`;
+  });
+  // Pad end
+  const totalCells=startDow+dates.length;
+  const remainder=totalCells%7;
+  if(remainder>0) for(let i=0;i<7-remainder;i++) html+=`<div class="day-cell empty-cell"></div>`;
+  html+=`</div>`;
+  return html;
+}
+
+// ============================
+// DAY STATUS MODAL
+// ============================
+function openDayModal(empId, dateStr){
+  state.editingDayKey={empId, dateStr};
+  const [y,m,d]=dateStr.split('-');
+  document.getElementById('modal-day-title').textContent=`Chấm công ${d}/${m}/${y}`;
+  const all=getCCData();
+  const key=`${empId}_${state.calViewYear||state.currentYear}_${state.calViewMonth||state.currentMonth}`;
+  const cur=(all[key]||{})[dateStr]||{};
+  // Build status grid
+  const grid=document.getElementById('status-grid');
+  grid.innerHTML=SIMPLE_STATUSES.map(code=>{
+    const sc=STATUS_CODES[code]||{bg:'#f1f5f9',color:'#475569',label:code};
+    return `<div class="status-opt ${cur.status===code?'selected':''}" onclick="selectDayStatus('${code}')">
+      <span class="status-opt-badge" style="background:${sc.bg};color:${sc.color}">${code}</span>
+      <span class="status-opt-lbl">${sc.label}</span>
+    </div>`;
+  }).join('');
+  const isLate=cur.status&&['T-S','T-C','T-S-P','T-C-P'].includes(cur.status);
+  document.getElementById('day-late-group').style.display=isLate?'block':'none';
+  document.getElementById('day-late-min').value=cur.lateMin||'';
+  document.getElementById('day-note').value=cur.note||'';
+  document.getElementById('modal-day').classList.add('show');
+}
+function selectDayStatus(code){
+  document.querySelectorAll('.status-opt').forEach(o=>o.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  const isLate=['T-S','T-C','T-S-P','T-C-P'].includes(code);
+  document.getElementById('day-late-group').style.display=isLate?'block':'none';
+}
+function saveDayStatus(){
+  if(!state.editingDayKey) return;
+  const {empId, dateStr}=state.editingDayKey;
+  const selected=document.querySelector('.status-opt.selected');
+  if(!selected){ alert('Vui lòng chọn trạng thái'); return; }
+  const code=selected.querySelector('.status-opt-badge').textContent;
+  const lateMin=parseInt(document.getElementById('day-late-min').value)||0;
+  const noteVal=document.getElementById('day-note').value.trim();
+  const entry={status:code, lateMin, manualOverride:true};
+  if(noteVal) entry.note=noteVal;
+  const all=getCCData();
+  const key=`${empId}_${state.calViewYear||state.currentYear}_${state.calViewMonth||state.currentMonth}`;
+  if(!all[key]) all[key]={};
+  all[key][dateStr]=entry;
+  setCCData(all);
+  document.getElementById('modal-day').classList.remove('show');
+  renderBangCC();
+}
+
+// ============================
+// BACKUP / RESTORE
+// ============================
+function exportBackup(){
+  const payload = {
+    bigx_cc: JSON.parse(localStorage.getItem('bigx_cc')||'{}'),
+    bigx_attendance: JSON.parse(localStorage.getItem('bigx_attendance')||'{}'),
+    bigx_employees: JSON.parse(localStorage.getItem('bigx_employees')||'[]'),
+    bigx_cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bigx_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+}
+function importBackup(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      const data = JSON.parse(ev.target.result);
+      if(data.bigx_cc) localStorage.setItem('bigx_cc', JSON.stringify(data.bigx_cc));
+      if(data.bigx_attendance) localStorage.setItem('bigx_attendance', JSON.stringify(data.bigx_attendance));
+      if(data.bigx_employees) localStorage.setItem('bigx_employees', JSON.stringify(data.bigx_employees));
+      if(data.bigx_cc_summary) localStorage.setItem('bigx_cc_summary', JSON.stringify(data.bigx_cc_summary));
+      alert('✅ Restore thành công! Trang sẽ tải lại.');
+      location.reload();
+    } catch(err) { alert('❌ File không hợp lệ: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+function exportExcel(){
+  alert('Tính năng xuất Excel đang phát triển.');
+}
+function bxSheetPayload(){
+  const now=new Date(); let m=now.getMonth()+1, y=now.getFullYear();
+  if(now.getDate()>=25){m++; if(m>12){m=1;y++;}}
+  const pm=m===1?12:m-1, py=m===1?y-1:y;
+  const dates=[]; const dp=new Date(py,pm,0).getDate();
+  for(let d=25;d<=dp;d++) dates.push(py+'-'+String(pm).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
+  for(let d=1;d<=24;d++) dates.push(y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
+  const dows=dates.map(s=>new Date(s+'T12:00:00').getDay());
+  const cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}');
+  let summ={}; try{summ=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}')}catch(e){summ={};}
+  const TULATE=['T-S','T-C','T-C2'];
+  function accrued2026(id){
+    if(isNoLeave(id)) return null;
+    var best=null, pref=id+'_';
+    for(var k in summ){ if(k.indexOf(pref)!==0) continue;
+      var pr=k.slice(pref.length).split('_'), yy=+pr[0], mm=+pr[1];
+      if(!summ[k]||summ[k].AQ==null) continue;
+      if(yy<y||(yy===y&&mm<=m)){ if(!best||(yy*12+mm)>(best.yy*12+best.mm)) best={yy:yy,mm:mm,aq:summ[k].AQ}; }
+    }
+    if(!best) return null;
+    var months=(y-best.yy)*12+(m-best.mm);
+    return Math.round((best.aq+months)*1000)/1000;
+  }
+  const wd=getWorkdays(y,m);
+  const rows=getEmployees().map(e=>{
+    const cd=cc[e.id+'_'+y+'_'+m]||{};
+    let cong=0,nghi=0,phut=0,phat=0,nghiPhep=0,nghiKL=0,nghiLe=0;
+    const statuses=dates.map(dt=>{const v=cd[dt]; if(!v) return '';
+      cong+=tinhCongNgay(v);
+      var _s=v.status,_m=+(v.lateMin||0),t=window.tinhNgay(_s,_m,false);
+      nghi+=t.nghi; nghiPhep+=t.phep;
+      if(_s==='P-KL') nghiKL+=1;
+      if(_s==='NL') nghiLe+=1;
+      if(TULATE.includes(_s)) phut+=_m;
+      phat+=tinhPhatNgay(v);
+      var st=_s||'';
+      if((st==='T-S-P'||st==='T-C-P')&&v.lateMin){var c=tinhCongNgay(v);return parseFloat(c.toFixed(4));}
+      if((st==='T-S'||st==='T-C'||st==='T-C2')&&v.lateMin){return st+' '+v.lateMin+"'";}
+      return st;});
+    var phepConLai, phepCap;
+    var off=empOfficialFrom(e.id);
+    var preOfficial=off&&(y<off.y||(y===off.y&&m<off.m));
+    if(isNoLeave(e.id)){
+      nghiKL=+nghi.toFixed(3); nghiPhep=0; phepCap='—'; phepConLai='—';
+    } else if(preOfficial){
+      nghiKL=+(nghiKL+nghiPhep).toFixed(3); nghiPhep=0; phepCap='—'; phepConLai='—';
+    } else {
+      var _p=calcPhepConLai(e.id,y,m); phepConLai=_p==null?'—':+_p.toFixed(3);
+      var _cap=accrued2026(e.id); phepCap=_cap==null?'—':_cap;
+      // [ĐÃ BỎ đoạn "cứu phép"] — trước đây khi phép=0 thì ghi đè = phepCap-nghiPhep,
+      // gây thổi phồng (bỏ qua phép đã dùng các tháng trước). Nay dùng đúng công thức chung.
+    }
+    var ngayLuong=+Math.min(wd,cong+nghiPhep+nghiLe).toFixed(3);
+    return {id:e.id,name:e.name,dept:e.dept||'',statuses,cong:+cong.toFixed(3),nghiPhep:+(+nghiPhep).toFixed(3),nghiKL:nghiKL,nghiLe:nghiLe,phep2025:0,phepCap:phepCap,ngayLuong:ngayLuong,phep:phepConLai,phut:phut,phat:phat,nghi:nghi,noLeave:isNoLeave(e.id),thuViec:(empType(e.id)==='probation')};
+  });
+  const p2=n=>String(n).padStart(2,'0');
+  ;(function(){try{
+ var __nd=dates.length;
+ var __cl=function(n){var s='';while(n>0){var r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;};
+ var LC=__cl(4+__nd);
+ var PT='T'+pm+'-'+py;
+ var DR='INDIRECT("$E"&ROW()&":$'+LC+'"&ROW())';
+ var ID='INDIRECT("$C"&ROW())';
+ var TXT='ARRAYFORMULA(TO_TEXT('+DR+'))';
+ var MN='ARRAYFORMULA(IFERROR(VALUE(REGEXEXTRACT('+TXT+',"(\\d+)\'")),0))';
+ var REQ='COUNTIF('+DR+',"P")+0.5*(COUNTIF('+DR+',"N-S")+COUNTIF('+DR+',"N-C"))+SUMPRODUCT(IF(ISNUMBER('+DR+'),IF('+DR+'<1,1-'+DR+',0),0))';
+ var CAPNUM='IFERROR(VLOOKUP('+ID+",'"+PT+"'!$C:$BZ,MATCH(\"*còn lại*\",'"+PT+"'!$7:$7,0)-2,FALSE)+1,0)";
+ var CAPRAW='IFERROR(VLOOKUP('+ID+",'"+PT+"'!$C:$BZ,MATCH(\"*còn lại*\",'"+PT+"'!$7:$7,0)-2,FALSE)+1,\"—\")";
+ var F={};
+ F.cong='=LET(r,'+DR+',t,ARRAYFORMULA(TO_TEXT(r)),mn,ARRAYFORMULA(IFERROR(VALUE(REGEXEXTRACT(t,"(\\d+)\'")),0)),SUM(r)+SUMPRODUCT(ARRAYFORMULA(N(REGEXMATCH(t,"^T-[SC]")))*IF(mn<=45,1,0.5))+0.5*SUMPRODUCT(ARRAYFORMULA(N(REGEXMATCH(t,"^N-[SC]$")))))';
+ F.nghiPhep='=MIN('+REQ+','+CAPNUM+')';
+ F.nghiKL='=COUNTIF('+DR+',"P-KL")+0.5*SUMPRODUCT(ARRAYFORMULA(N(REGEXMATCH('+TXT+',"^T-[SC]")))*IF('+MN+'>45,1,0))+('+REQ+'-MIN('+REQ+','+CAPNUM+'))';
+ F.nghiLe='=COUNTIF('+DR+',"NL")';
+ F.phepCap='='+CAPRAW;
+ F.ngayLuong='=MIN('+wd+',('+F.cong.slice(1)+')+MIN('+REQ+','+CAPNUM+')+COUNTIF('+DR+',"NL"))';
+ F.phep='=IF(ISNUMBER('+CAPRAW+'),'+CAPRAW+'-MIN('+REQ+','+CAPNUM+'),"—")';
+ F.phut='=SUMPRODUCT('+MN+')';
+ F.phat='=SUMPRODUCT(('+MN+'>=3)*('+MN+'<=20))*20000+SUMPRODUCT(('+MN+'>=21)*('+MN+'<=45))*50000';
+ // Convert to Vietnamese locale: argument separator ';' and decimal comma. No string literal here contains ',' so global swap is safe.
+ var viLoc=function(f){return f.replace(/,/g,';').replace(/(\d)\.(\d)/g,'$1,$2');};
+ Object.keys(F).forEach(function(k){F[k]=viLoc(F[k]);});
+ (rows||[]).forEach(function(rw){
+   rw.cong=F.cong;rw.nghiLe=F.nghiLe;rw.phut=F.phut;rw.phat=F.phat;
+   var _off=empOfficialFrom(rw.id);
+   var _prevDash=isNoLeave(rw.id)||(_off&&(py<_off.y||(py===_off.y&&pm<_off.m)));
+   var _useVal=_prevDash&&(typeof rw.phepCap==='number');
+   if(_useVal){
+     // NV mới lên chính thức: tab tháng trước còn "—" nên công thức VLOOKUP gãy (ra "—").
+     // Giữ giá trị phép web tính, NHƯNG còn lại = được cấp − nghỉ phép trong kỳ (khớp cột "Nghỉ phép" của sheet;
+     // tránh lệch do ngày P nhập tay không nằm trong kho điểm danh gốc).
+     if(typeof rw.phepCap==='number'){ rw.phep=Math.max(0,+(rw.phepCap-(+rw.nghiPhep||0)).toFixed(3)); }
+   } else {
+     rw.nghiPhep=F.nghiPhep;rw.nghiKL=F.nghiKL;rw.phepCap=F.phepCap;rw.ngayLuong=F.ngayLuong;rw.phep=F.phep;
+   }
+ });
+}catch(e){console.warn('BIGX formula inject error',e);}})();
+  return {y,m,workdays:wd,dates,dows,rows,updatedAt:p2(now.getDate())+'/'+p2(now.getMonth()+1)+'/'+now.getFullYear()+' '+p2(now.getHours())+':'+p2(now.getMinutes())};
+}
+function bxPushSheet(){
+  try{ fetch('https://script.google.com/macros/s/AKfycbwUP4tkTbtyKEjMb8hsb-D9XklP-2YBpS3-qhoD3jR6dbNDJRIAP0XznACuywlMOKjS/exec',{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'silent=1&data='+encodeURIComponent(JSON.stringify(bxSheetPayload()))}).catch(function(e){console.warn('sheet push',e);}); }catch(e){console.warn('sheet push',e);}
+}
+async function autoPushSheet(force){try{if(window._guestMode)return;var cc=localStorage.getItem('bigx_cc')||'',at=localStorage.getItem('bigx_attendance')||'';var sig=cc.length+'|'+at.length+'|'+cc.slice(-60)+'|'+at.slice(-60);var now=Date.now();if(!force){if(sig===window.__sheetSig)return;if(now-(window.__sheetPushAt||0)<120000)return;}window.__sheetPushAt=now;window.__sheetSig=sig;bxPushSheet();}catch(e){}}
+try{setTimeout(function(){autoPushSheet(true);},8000);setInterval(function(){autoPushSheet(false);},120000);}catch(e){}
+function openGSheet(){
+  bxPushSheet();
+  window.open('https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit','_blank');
+}
+
+// ============================
+// EXPORT EXCEL
+// ============================
+function exportEmpExcel(empId){
+  const emp=state.employees.find(e=>e.id===empId);
+  if(!emp) return;
+  const y=state.calViewYear||state.currentYear;
+  const m=state.calViewMonth||state.currentMonth;
+  const empCC=getEmpCCForCycle(empId,y,m);
+  const dates=getCycleDates(y,m);
+  const header=['Ngày','Thứ','Trạng thái','Phút trễ','Ghi chú'];
+  const rows=dates.map(d=>{
+    const dow=new Date(d).getDay();
+    const dayNames=['CN','T2','T3','T4','T5','T6','T7'];
+    const cc=empCC[d]||{};
+    return [d,dayNames[dow],cc.status||'',cc.lateMin||'',cc.note||''];
+  });
+  const csv=[header,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='chamcong_'+emp.name.replace(/\s/g,'_')+'_'+y+'_'+m+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+}
+
+
+// Auto-init on load
+(function(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  const saved = localStorage.getItem(LS_USER);
+  if (saved) {
+    state.currentUser = saved;
+    document.getElementById('topbar-user-email').textContent = saved;
+  } else {
+    window._guestMode = true;
+    document.body.classList.add('guest-mode');
+    document.getElementById('topbar-user-email').textContent = 'Chỉ xem';
+    loadFromCloud().then(() => { renderBangCC(); updateStats(); });
+    setTimeout(() => switchMainTab(1), 0);
+  }
+  initApp();
+})();
+
+// ============================
+// PUBLISH (admin only)
+// ============================
+function doPublish() {
+  const data = {
+    employees: JSON.parse(localStorage.getItem(LS_EMPLOYEES)||'[]'),
+    cc_data:   JSON.parse(localStorage.getItem(LS_CC_DATA)||'{}'),
+  };
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const repl = "window.BIGX_PUBLIC_DATA = JSON.parse(decodeURIComponent(escape(atob('" + encoded + "')))); /* BIGX_PD */";
+  const t = 'team_B4mAOLDh6h6eEt4TsOBo8UGY';
+  const lines = [
+    "(async()=>{",
+    "const t='"+t+"';",
+    "const r=await fetch('https://bigx-chamcong.vercel.app/?v='+Date.now());",
+    "let h=await r.text();",
+    "h=h.replace(/window[.]BIGX_PUBLIC_DATA = [^;]+; [/][*] BIGX_PD [*][/]/,repl);",
+    "const e=new TextEncoder();const b=e.encode(h);",
+    "const s=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-1',b))).map(x=>x.toString(16).padStart(2,'0')).join('');",
+    "await fetch('/api/v2/files?teamId='+t,{method:'POST',credentials:'include',headers:{'Content-Type':'application/octet-stream','x-vercel-digest':s},body:b});",
+    "const d=await(await fetch('/api/v13/deployments?teamId='+t,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'bigx-chamcong',files:[{file:'index.html',sha:s,size:b.length}],target:'production',projectSettings:{framework:null}})})).json();",
+    "let st=d.readyState;",
+    "for(let i=0;i<12&&st!=='READY';i++){await new Promise(r=>setTimeout(r,3000));const c=await(await fetch('/api/v13/deployments/'+d.id+'?teamId='+t,{credentials:'include'})).json();st=c.readyState;}",
+    "alert(st==='READY'?'✅ Xuất bản xong!':'⚠️ Kiểm tra vercel.com');",
+    "})()"
+  ];
+  const script = 'const repl=' + JSON.stringify(repl) + ';\n' + lines.join('\n');
+  try { navigator.clipboard.writeText(script).then(()=>alert('📋 Script copied!\n\n→ vercel.com → F12 → Console → Paste → Enter (~30s)')); }
+  catch(e2) { const el=document.createElement('textarea');el.value=script;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);alert('📋 Script copied! → vercel.com → F12 → Console → Paste'); }
+}
+</script>
+<!-- [DA GOP - code lien mach]
+     - Sap NV theo phong ban: gop vao getEmployees()
+     - Tim nhan vien theo ten: bxStripVN/bxApplyNameFilter/initNameSearch trong script chinh (goi o cuoi renderBangCC + initApp)
+     - Tinh phep: 1 ham calcPhepConLai duy nhat (da bo lop va phepPatchV2)
+     - Day Google Sheet: qua syncToCloud + autoPushSheet(120s) - da bo override localStorage.setItem -->
+
+</body></html>

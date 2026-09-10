@@ -1168,19 +1168,19 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_WEB_URL   = 'https://bigx-chamcong.vercel.app/';
+var CC_APP_URL   = 'chamcong.html'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
 
 function renderChamCong(){
   return ''+
     '<div class="page-head"><div class="page-h1">Chấm công &amp; phép</div>'+
-    '<div class="page-lead">Toàn bộ hệ thống chấm công BigX được nhúng nguyên trạng vào đây — dữ liệu, công thức và cách lưu giữ <b>100% như web gốc</b>, không thay đổi gì. Thao tác ngay trong khung bên dưới, hoặc mở Google Sheet / web ở tab riêng.</div></div>'+
+    '<div class="page-lead">Hệ thống chấm công BigX — nay chạy ngay trong dashboard tổng, giữ <b>100%</b> giao diện, công thức và dữ liệu (cùng một nguồn Firebase). Thao tác trực tiếp trong khung bên dưới; mọi thay đổi lưu thẳng vào hệ thống và đẩy Google Sheet như cũ.</div></div>'+
     '<div class="cc-bar">'+
-      '<a class="ov-navbtn" href="'+CC_WEB_URL+'" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Mở web chấm công (tab mới)</a>'+
+      '<a class="ov-navbtn" href="'+CC_APP_URL+'" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Mở toàn màn hình</a>'+
       '<a class="ov-navbtn" href="'+CC_SHEET_URL+'" target="_blank" rel="noopener"><i class="ti ti-table"></i>Mở Google Sheet</a>'+
-      '<span class="cc-hint"><i class="ti ti-lock"></i> Nhúng nguyên bản — mọi thao tác lưu thẳng vào hệ thống chấm công, không qua dashboard.</span>'+
+      '<span class="cc-hint"><i class="ti ti-lock"></i> Dữ liệu &amp; công thức nguyên bản — lưu thẳng vào hệ thống chấm công.</span>'+
     '</div>'+
-    '<div class="cc-frame-wrap"><iframe class="cc-frame" src="'+CC_WEB_URL+'" title="BigX Chấm công" loading="lazy" allow="clipboard-read; clipboard-write"></iframe></div>';
+    '<div class="cc-frame-wrap"><iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe></div>';
 }
 
 /* ---- Router ---- */
