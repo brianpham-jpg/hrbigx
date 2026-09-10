@@ -1628,33 +1628,13 @@ function fixOrphanRecords(){
   });
   if(changed){ setCCData(cc); localStorage.setItem(FIXED_KEY, JSON.stringify(fixed)); }
 }
-function repair20260905(){
-  try{
-    if(localStorage.getItem('bigx_repair_20260905')) return;
-    var att=getAttendance(); if(Object.keys(att).length<10) return;
-    var raw=localStorage.getItem('bigx_cc'); var okObj=false;
-    try{ var p=JSON.parse(raw); okObj=(p&&typeof p==='object'&&!Array.isArray(p)); }catch(e){}
-    if(!okObj){ localStorage.setItem('bigx_cc','{}'); }
-    syncAllAttToCC();
-    var c=getCCData();
-    Object.keys(c).filter(function(k){return k.slice(-7)==='_2026_9';}).forEach(function(k){
-      c[k]['2026-09-01']={status:'NL',lateMin:0,note:'',manualOverride:true};
-      c[k]['2026-09-02']={status:'NL',lateMin:0,note:'',manualOverride:true};
-    });
-    var hk='NV053_2026_9'; c[hk]=c[hk]||{};
-    [7,8,9,10,11,14,15,16,17,18,21,22,23,24].forEach(function(d){ var ds='2026-09-'+(d<10?'0'+d:d); c[hk][ds]={status:'ĐÃ NGHỈ',lateMin:0,note:'',manualOverride:true}; });
-    setCCData(c);
-    var e=JSON.parse(localStorage.getItem('bigx_employees')||'[]'); var h=e.find(function(x){return x.id==='NV053';}); if(h){h.lastCycle=9;h.lastCycleYear=2026;} setEmployees(e);
-    localStorage.setItem('bigx_repair_20260905','1');
-    console.log('repair20260905 done: cc keys',Object.keys(c).length);
-  }catch(err){ console.warn('repair20260905', err); }
-}
+// (da go repair20260905 — ban va 1 lan ngay 5/9 da xong viec; go de khong tu chay lai/ghi de. Guard chong hong cc van giu o initApp + loadFromCloud)
 function initApp(){
   initNameSearch();
   try{ var _cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}'); if(!_cc||typeof _cc!=='object'||Array.isArray(_cc)) localStorage.setItem('bigx_cc','{}'); }catch(e){ localStorage.setItem('bigx_cc','{}'); }
   fixOrphanRecords();
   syncAllAttToCC();
-  loadFromCloud().then(()=>{ syncAllAttToCC(); try{repair20260905();}catch(e){} renderTodayAttendance(); renderAbsentList(); updateStats(); renderBangCC(); });
+  loadFromCloud().then(()=>{ syncAllAttToCC(); renderTodayAttendance(); renderAbsentList(); updateStats(); renderBangCC(); });
   renderTodayDate();
   renderTodayAttendance();
   renderAbsentList();
