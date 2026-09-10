@@ -86,16 +86,18 @@ function applyData(d, fromCache){
   if(currentTab) go(currentTab);
 }
 
-function fetchHR(tries){
-  return fetch(API_URL,{cache:'no-store'})
+function fetchHR(tries, fresh){
+  var url = API_URL + (fresh?'?fresh=1':'');
+  return fetch(url,{cache:'no-store'})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
     .catch(function(e){
-      if(tries>0){ return new Promise(function(res){ setTimeout(res,1200); }).then(function(){ return fetchHR(tries-1); }); }
+      if(tries>0){ return new Promise(function(res){ setTimeout(res,1200); }).then(function(){ return fetchHR(tries-1, fresh); }); }
       throw e;
     });
 }
 
-function loadData(){
+/* force=true → gọi API bỏ qua cache máy chủ (dùng sau khi upload CV để lấy data mới ngay) */
+function loadData(force){
   HR.error=null;
   /* 1) vẽ NGAY từ bản lưu trong trình duyệt (nếu có) để không phải chờ API */
   try{
@@ -104,7 +106,7 @@ function loadData(){
   }catch(e){}
 
   /* 2) gọi API nền (thử lại 2 lần), xong thì cập nhật + lưu cache */
-  fetchHR(2)
+  fetchHR(2, force)
     .then(function(d){
       applyData(d, false);
       try{ localStorage.setItem(HR_CACHE_KEY, JSON.stringify(d)); }catch(e){}
@@ -425,7 +427,7 @@ async function kcvSubmit(){
         '<div class="table-wrap" style="margin-top:10px;max-width:720px;"><table class="dt"><thead><tr><th>Mã UV</th><th>Họ tên</th><th>Vị trí</th><th>Link CV</th></tr></thead><tbody>'+
         d.added.map(function(a){return '<tr><td class="dt-mono">'+esc(a.maUV)+'</td><td class="dt-name">'+esc(a.hoTen)+'</td><td>'+esc(a.viTri)+'</td><td><a href="'+esc(a.url)+'" target="_blank" rel="noopener">Mở CV</a></td></tr>';}).join('')+'</tbody></table></div>';
       kcvFiles=[]; kcvRenderList();
-      loadData();
+      loadData(true); // bỏ qua cache máy chủ để CV vừa nạp hiện ngay
     } else { status.innerHTML='<span style="color:var(--rust);">Lỗi: '+esc(d.error||'không rõ')+'</span>'; }
   }catch(e){ status.innerHTML='<span style="color:var(--rust);">Lỗi kết nối: '+esc(e.message)+'</span>'; }
   kcvValid();
