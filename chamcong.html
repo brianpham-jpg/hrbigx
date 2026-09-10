@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<!-- saved from url=(0033)https://bigx-chamcong.vercel.app/ -->
-<html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!DOCTYPE html><html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BigX – Quản lý Chấm Công</title>
@@ -295,7 +293,7 @@ body.guest-mode .admin-only{display:none!important}
     <div class="topbar-right">
       <span class="topbar-user" id="topbar-user-email">brian.pham@bigx.vn</span>
       <button class="cc-login-guest" onclick="ccShowLogin()">🔑 Đăng nhập</button>
-      <button class="publish-btn admin-only" onclick="doPublish()">📤 Xuất bản</button>
+      <button class="publish-btn admin-only" onclick="doPublish()">💾 Lưu Sheet ngay</button>
       <button class="topbar-logout admin-only" id="topbar-logout-btn" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
@@ -2784,32 +2782,36 @@ function exportEmpExcel(empId){
 // ============================
 // PUBLISH (admin only)
 // ============================
-function doPublish() {
-  const data = {
-    employees: JSON.parse(localStorage.getItem(LS_EMPLOYEES)||'[]'),
-    cc_data:   JSON.parse(localStorage.getItem(LS_CC_DATA)||'{}'),
-  };
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  const repl = "window.BIGX_PUBLIC_DATA = JSON.parse(decodeURIComponent(escape(atob('" + encoded + "')))); /* BIGX_PD */";
-  const t = 'team_B4mAOLDh6h6eEt4TsOBo8UGY';
-  const lines = [
-    "(async()=>{",
-    "const t='"+t+"';",
-    "const r=await fetch('https://bigx-chamcong.vercel.app/?v='+Date.now());",
-    "let h=await r.text();",
-    "h=h.replace(/window[.]BIGX_PUBLIC_DATA = [^;]+; [/][*] BIGX_PD [*][/]/,repl);",
-    "const e=new TextEncoder();const b=e.encode(h);",
-    "const s=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-1',b))).map(x=>x.toString(16).padStart(2,'0')).join('');",
-    "await fetch('/api/v2/files?teamId='+t,{method:'POST',credentials:'include',headers:{'Content-Type':'application/octet-stream','x-vercel-digest':s},body:b});",
-    "const d=await(await fetch('/api/v13/deployments?teamId='+t,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'bigx-chamcong',files:[{file:'index.html',sha:s,size:b.length}],target:'production',projectSettings:{framework:null}})})).json();",
-    "let st=d.readyState;",
-    "for(let i=0;i<12&&st!=='READY';i++){await new Promise(r=>setTimeout(r,3000));const c=await(await fetch('/api/v13/deployments/'+d.id+'?teamId='+t,{credentials:'include'})).json();st=c.readyState;}",
-    "alert(st==='READY'?'✅ Xuất bản xong!':'⚠️ Kiểm tra vercel.com');",
-    "})()"
-  ];
-  const script = 'const repl=' + JSON.stringify(repl) + ';\n' + lines.join('\n');
-  try { navigator.clipboard.writeText(script).then(()=>alert('📋 Script copied!\n\n→ vercel.com → F12 → Console → Paste → Enter (~30s)')); }
-  catch(e2) { const el=document.createElement('textarea');el.value=script;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);alert('📋 Script copied! → vercel.com → F12 → Console → Paste'); }
+async function doPublish() {
+  // Lưu tay: ghi Firebase ngay + đẩy Google Sheet ngay (bỏ cơ chế vercel cũ).
+  // Dữ liệu vẫn tự lưu qua syncToCloud/autoPushSheet; nút này chỉ ép sync tức thì.
+  if (window._guestMode) { alert('Chế độ chỉ xem — không lưu.'); return; }
+  var btn = document.querySelector('.publish-btn');
+  var old = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu…'; }
+  try {
+    const dismissed = {};
+    Object.keys(localStorage).filter(k=>k.startsWith('bigx_dismissed_')).forEach(k => {
+      const date = k.replace('bigx_dismissed_','');
+      dismissed[date] = JSON.parse(localStorage.getItem(k)||'[]');
+    });
+    const payload = {
+      attendance: JSON.parse(localStorage.getItem('bigx_attendance')||'{}'),
+      employees:  JSON.parse(localStorage.getItem('bigx_employees')||'[]'),
+      cc_data:    JSON.parse(localStorage.getItem('bigx_cc')||'{}'),
+      cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
+      dismissed
+    };
+    await fetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    _lastSync = Date.now();
+    bxPushSheet();
+    if (btn) { btn.textContent = '✅ Đã lưu'; }
+    setTimeout(function(){ if (btn) { btn.disabled = false; btn.textContent = old || '💾 Lưu Sheet ngay'; } }, 2000);
+  } catch (e) {
+    console.warn('Luu that bai', e);
+    if (btn) { btn.textContent = '⚠️ Lỗi mạng'; }
+    setTimeout(function(){ if (btn) { btn.disabled = false; btn.textContent = old || '💾 Lưu Sheet ngay'; } }, 2500);
+  }
 }
 </script>
 <!-- [DA GOP - code lien mach]
