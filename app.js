@@ -1181,16 +1181,8 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ var w=do
 
 function renderChamCong(){
   return ''+
-    '<div class="cc-head">'+
-      '<div><div class="page-h1" style="font-size:22px">Chấm công &amp; phép</div>'+
-      '<div class="cc-sub">Hệ thống chấm công BigX chạy ngay trong dashboard tổng — giữ <b>100%</b> giao diện, công thức &amp; dữ liệu (cùng nguồn Firebase). Đăng nhập trong khung để hiện đầy đủ &amp; chỉnh sửa.</div></div>'+
-      '<div class="cc-bar">'+
-        '<button class="ov-navbtn cc-btn-primary" onclick="ccToggleFull()"><i class="ti ti-arrows-maximize"></i>Toàn màn hình</button>'+
-        '<a class="ov-navbtn" href="'+CC_APP_URL+'" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Tab mới</a>'+
-        '<a class="ov-navbtn" href="'+CC_SHEET_URL+'" target="_blank" rel="noopener"><i class="ti ti-table"></i>Google Sheet</a>'+
-      '</div>'+
-    '</div>'+
-    '<div class="cc-frame-wrap">'+
+    '<div class="cc-frame-wrap cc-bare">'+
+      '<button class="cc-fs-btn" onclick="ccToggleFull()" title="Toàn màn hình"><i class="ti ti-arrows-maximize"></i></button>'+
       '<button class="cc-exit" onclick="ccToggleFull()" title="Thu nhỏ (Esc)"><i class="ti ti-arrows-minimize"></i> Thu nhỏ</button>'+
       '<iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe>'+
     '</div>';
