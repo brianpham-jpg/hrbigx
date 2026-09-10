@@ -985,6 +985,150 @@ function renderBienDong(){
     '</div>';
 }
 
+/* ============================================================
+   TAB: TỔNG QUAN — Bảng điều khiển (động, ECharts, tự cập nhật)
+   ============================================================ */
+function ovActive(){ return (HR.nhansu||[]).filter(function(e){return (e.tinhTrang||'').trim()!=='Nghỉ việc';}); }
+/* số bản HĐ đã ký = 0 / trống → cần ký */
+function ovCanKy(){
+  return ovActive().filter(function(e){ var v=String(e.soBanKy==null?'':e.soBanKy).trim(); return v===''||v==='0'; });
+}
+/* HĐ quá hạn / sắp hết hạn ≤30 ngày → cần ký lại (gia hạn) */
+function ovGiaHan(){
+  return ovActive().map(function(e){ return {e:e, n:conLaiNum(e.ngayConLai)}; })
+    .filter(function(o){ return o.n!==null && o.n<=30; })
+    .sort(function(a,b){ return a.n-b.n; });
+}
+/* sinh nhật sắp tới: tháng này (từ hôm nay) + tháng sau; trả kèm số ngày còn lại */
+function ovBirthdays(){
+  var now=new Date(); var Y=now.getFullYear();
+  var list=[];
+  ovActive().forEach(function(e){
+    var p=String(e.sinhNhat||'').split('/'); if(p.length<2) return;
+    var d=parseInt(p[0],10), m=parseInt(p[1],10); if(!d||!m) return;
+    var next=new Date(Y, m-1, d); next.setHours(0,0,0,0);
+    var t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    if(next<t0) next=new Date(Y+1, m-1, d);
+    var days=Math.round((next-t0)/86400000);
+    list.push({ten:e.hoTen, phong:e.phong, d:d, m:m, days:days, dd:String(d).padStart(2,'0')+'/'+String(m).padStart(2,'0')});
+  });
+  var curM=now.getMonth()+1, nextM=curM===12?1:curM+1, curD=now.getDate();
+  // tháng này (từ hôm nay trở đi) + toàn bộ tháng sau
+  return list.filter(function(b){ return b.m===nextM || (b.m===curM && b.d>=curD); }).sort(function(a,b){ return a.days-b.days; });
+}
+
+/* đếm số động (count-up) */
+function ovCountUp(){
+  document.querySelectorAll('.ov-num[data-to]').forEach(function(el){
+    var to=parseFloat(el.getAttribute('data-to'))||0, dec=el.getAttribute('data-dec')==='1', suf=el.getAttribute('data-suf')||'';
+    var dur=900, t0=null;
+    function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=1-Math.pow(1-p,3); var v=to*e;
+      el.textContent=(dec?(Math.round(v*10)/10).toFixed(1):Math.round(v))+suf; if(p<1) requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  });
+}
+
+function ovInit(){
+  ovCountUp();
+  var all=HR.tuyendung||[]; var act=ovActive();
+
+  /* funnel tuyển dụng rút gọn */
+  var fn=tdFunnel(all);
+  ptMk('ov-funnel',{
+    tooltip:ptTip({trigger:'item',formatter:function(p){var i=p.dataIndex;return '<b>'+p.name+'</b><br/>'+p.value+' ứng viên'+(i>0?'<br/><span style="color:'+PTC.muted+'">'+pct(fn[i].n,fn[0].n)+'% tổng</span>':'');}}),
+    series:[{type:'funnel',left:'6%',right:'6%',top:6,bottom:6,minSize:'26%',maxSize:'100%',sort:'none',gap:3,
+      label:{show:true,position:'inside',color:'#fff',fontFamily:PTFONT,fontWeight:600,fontSize:11.5,formatter:function(p){return p.name+'  '+p.value;}},
+      labelLine:{show:false},itemStyle:{borderWidth:0},emphasis:{label:{fontSize:12.5}},
+      data:fn.map(function(s,i){return {value:s.n,name:s.label,itemStyle:{color:PTC.ramp[i]||PTC.teal}};})}]
+  });
+
+  /* cơ cấu phòng ban (đang làm) — bar ngang */
+  var dept=csCount(act,'phong');
+  ptMk('ov-dept',{
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' người';}}),
+    grid:{left:6,right:28,top:8,bottom:4,containLabel:true},
+    xAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
+    yAxis:{type:'category',data:dept.map(function(x){return x[0];}).reverse(),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:PTC.text,fontFamily:PTFONT,fontSize:11}},
+    series:[{type:'bar',data:dept.map(function(x){return x[1];}).reverse(),barWidth:'56%',itemStyle:{color:PTC.teal,borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:PTC.muted,fontFamily:PTFONT,fontSize:11}}]
+  });
+}
+
+function renderOverview(){
+  if(HR.error) return errorBox();
+  if(!HR.loaded) return loadingBox();
+  var ns=HR.nhansu||[]; var act=ovActive();
+  var tong=ns.length, dangLam=act.length;
+  var nghi=ns.filter(function(e){return (e.tinhTrang||'').trim()==='Nghỉ việc';}).length;
+  var rateNghi=tong?Math.round(nghi/tong*1000)/10:0;
+  var totalCV=(HR.tuyendung||[]).length;
+  var viTriMo=(HR.viTriList&&HR.viTriList.length)?HR.viTriList.length:0;
+
+  var kpis=[
+    ['Tổng nhân sự', tong, 0, '', 'ti-users'],
+    ['Đang làm', dangLam, 0, '', 'ti-user-check'],
+    ['Tỷ lệ nghỉ', rateNghi, 1, '%', 'ti-trending-down'],
+    ['Tổng CV tuyển dụng', totalCV, 0, '', 'ti-files']
+  ].map(function(k){return '<div class="stat"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[4]+'"></i></div><div class="stat-val ov-num" data-to="'+k[1]+'" data-dec="'+k[2]+'" data-suf="'+k[3]+'">0'+k[3]+'</div></div>';}).join('');
+
+  /* ---- Hợp đồng cần ký ---- */
+  var canKy=ovCanKy(); var giaHan=ovGiaHan();
+  var soon=giaHan.filter(function(o){return o.n>=0;});
+  var over=giaHan.filter(function(o){return o.n<0;});
+  var ckRows=canKy.map(function(e){
+    return '<div class="ov-li"><span class="ov-dot rust"></span><span class="ov-li-main">'+esc(e.hoTen)+'</span>'+
+      '<span class="ov-li-sub">'+esc(loaiHDShort(e.loaiHD))+'</span><span class="ov-tag rust">Chưa ký</span></div>';
+  }).join('');
+  var soonRows=soon.map(function(o){
+    return '<div class="ov-li"><span class="ov-dot clay"></span><span class="ov-li-main">'+esc(o.e.hoTen)+'</span>'+
+      '<span class="ov-li-sub">'+esc(loaiHDShort(o.e.loaiHD))+'</span><span class="ov-tag clay">Còn '+o.n+'n</span></div>';
+  }).join('');
+  var ckTotal=canKy.length+soon.length+over.length;
+  var ckBody = (canKy.length?('<div class="ov-sub-h">Chưa ký bản nào ('+canKy.length+')</div>'+ckRows):'')+
+               (soon.length?('<div class="ov-sub-h">Sắp hết hạn ≤30 ngày ('+soon.length+')</div>'+soonRows):'')+
+               (over.length?('<div class="ov-more"><i class="ti ti-alert-triangle"></i> Và <b>'+over.length+'</b> hợp đồng đã quá hạn cần ký lại.</div>'):'');
+  if(!ckBody) ckBody='<div class="ov-empty">Không có hợp đồng cần xử lý.</div>';
+
+  /* ---- Sinh nhật sắp tới ---- */
+  var bds=ovBirthdays();
+  var now=new Date(); var curM=now.getMonth()+1, nextM=curM===12?1:curM+1;
+  var bdRows = bds.length ? bds.map(function(b){
+    var when=b.days===0?'Hôm nay':(b.days===1?'Ngày mai':('Còn '+b.days+' ngày'));
+    var soon=b.days<=7;
+    return '<div class="ov-li"><span class="ov-dot '+(soon?'gold':'teal')+'"></span><span class="ov-li-main">'+esc(b.ten)+'</span>'+
+      '<span class="ov-li-sub">'+esc(b.phong||'')+'</span><span class="ov-tag '+(soon?'gold':'teal')+'">'+b.dd+' · '+when+'</span></div>';
+  }).join('') : '<div class="ov-empty">Không có sinh nhật trong tháng '+curM+'–'+nextM+'.</div>';
+
+  setTimeout(ovInit,30);
+
+  return ''+
+    '<div class="page-head"><div class="page-h1">Bảng điều khiển</div>'+
+    '<div class="page-lead">Nhìn nhanh trong 10 giây — nhân sự, việc cần xử lý và tuyển dụng. Tự cập nhật theo nguồn dữ liệu.</div></div>'+
+    '<div class="stat-row">'+kpis+'</div>'+
+
+    '<div class="grid-2">'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Hợp đồng cần ký</span>'+
+        '<span class="sec-badge'+(ckTotal?' on':'')+'">'+ckTotal+'</span></div>'+
+        '<div class="card ov-card" onclick="go(\'hop-dong\')">'+ckBody+
+        '<div class="ov-foot">Xem tab Hợp đồng <i class="ti ti-arrow-right"></i></div></div></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Sinh nhật sắp tới</span>'+
+        '<span class="sec-badge'+(bds.length?' on':'')+'">'+bds.length+'</span></div>'+
+        '<div class="card ov-card" onclick="go(\'ho-so\')">'+bdRows+
+        '<div class="ov-foot">Tháng '+curM+' &amp; tháng '+nextM+' <i class="ti ti-cake"></i></div></div></div>'+
+    '</div>'+
+
+    '<div class="grid-2">'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Phễu tuyển dụng</span><span class="sec-sub">tóm tắt</span></div>'+
+        '<div class="card"><div id="ov-funnel" class="ec ec-tall"></div></div></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Cơ cấu phòng ban</span><span class="sec-sub">nhân sự đang làm</span></div>'+
+        '<div class="card"><div id="ov-dept" class="ec ec-tall"></div></div></div>'+
+    '</div>'+
+
+    '<div class="ov-nav">'+
+      ['pt-chi-so|Chỉ số & xu hướng|ti-chart-bar','pt-tuyen-dung|Hiệu quả tuyển dụng|ti-activity','pt-bien-dong|Biến động nhân sự|ti-trending-up','kho-cv|Nạp CV mới|ti-folder']
+      .map(function(s){var p=s.split('|');return '<button class="ov-navbtn" onclick="go(\''+p[0]+'\')"><i class="ti '+p[2]+'"></i>'+p[1]+'</button>';}).join('')+
+    '</div>';
+}
+
 /* ---- Router ---- */
 var currentTab = null;
 function go(id){
@@ -1000,7 +1144,8 @@ function go(id){
   document.getElementById('tb-crumb').textContent=group.group;
 
   var content=document.getElementById('content');
-  if(id==='ho-so') content.innerHTML=renderHoSo();
+  if(id==='overview') content.innerHTML=renderOverview();
+  else if(id==='ho-so') content.innerHTML=renderHoSo();
   else if(id==='hop-dong') content.innerHTML=renderHopDong();
   else if(id==='tuyen-dung') content.innerHTML=renderTuyenDung();
   else if(id==='pt-tuyen-dung') content.innerHTML=renderPhanTichTuyenDung();
