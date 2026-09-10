@@ -1171,16 +1171,29 @@ function renderOverview(){
 var CC_APP_URL   = 'chamcong.html'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
 
+function ccToggleFull(){
+  var w=document.querySelector('.cc-frame-wrap'); if(!w) return;
+  var on=!w.classList.contains('cc-full');
+  w.classList.toggle('cc-full', on);
+  document.body.style.overflow = on?'hidden':'';
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ var w=document.querySelector('.cc-frame-wrap.cc-full'); if(w) ccToggleFull(); } });
+
 function renderChamCong(){
   return ''+
-    '<div class="page-head"><div class="page-h1">Chấm công &amp; phép</div>'+
-    '<div class="page-lead">Hệ thống chấm công BigX — nay chạy ngay trong dashboard tổng, giữ <b>100%</b> giao diện, công thức và dữ liệu (cùng một nguồn Firebase). Thao tác trực tiếp trong khung bên dưới; mọi thay đổi lưu thẳng vào hệ thống và đẩy Google Sheet như cũ.</div></div>'+
-    '<div class="cc-bar">'+
-      '<a class="ov-navbtn" href="'+CC_APP_URL+'" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Mở toàn màn hình</a>'+
-      '<a class="ov-navbtn" href="'+CC_SHEET_URL+'" target="_blank" rel="noopener"><i class="ti ti-table"></i>Mở Google Sheet</a>'+
-      '<span class="cc-hint"><i class="ti ti-lock"></i> Dữ liệu &amp; công thức nguyên bản — lưu thẳng vào hệ thống chấm công.</span>'+
+    '<div class="cc-head">'+
+      '<div><div class="page-h1" style="font-size:22px">Chấm công &amp; phép</div>'+
+      '<div class="cc-sub">Hệ thống chấm công BigX chạy ngay trong dashboard tổng — giữ <b>100%</b> giao diện, công thức &amp; dữ liệu (cùng nguồn Firebase). Đăng nhập trong khung để hiện đầy đủ &amp; chỉnh sửa.</div></div>'+
+      '<div class="cc-bar">'+
+        '<button class="ov-navbtn cc-btn-primary" onclick="ccToggleFull()"><i class="ti ti-arrows-maximize"></i>Toàn màn hình</button>'+
+        '<a class="ov-navbtn" href="'+CC_APP_URL+'" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Tab mới</a>'+
+        '<a class="ov-navbtn" href="'+CC_SHEET_URL+'" target="_blank" rel="noopener"><i class="ti ti-table"></i>Google Sheet</a>'+
+      '</div>'+
     '</div>'+
-    '<div class="cc-frame-wrap"><iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe></div>';
+    '<div class="cc-frame-wrap">'+
+      '<button class="cc-exit" onclick="ccToggleFull()" title="Thu nhỏ (Esc)"><i class="ti ti-arrows-minimize"></i> Thu nhỏ</button>'+
+      '<iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe>'+
+    '</div>';
 }
 
 /* ---- Router ---- */
