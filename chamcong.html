@@ -2825,6 +2825,38 @@ body.guest-mode .cc-login-guest{display:inline-flex}
 </style>
 <script>
 function ccShowLogin(){var a=document.getElementById('app'),l=document.getElementById('login-screen');if(a)a.style.display='none';if(l)l.style.display='flex';var e=document.getElementById('login-email');if(e){try{e.focus();}catch(_){}}}
+/* Dán ảnh Ctrl+V để chấm công (dùng lại pipeline OCR sẵn có) */
+async function ccOcrPasted(file){
+  var session='sang';
+  var st=document.getElementById('upload-status-'+session);
+  try{ if(st){st.style.display='block';st.innerHTML='\u23f3 \u0110ang \u0111\u1ecdc \u1ea3nh d\u00e1n...';} }catch(_){ }
+  try{
+    await loadTesseract();
+    var processed=await preprocessForOCR(file);
+    var r=await Tesseract.recognize(processed,'vie+eng',{logger:function(){}});
+    var lines=r.data.text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>2;});
+    var normText=normalizeViet(lines.join(' '));
+    var emps=getEmployees();
+    var matched=emps.filter(function(emp){return matchEmpInText(emp,normText);});
+    showOcrMatches(matched,lines,session);
+    if(st)st.style.display='none';
+  }catch(err){ if(st)st.innerHTML='\u274c LLoi OCR: '+(err&&err.message||err); }
+}
+document.addEventListener('paste',function(e){
+  try{
+    if(!e.clipboardData) return;
+    var items=e.clipboardData.items||[];
+    for(var i=0;i<items.length;i++){
+      if(items[i].type && items[i].type.indexOf('image')===0){
+        var file=items[i].getAsFile();
+        if(file){ e.preventDefault(); ccOcrPasted(file); return; }
+      }
+    }
+  }catch(_){}
+});
+/* Đổi nhãn cột khi đã bỏ buổi chiều */
+function ccRelabelSang(){ try{ var sp=Array.prototype.slice.call(document.querySelectorAll('span')).find(function(x){return /BU\u1ed4I S\u00c1NG/.test(x.textContent);}); if(sp) sp.textContent='\ud83d\udccb \u0110I\u1ec2M DANH H\u00d4M NAY'; }catch(_){} }
+ccRelabelSang(); setTimeout(ccRelabelSang,600);
 </script>
 <style id="cc-sync">
 /* Font đồng bộ dashboard */
@@ -2838,5 +2870,8 @@ button,input,select,textarea{font-family:inherit!important;}
 .topbar-logout{background:#fff!important;color:var(--red)!important;border:1px solid var(--gray-bd)!important;}
 .cc-login-guest{background:#fff!important;color:var(--green)!important;border:1px solid var(--gray-bd)!important;}
 .publish-btn{border:1px solid #e7c200!important;}
+/* Gộp 1 lần check-in: ẩn cột Buổi chiều, cột Buổi sáng full */
+.card:has(#file-input-chieu){display:none!important;}
+div:has(> .card > div > #file-input-chieu){grid-template-columns:1fr!important;}
 </style>
 </body></html>
