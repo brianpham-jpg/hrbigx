@@ -1199,7 +1199,8 @@ function go(id){
   else if(id==='pt-bien-dong') content.innerHTML=renderBienDong();
   else if(id==='kho-cv') content.innerHTML=renderKhoCV();
   else if(id==='cham-cong') content.innerHTML=renderChamCong();
-  else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
+  else if(id==='pt-nang-suat'){content.innerHTML=window.renderNangSuat();}
+    else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
 }
 
@@ -1207,3 +1208,115 @@ function go(id){
 renderNav();
 loadData();
 go('overview');
+
+
+/* ---- Cham cong & nang suat (pt-nang-suat) ---- */
+window.__NS_FB="https://bigx-chamcong-hr-default-rtdb.firebaseio.com/public.json";
+window.nsNorm=function(s){return String(s||'').toLowerCase().normalize('NFC').replace(/\s+/g,' ').trim();};
+window.nsEsc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+window.nsuatData=function(){
+  if(window.__ccData) return window.__ccData;
+  var emp=[],cc={};
+  try{emp=JSON.parse(localStorage.getItem('bigx_employees'))||[];}catch(e){}
+  try{cc=JSON.parse(localStorage.getItem('bigx_cc'))||{};}catch(e){}
+  if(emp.length && Object.keys(cc).length) return {employees:emp, cc_data:cc};
+  return null;
+};
+window.nsuatLoadFirebase=function(){
+  if(window.__ccLoading) return; window.__ccLoading=true;
+  fetch(window.__NS_FB).then(function(r){return r.json();}).then(function(d){
+    window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}};
+    window.__ccLoading=false;
+    if(document.querySelector('#nsuat')) window.go && window.go('pt-nang-suat');
+  }).catch(function(e){ window.__ccLoading=false; var el=document.querySelector('#nsuat-status'); if(el) el.textContent='Không tải được dữ liệu chấm công (Firebase).'; });
+};
+window.renderNangSuat=function(){
+  var esc=window.nsEsc, norm=window.nsNorm;
+  var ns=(window.HR&&window.HR.nhansu)||[];
+  var nsByName={}; ns.forEach(function(n){nsByName[norm(n.hoTen)]=n;});
+  var head='<div class="page-head"><div class="page-h1">Chấm công & năng suất</div>'
+    +'<div class="page-lead">Từ bảng công đến góc nhìn năng suất — dữ liệu chấm công đã liên kết mã nhân viên.</div></div>';
+  var style='<style id="ns-style">'
+    +'#nsuat{max-width:1120px}'
+    +'#nsuat .ns-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:4px 0 20px}'
+    +'#nsuat .ns-kpi{background:#fff;border:1px solid #e6e0d4;border-radius:10px;padding:16px 18px}'
+    +'#nsuat .ns-kpi .v{font-family:Fraunces,Georgia,serif;font-size:30px;font-weight:600;color:#243b35;line-height:1}'
+    +'#nsuat .ns-kpi .l{font-size:12.5px;color:#7a7365;margin-top:6px;letter-spacing:.02em}'
+    +'#nsuat .ns-note{background:#f3efe6;border:1px solid #e6e0d4;border-left:3px solid #35655B;border-radius:8px;padding:12px 16px;font-size:13.5px;color:#4a4638;margin-bottom:22px;line-height:1.55}'
+    +'#nsuat h3{font-family:Fraunces,Georgia,serif;font-size:17px;color:#243b35;margin:26px 0 10px;font-weight:600}'
+    +'#nsuat table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e6e0d4;border-radius:10px;overflow:hidden;font-size:13px}'
+    +'#nsuat th{text-align:left;background:#f3efe6;color:#5c5647;font-weight:600;padding:9px 12px;border-bottom:1px solid #e6e0d4;white-space:nowrap;font-size:12px;letter-spacing:.02em}'
+    +'#nsuat td{padding:8px 12px;border-bottom:1px solid #f0ebe0;color:#3d3a30;vertical-align:middle}'
+    +'#nsuat tr:last-child td{border-bottom:none}'
+    +'#nsuat td.num,#nsuat th.num{text-align:right;font-variant-numeric:tabular-nums}'
+    +'#nsuat .code{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#35655B;font-weight:600}'
+    +'#nsuat .nvcode{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:#9a8f78}'
+    +'#nsuat .mtag{display:inline-block;background:#eef1ea;color:#4a6b60;border-radius:4px;padding:1px 6px;font-size:11px;margin:1px 2px 1px 0}'
+    +'#nsuat .late{color:#A65A4B;font-weight:600}'
+    +'#nsuat .muted{color:#9a8f78}'
+    +'</style>';
+  var data=window.nsuatData();
+  if(!data){ window.nsuatLoadFirebase(); return head+style+'<div id="nsuat"><div id="nsuat-status" class="ns-note">Đang tải dữ liệu chấm công…</div></div>'; }
+  var emp=data.employees||[], cc=data.cc_data||{};
+  var ccKeys=Object.keys(cc);
+  var rows=emp.map(function(e){
+    var months={}, totalRec=0, fullDays=0, lateCnt=0;
+    ccKeys.forEach(function(k){
+      if(k.indexOf(e.id+'_')!==0) return;
+      var mm=k.split('_'); if(mm.length<3) return;
+      months['T'+mm[2]]=1;
+      var rec=cc[k]||{};
+      Object.keys(rec).forEach(function(d){
+        var v=rec[d]; var st=(v&&typeof v==='object')?v.status:v;
+        if(st===''||st==null) return;
+        totalRec++;
+        if(st==='1') fullDays++;
+        var lm=(v&&typeof v==='object'&&v.lateMin)||0; if(lm>0) lateCnt++;
+      });
+    });
+    var n=nsByName[norm(e.name)];
+    return {nv:e.id, bigx:n?n.maNV:'—', name:e.name, phong:(n&&n.phong)||e.dept||'—',
+      months:Object.keys(months).sort(function(a,b){return (+a.slice(1))-(+b.slice(1));}),
+      totalRec:totalRec, fullDays:fullDays, lateCnt:lateCnt};
+  });
+  rows.sort(function(a,b){return (a.phong+'|'+a.name).localeCompare(b.phong+'|'+b.name,'vi');});
+  var depts={}; rows.forEach(function(r){if(!depts[r.phong])depts[r.phong]={n:0,rec:0,late:0};depts[r.phong].n++;depts[r.phong].rec+=r.totalRec;depts[r.phong].late+=r.lateCnt;});
+  var totalRecAll=rows.reduce(function(s,r){return s+r.totalRec;},0);
+  var totalLate=rows.reduce(function(s,r){return s+r.lateCnt;},0);
+  var allMonths={}; rows.forEach(function(r){r.months.forEach(function(m){allMonths[m]=1;});});
+  var monthList=Object.keys(allMonths).sort(function(a,b){return (+a.slice(1))-(+b.slice(1));});
+  var empNames={}; emp.forEach(function(e){empNames[norm(e.name)]=1;});
+  var noAtt=ns.filter(function(n){return n.tinhTrang && n.tinhTrang.indexOf('Nghỉ')<0 && !empNames[norm(n.hoTen)];});
+  var kpis='<div class="ns-kpis">'
+    +'<div class="ns-kpi"><div class="v">'+rows.length+'</div><div class="l">Nhân viên có chấm công</div></div>'
+    +'<div class="ns-kpi"><div class="v">'+Object.keys(depts).length+'</div><div class="l">Phòng ban</div></div>'
+    +'<div class="ns-kpi"><div class="v">'+totalRecAll+'</div><div class="l">Tổng ngày đã chấm</div></div>'
+    +'<div class="ns-kpi"><div class="v">'+monthList.length+'</div><div class="l">Tháng có dữ liệu ('+(monthList[0]||'')+'–'+(monthList[monthList.length-1]||'')+')</div></div>'
+    +'</div>';
+  var note='<div class="ns-note"><b>Liên kết mã:</b> đã nối '+rows.length+'/'+emp.length
+    +' mã chấm công (NVxxx) với mã hồ sơ (BIGX) theo tên — khớp sạch. '
+    +noAtt.length+' nhân viên đang làm không có dữ liệu chấm công (BOD/cố vấn/quản lý không bấm máy). '
+    +'Số liệu dưới là dữ liệu thô đã chấm; phân tích năng suất (biểu đồ) sẽ bổ sung ở bước sau.</div>';
+  var thead='<tr><th>Mã BIGX</th><th>Mã CC</th><th>Họ tên</th><th>Phòng ban</th><th>Tháng có dữ liệu</th><th class="num">Ngày đã chấm</th><th class="num">Ngày công đủ</th><th class="num">Lượt đi trễ</th></tr>';
+  var tbody=rows.map(function(r){
+    return '<tr><td class="code">'+esc(r.bigx)+'</td>'
+      +'<td class="nvcode">'+esc(r.nv)+'</td>'
+      +'<td>'+esc(r.name)+'</td>'
+      +'<td>'+esc(r.phong)+'</td>'
+      +'<td>'+r.months.map(function(m){return '<span class="mtag">'+m+'</span>';}).join('')+'</td>'
+      +'<td class="num">'+r.totalRec+'</td>'
+      +'<td class="num">'+r.fullDays+'</td>'
+      +'<td class="num '+(r.lateCnt>0?'late':'muted')+'">'+r.lateCnt+'</td></tr>';
+  }).join('');
+  var table='<h3>Nhân viên có chấm công ('+rows.length+')</h3><table>'+thead+tbody+'</table>';
+  var deptRows=Object.keys(depts).sort(function(a,b){return a.localeCompare(b,'vi');}).map(function(d){
+    return '<tr><td>'+esc(d)+'</td><td class="num">'+depts[d].n+'</td><td class="num">'+depts[d].rec+'</td><td class="num '+(depts[d].late>0?'late':'muted')+'">'+depts[d].late+'</td></tr>';
+  }).join('');
+  var deptTable='<h3>Theo phòng ban</h3><table><tr><th>Phòng ban</th><th class="num">Số NV</th><th class="num">Tổng ngày chấm</th><th class="num">Lượt đi trễ</th></tr>'+deptRows+'</table>';
+  var noAttHtml='';
+  if(noAtt.length){
+    noAttHtml='<h3>Đang làm nhưng không chấm công ('+noAtt.length+')</h3><table><tr><th>Mã BIGX</th><th>Họ tên</th><th>Phòng ban</th><th>Tình trạng</th></tr>'
+      +noAtt.map(function(n){return '<tr><td class="code">'+esc(n.maNV)+'</td><td>'+esc(n.hoTen)+'</td><td>'+esc(n.phong)+'</td><td class="muted">'+esc(n.tinhTrang)+'</td></tr>';}).join('')+'</table>';
+  }
+  return head+style+'<div id="nsuat">'+kpis+note+table+deptTable+noAttHtml+'</div>';
+};
