@@ -1269,7 +1269,7 @@ window.renderNangSuat=function(){
   if(!data){ window.nsuatLoadFirebase(); return head+style+'<div id="nsuat"><div id="nsuat-status" class="ns-note">Đang tải dữ liệu chấm công…</div></div>'; }
   var emp=data.employees||[], cc=data.cc_data||{};
   var ccKeys=Object.keys(cc);
-  var byMonth={}, byDept={};
+  var byMonth={}, byDept={}, lateEmp={};
   var rows=emp.map(function(e){
     var months={}, totalRec=0, fullDays=0, lateCnt=0;
     var n=nsByName[norm(e.name)];
@@ -1286,7 +1286,13 @@ window.renderNangSuat=function(){
         var lm=(v&&typeof v==='object'&&v.lateMin)||0;
         totalRec++; byMonth[ml].rec++; byMonth[ml].emp[e.id]=1;
         if(st==='1'){fullDays++; byMonth[ml].full++;}
-        if(lm>0){lateCnt++; byMonth[ml].late++;}
+        if(lm>0){lateCnt++; byMonth[ml].late++;
+          var _le=lateEmp[e.id]||(lateEmp[e.id]={name:e.name,phong:dept,mon:{},tot:{c:0,m:0,f:0}});
+          _le.phong=dept;
+          var _mo=_le.mon[ml]||(_le.mon[ml]={c:0,m:0,f:0});
+          var _f=(lm>=3&&lm<=20)?20000:((lm>=21&&lm<=45)?50000:0);
+          _mo.c++;_mo.m+=lm;_mo.f+=_f;_le.tot.c++;_le.tot.m+=lm;_le.tot.f+=_f;
+        }
       });
     });
     byDept[dept]=byDept[dept]||{n:0,full:0,late:0,rec:0};
@@ -1299,7 +1305,7 @@ window.renderNangSuat=function(){
   var months=Object.keys(byMonth).sort(function(a,b){return (+a.slice(1))-(+b.slice(1));});
   var mArr=months.map(function(m,i){return {m:m, full:byMonth[m].full, late:byMonth[m].late, rec:byMonth[m].rec, emp:Object.keys(byMonth[m].emp).length, partial:(i===months.length-1)};});
   var dArr=Object.keys(byDept).map(function(d){return {d:d, n:byDept[d].n, full:byDept[d].full, late:byDept[d].late, rec:byDept[d].rec, rate:byDept[d].rec?+(byDept[d].late/byDept[d].rec*100).toFixed(1):0};});
-  window.__nsChartData={months:months, byMonth:mArr, byDept:dArr};
+  window.__nsChartData={months:months, byMonth:mArr, byDept:dArr, late:lateEmp};
   var sumFull=rows.reduce(function(s,r){return s+r.fullDays;},0);
   var sumLate=rows.reduce(function(s,r){return s+r.lateCnt;},0);
   var sumRec=rows.reduce(function(s,r){return s+r.totalRec;},0);
@@ -1325,6 +1331,10 @@ window.renderNangSuat=function(){
     +'<div class="ns-card"><div class="ct">Ngày công đủ theo phòng</div><div class="cs">Quy mô đóng góp ngày công</div><div class="ns-chart" id="ns-dfull"></div></div>'
     +'<div class="ns-card"><div class="ct">Tỷ lệ đi trễ theo phòng</div><div class="cs">Lượt đi trễ / tổng ngày chấm (%)</div><div class="ns-chart" id="ns-dlate"></div></div>'
     +'</div>';
+  var mBtns='<button data-k="all" class="on">Toàn kỳ</button>'+months.map(function(m){return '<button data-k="'+m+'">'+m+'</button>';}).join('');
+  var lateTop='<div class="ns-head"><h3 style="margin-top:26px">Đi trễ nhiều nhất — Top 10</h3>'
+    +'<span class="ns-seg" id="ns-late-seg">'+mBtns+'</span></div>'
+    +'<div class="ns-card"><div class="cs" style="margin:-2px 0 3px">Xếp theo số lần đi trễ · di chuột để xem tổng phút &amp; tiền phạt ước tính</div><div class="ns-chart tall" id="ns-top-late"></div></div>';
   var thead='<tr><th>Mã BIGX</th><th>Mã CC</th><th>Họ tên</th><th>Phòng ban</th><th>Tháng có dữ liệu</th><th class="num">Ngày đã chấm</th><th class="num">Ngày công đủ</th><th class="num">Lượt đi trễ</th></tr>';
   var tbody=rows.map(function(r){
     return '<tr><td class="code">'+esc(r.bigx)+'</td><td class="nvcode">'+esc(r.nv)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.phong)+'</td>'
@@ -1343,7 +1353,7 @@ window.renderNangSuat=function(){
       +noAtt.map(function(n){return '<tr><td class="code">'+esc(n.maNV)+'</td><td>'+esc(n.hoTen)+'</td><td>'+esc(n.phong)+'</td><td class="muted">'+esc(n.tinhTrang)+'</td></tr>';}).join('')+'</table>';
   }
   if(typeof setTimeout==='function') setTimeout(window.nsInit,30);
-  return head+style+'<div id="nsuat">'+kpis+note+charts+table+deptTable+noAttHtml+'</div>';
+  return head+style+'<div id="nsuat">'+kpis+note+charts+lateTop+table+deptTable+noAttHtml+'</div>';
 };
 window.nsInit=function(){
   if(typeof echarts==='undefined'||!window.ptMk) return;
@@ -1387,5 +1397,26 @@ window.nsInit=function(){
     xAxis:Object.assign({type:'value',axisLabel:{color:muted,fontFamily:FONT,fontSize:11.5,formatter:'{value}%'}},axis),
     yAxis:Object.assign({type:'category',data:dl.map(function(x){return x.d;})},axis,{axisLabel:{color:navy,fontFamily:FONT,fontSize:11.5}}),
     series:[{type:'bar',barWidth:'62%',data:dl.map(function(x){return x.rate;}),itemStyle:{color:function(p){var r=dl[p.dataIndex].rate;return r>=10?rust:(r>=6?clay:teal2);},borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:muted,fontFamily:FONT,fontSize:11,formatter:function(o){return o.value.toFixed(1).replace('.',',')+'%';}},animationDuration:700,animationDelay:function(i){return i*40;}}]
+  });
+  function nsMoney(n){return (n||0).toLocaleString('vi')+'đ';}
+  function topLateOpt(scope){
+    var L=D.late||{};
+    var arr=Object.keys(L).map(function(id){var o=L[id];var s=scope==='all'?o.tot:(o.mon[scope]||{c:0,m:0,f:0});return {name:o.name,phong:o.phong,c:s.c,m:s.m,f:s.f};}).filter(function(x){return x.c>0;});
+    arr.sort(function(a,b){return (b.c-a.c)||(b.m-a.m);});
+    arr=arr.slice(0,10).reverse();
+    return {
+      grid:{left:6,right:54,top:10,bottom:6,containLabel:true},
+      tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var o=arr[p[0].dataIndex];return '<b>'+o.name+'</b><br/><span style="color:'+muted+'">'+o.phong+'</span><br/>Số lần đi trễ: <b>'+o.c+'</b><br/>Tổng phút trễ: <b>'+o.m+'</b> phút<br/>Tiền phạt ước tính: <b>'+nsMoney(o.f)+'</b>';}}),
+      xAxis:Object.assign({type:'value',minInterval:1},axis),
+      yAxis:Object.assign({type:'category',data:arr.map(function(x){return x.name;})},axis,{axisLabel:{color:navy,fontFamily:FONT,fontSize:11.5}}),
+      series:[{type:'bar',barWidth:'60%',data:arr.map(function(x){return x.c;}),itemStyle:{color:rust,borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:muted,fontFamily:FONT,fontSize:11.5,formatter:function(o){return arr[o.dataIndex].c+' lần';}},animationDuration:700,animationDelay:function(i){return i*45;}}],
+      title:arr.length?{show:false}:{text:'Không có lượt đi trễ trong kỳ này',left:'center',top:'middle',textStyle:{color:muted,fontFamily:FONT,fontSize:13,fontWeight:400}}
+    };
+  }
+  window.ptMk('ns-top-late',topLateOpt('all'));
+  var lseg=document.getElementById('ns-late-seg');
+  if(lseg) lseg.querySelectorAll('button').forEach(function(b){
+    b.onclick=function(){lseg.querySelectorAll('button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
+      var c=window.__ptCharts&&window.__ptCharts['ns-top-late']; if(c) c.setOption(topLateOpt(b.dataset.k),true);};
   });
 };
