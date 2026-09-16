@@ -1286,11 +1286,13 @@ window.renderNangSuat=function(){
         var lm=(v&&typeof v==='object'&&v.lateMin)||0;
         totalRec++; byMonth[ml].rec++; byMonth[ml].emp[e.id]=1;
         if(st==='1'){fullDays++; byMonth[ml].full++;}
-        if(lm>0){lateCnt++; byMonth[ml].late++;
+        // "Đi trễ" = mã bắt đầu T-S hoặc T-C (đi trễ sáng/chiều); KHÔNG tính theo lateMin để bỏ ngày đủ công còn sót phút rác
+        if(/^T-[SC]/.test(st)){lateCnt++; byMonth[ml].late++;
           var _le=lateEmp[e.id]||(lateEmp[e.id]={name:e.name,phong:dept,mon:{},tot:{c:0,m:0,f:0}});
           _le.phong=dept;
           var _mo=_le.mon[ml]||(_le.mon[ml]={c:0,m:0,f:0});
-          var _f=(lm>=3&&lm<=20)?20000:((lm>=21&&lm<=45)?50000:0);
+          // tiền phạt chỉ áp cho đi trễ KHÔNG phép (mã không kết thúc -P); đi trễ có phép trừ vào phép, không phạt tiền
+          var _f=(/-P$/.test(st))?0:((lm>=3&&lm<=20)?20000:((lm>=21&&lm<=45)?50000:0));
           _mo.c++;_mo.m+=lm;_mo.f+=_f;_le.tot.c++;_le.tot.m+=lm;_le.tot.f+=_f;
         }
       });
