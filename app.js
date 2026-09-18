@@ -51,7 +51,10 @@ const NAV = [
     { id:'pt-nang-suat', label:'Chấm công & năng suất', icon:'ti-clock', badge:'new',
       lead:'Từ bảng công đến góc nhìn năng suất.',
       points:['Ngày công, đi trễ, tăng ca theo nhóm','So sánh giữa phòng ban','Xu hướng theo tháng'],
-      skeleton:'charts' }
+      skeleton:'charts' },
+    { id:'bao-cao', label:'Báo cáo', icon:'ti-report', badge:'new',
+      lead:'Báo cáo tổng hợp theo tuần / tháng — tuyển dụng, biến động nhân sự, chấm công, hợp đồng; tự gửi email T2 hằng tuần & ngày 1 hằng tháng.',
+      points:['Toggle Tuần / Tháng, chọn kỳ bất kỳ','So sánh kỳ trước, đi trễ theo tên','In / Xuất PDF · tự gửi email'] }
   ]},
   { group:'Tổ chức & tham chiếu', items:[
     { id:'so-do',   label:'Sơ đồ tổ chức', icon:'ti-sitemap',
@@ -1200,6 +1203,7 @@ function go(id){
   else if(id==='kho-cv') content.innerHTML=renderKhoCV();
   else if(id==='cham-cong') content.innerHTML=renderChamCong();
   else if(id==='pt-nang-suat'){content.innerHTML=window.renderNangSuat();}
+  else if(id==='bao-cao'){content.innerHTML=window.renderBaoCao();}
     else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
 }
@@ -1422,3 +1426,316 @@ window.nsInit=function(){
       var c=window.__ptCharts&&window.__ptCharts['ns-top-late']; if(c) c.setOption(topLateOpt(b.dataset.k),true);};
   });
 };
+
+
+/* ============================================================
+   TAB: BÁO CÁO theo kỳ (bao-cao)
+   Tổng hợp Tuyển dụng · Biến động NS · Chấm công · Hợp đồng
+   theo Tuần / Tháng, so với kỳ trước. Số liệu từ data thật:
+   - HR.tuyendung / HR.nhansu (API hub)
+   - Chấm công: Firebase (window.__ccData qua nsuatData/loadFirebase)
+   ============================================================ */
+window.__bc = window.__bc || { mode:'week', off:0 };
+
+window.bcSetMode = function(m){ window.__bc.mode=m; window.__bc.off=0; window.go('bao-cao'); };
+window.bcStep    = function(d){ window.__bc.off += d; if(window.__bc.off>0) window.__bc.off=0; window.go('bao-cao'); };
+window.bcPrint   = function(){ window.print(); };
+
+/* ---- helpers ---- */
+function bcYmd(dt){ var m=dt.getMonth()+1, d=dt.getDate(); return dt.getFullYear()+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d); }
+function bcDMY(dt){ var m=dt.getMonth()+1, d=dt.getDate(); return (d<10?'0'+d:d)+'/'+(m<10?'0'+m:m)+'/'+dt.getFullYear(); }
+function bcPeriod(mode, off){
+  var now=new Date(); now.setHours(0,0,0,0);
+  if(mode==='week'){
+    var day=(now.getDay()+6)%7;                 // Mon=0 … Sun=6
+    var mon=new Date(now); mon.setDate(now.getDate()-day + off*7);
+    var sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    return {start:mon, end:sun};
+  }
+  var m0=new Date(now.getFullYear(), now.getMonth()+off, 1);
+  var m1=new Date(m0.getFullYear(), m0.getMonth()+1, 0);
+  return {start:m0, end:m1};
+}
+function bcLabel(mode, p){
+  if(mode==='week') return bcDMY(p.start).slice(0,5)+' – '+bcDMY(p.end);
+  return 'Tháng '+(p.start.getMonth()+1)+'/'+p.start.getFullYear();
+}
+function bcInRangeDMY(s, p){ var d=window.parseDMY(s); return d && d>=p.start && d<=p.end; }
+function bcInRangeYmd(ymd, sYmd, eYmd){ return ymd>=sYmd && ymd<=eYmd; }
+
+/* delta pill: goodUp=true → tăng là tốt (xanh) */
+function bcDelta(cur, prev, goodUp){
+  var d=cur-prev;
+  if(d===0) return '<span class="bc-d flat">— <small>= '+prev+'</small></span>';
+  var up=d>0, good=(up===!!goodUp);
+  var arw=up?'▲':'▼';
+  return '<span class="bc-d '+(good?'up':'down')+'">'+arw+' '+Math.abs(d)+' <small>vs '+prev+'</small></span>';
+}
+function bcDeltaPct(cur, prev){ // for % metric, cur/prev are numbers (percent points)
+  var d=Math.round((cur-prev)*10)/10;
+  if(d===0) return '<span class="bc-d flat">— <small>= '+prev+'%</small></span>';
+  var up=d>0, arw=up?'▲':'▼';
+  return '<span class="bc-d '+(up?'up':'down')+'">'+arw+' '+Math.abs(d)+'đ <small>vs '+prev+'%</small></span>';
+}
+
+/* ---- chấm công: gom số liệu trong 1 khoảng ---- */
+function bcCham(p){
+  var data=window.nsuatData(); if(!data) return null;
+  var emp=data.employees||[], cc=data.cc_data||{};
+  var norm=window.nsNorm;
+  var ns=(window.HR&&window.HR.nhansu)||[]; var nsByName={}; ns.forEach(function(n){nsByName[norm(n.hoTen)]=n;});
+  var empById={}; emp.forEach(function(e){empById[e.id]=e;});
+  var sY=bcYmd(p.start), eY=bcYmd(p.end);
+  var full=0, late=0, absent=0, leave=0, work=0, lateBy={};
+  Object.keys(cc).forEach(function(k){
+    var mm=k.split('_'); if(mm.length<3) return;
+    var id=mm[0]; var rec=cc[k]||{};
+    Object.keys(rec).forEach(function(d){
+      if(!bcInRangeYmd(d, sY, eY)) return;         // d = 'YYYY-MM-DD'
+      var v=rec[d]; var st=(v&&typeof v==='object')?v.status:v;
+      if(st===''||st==null) return;
+      if(st==='NL'||st==='ĐÃ NGHỈ') return;        // nghỉ lễ / đã nghỉ việc: không tính
+      if(/^P/.test(st)||/-P$/.test(st)){ leave++; if(!/^T-[SC]/.test(st)) return; } // nghỉ phép (đi trễ có phép vẫn tính là đi làm bên dưới)
+      work++;
+      if(st==='1'){ full++; return; }
+      if(/^T-[SC]/.test(st)){
+        late++;
+        var e=empById[id]; var nm=e?e.name:id; var dept=(nsByName[norm(nm)]&&nsByName[norm(nm)].phong)||(e&&e.dept)||'—';
+        var o=lateBy[id]||(lateBy[id]={name:nm, dept:dept, c:0}); o.c++;
+        return;
+      }
+      if(st==='K'){ absent++; return; }
+      // các mã nửa buổi N-S/N-C… tính vào "work" nhưng không phải full/late/absent
+    });
+  });
+  var present=full+late;                            // ngày có mặt (đúng giờ + trễ)
+  var rate=work? Math.round(present/work*1000)/10 : 0;
+  var lateArr=Object.keys(lateBy).map(function(k){return lateBy[k];}).sort(function(a,b){return b.c-a.c;});
+  return {full:full, late:late, absent:absent, leave:leave, work:work, rate:rate, lateArr:lateArr};
+}
+
+/* ---- Tuyển dụng theo kỳ ---- */
+function bcTuyen(p){
+  var t=(window.HR&&window.HR.tuyendung)||[];
+  var cvNew=t.filter(function(c){return bcInRangeDMY(c.ngayNop, p);});
+  var hire =t.filter(function(c){return bcInRangeDMY(c.ngayNhanViec, p);});
+  var byPos={};
+  cvNew.forEach(function(c){ var k=c.viTri||'—'; (byPos[k]=byPos[k]||{pos:k,cv:0,hire:0}).cv++; });
+  hire.forEach(function(c){ var k=c.viTri||'—'; (byPos[k]=byPos[k]||{pos:k,cv:0,hire:0}).hire++; });
+  var pos=Object.keys(byPos).map(function(k){return byPos[k];}).sort(function(a,b){return b.cv-a.cv;});
+  // CV theo ngày (tuần) hoặc theo ngày trong tháng
+  var buckets, labels;
+  if(window.__bc.mode==='week'){
+    labels=['T2','T3','T4','T5','T6','T7','CN']; buckets=[0,0,0,0,0,0,0];
+    cvNew.forEach(function(c){ var d=window.parseDMY(c.ngayNop); if(d){ var idx=(d.getDay()+6)%7; buckets[idx]++; } });
+  } else {
+    var days=p.end.getDate(); labels=[]; buckets=[];
+    for(var i=1;i<=days;i++){ labels.push(String(i)); buckets.push(0); }
+    cvNew.forEach(function(c){ var d=window.parseDMY(c.ngayNop); if(d){ buckets[d.getDate()-1]++; } });
+  }
+  return {cvNew:cvNew.length, hire:hire.length, pos:pos, chart:{labels:labels, data:buckets}};
+}
+
+/* ---- Biến động nhân sự theo kỳ ---- */
+function bcBienDong(p){
+  var ns=(window.HR&&window.HR.nhansu)||[];
+  var vao=ns.filter(function(n){return bcInRangeDMY(n.ngayVao, p);});
+  var nghi=ns.filter(function(n){return bcInRangeDMY(n.ngayNghi, p);});
+  var active=ns.filter(function(n){return !(n.tinhTrang&&/nghỉ/i.test(n.tinhTrang));}).length;
+  return {vao:vao, nghi:nghi, active:active};
+}
+
+/* ---- Hợp đồng & hồ sơ (hết hạn trong kỳ + snapshot hiện tại) ---- */
+function bcHopDong(p){
+  var act=window.hdActive?window.hdActive():((window.HR&&window.HR.nhansu)||[]).filter(function(n){return !(n.tinhTrang&&/nghỉ/i.test(n.tinhTrang));});
+  var expire=act.filter(function(e){return bcInRangeDMY(e.ngayHetHan, p);})
+    .sort(function(a,b){return (window.parseDMY(a.ngayHetHan))-(window.parseDMY(b.ngayHetHan));});
+  var over=0, thieu=0;
+  act.forEach(function(e){ var n=window.conLaiNum?window.conLaiNum(e.ngayConLai):null; if(n!==null&&n<0)over++; if(/thiếu/i.test(e.tinhTrangHoSo||''))thieu++; });
+  return {expire:expire, over:over, thieu:thieu};
+}
+
+window.renderBaoCao = function(){
+  var esc=window.nsEsc||function(s){return s;};
+  if(window.HR&&window.HR.error) return (window.errorBox?window.errorBox():'<div class="page-head"><div class="page-h1">Báo cáo</div></div><div class="ns-note">Lỗi tải dữ liệu.</div>');
+  if(!(window.HR&&window.HR.loaded)) return (window.loadingBox?window.loadingBox():'<div class="ns-note">Đang tải…</div>');
+
+  var mode=window.__bc.mode, off=window.__bc.off;
+  var p=bcPeriod(mode, off), pv=bcPeriod(mode, off-1);
+
+  var head='<div class="page-head"><div class="page-h1">Báo cáo theo kỳ</div>'
+    +'<div class="page-lead">Tổng hợp tuyển dụng, biến động nhân sự, chấm công và hợp đồng theo tuần hoặc tháng — số liệu lấy trực tiếp từ dữ liệu web, có so sánh với kỳ liền trước.</div></div>';
+
+  var style=bcStyle();
+
+  var offLbl = off===0 ? (mode==='week'?'Tuần này':'Tháng này') : (mode==='week'?(off===-1?'Tuần trước':(Math.abs(off))+' tuần trước'):(off===-1?'Tháng trước':(Math.abs(off))+' tháng trước'));
+  var controls='<div class="bc-controls">'
+    +'<div class="bc-seg"><button class="'+(mode==='week'?'on':'')+'" onclick="bcSetMode(\'week\')">Tuần</button>'
+    +'<button class="'+(mode==='month'?'on':'')+'" onclick="bcSetMode(\'month\')">Tháng</button></div>'
+    +'<div class="bc-step"><span class="arw" onclick="bcStep(-1)">‹</span>'
+    +'<span class="lbl">'+bcLabel(mode,p)+'<small>'+offLbl+'</small></span>'
+    +'<span class="arw'+(off>=0?' dis':'')+'" onclick="bcStep(1)">›</span></div>'
+    +'<span class="bc-cmp">so với kỳ trước · '+bcLabel(mode,pv)+'</span>'
+    +'<button class="bc-pdf" onclick="bcPrint()">⎙&nbsp; In / Xuất PDF</button>'
+    +'</div>'
+    +'<div class="bc-cad">◷&nbsp; Tự phát hành: <b>Thứ 2 hằng tuần</b> (báo cáo tuần trước) · <b>Ngày 1 hằng tháng</b> (báo cáo tháng trước) — gửi email brian.pham@bigx.vn</div>';
+
+  /* data */
+  var T=bcTuyen(p),  Tp=bcTuyen(pv);
+  var B=bcBienDong(p), Bp=bcBienDong(pv);
+  var H=bcHopDong(p);
+  var cham=bcCham(p), champ=bcCham(pv);
+  var chamReady=!!cham;
+  if(!cham){ if(!window.__ccData && !window.__ccLoading) bcLoadCham(); cham={full:'—',late:'—',absent:'—',rate:0,lateArr:[]}; champ={full:0,late:0,absent:0,rate:0,work:0}; }
+  var cmpCham = chamReady && champ && champ.work>0;   // chỉ so sánh khi kỳ trước có dữ liệu chấm công
+
+  /* KPI row */
+  var kpis='<div class="bc-kpis">'
+    +bcKpi('CV mới nhận', T.cvNew, bcDelta(T.cvNew,Tp.cvNew,true))
+    +bcKpi('Nhận việc mới', T.hire, bcDelta(T.hire,Tp.hire,true))
+    +bcKpi('Nhân sự vào mới', B.vao.length, bcDelta(B.vao.length,Bp.vao.length,true))
+    +bcKpi('Nghỉ việc', B.nghi.length, bcDelta(B.nghi.length,Bp.nghi.length,false))
+    +bcKpi('Tỷ lệ có mặt', chamReady?(cham.rate+'%'):'—', cmpCham?bcDeltaPct(cham.rate,champ.rate):'')
+    +'</div>';
+
+  /* Section A: Tuyển dụng */
+  var posRows=T.pos.length? T.pos.map(function(r){
+    return '<tr'+(/telesales/i.test(r.pos)?' class="hl"':'')+'><td>'+esc(r.pos)+'</td><td class="num">'+r.cv+'</td><td class="num">'+r.hire+'</td></tr>';
+  }).join('') : '<tr><td colspan="3" class="muted">Chưa có CV mới trong kỳ.</td></tr>';
+  var secA='<div class="bc-sec full"><div class="bc-sh"><span class="dot"></span><h3>Tuyển dụng trong kỳ</h3>'
+    +'<span class="sh-d '+(T.cvNew>=Tp.cvNew?'up':'down')+'">'+(Tp.cvNew?((T.cvNew>=Tp.cvNew?'▲':'▼')+' '+Math.abs(T.cvNew-Tp.cvNew)+' CV so kỳ trước'):(T.cvNew+' CV'))+'</span></div>'
+    +'<div class="bc-cap">CV mới nhận theo '+(mode==='week'?'ngày trong tuần':'ngày trong tháng')+' và phân bổ theo vị trí.</div>'
+    +'<div class="bc-row2"><div><div id="bc-cvchart" class="bc-chart"></div></div>'
+    +'<div><table class="bc-tbl"><thead><tr><th>Vị trí</th><th class="num">CV mới</th><th class="num">Nhận việc</th></tr></thead><tbody>'+posRows+'</tbody></table></div></div></div>';
+
+  /* Section B: Biến động + C: Chấm công */
+  var vaoNames=B.vao.map(function(n){return esc(n.hoTen);}).join(' · ')||'—';
+  var nghiNames=B.nghi.map(function(n){return esc(n.hoTen);}).join(' · ')||'—';
+  var secB='<div class="bc-sec"><div class="bc-sh"><span class="dot"></span><h3>Biến động nhân sự</h3></div>'
+    +'<div class="bc-cap">Người vào / nghỉ và headcount trong kỳ.</div>'
+    +bcStat('Vào mới', B.vao.length, bcDelta(B.vao.length,Bp.vao.length,true), B.vao.length?vaoNames:'')
+    +bcStat('Nghỉ việc', B.nghi.length, bcDelta(B.nghi.length,Bp.nghi.length,false), B.nghi.length?nghiNames:'')
+    +bcStat('Đang làm (hiện tại)', B.active, '', '')
+    +'</div>';
+
+  var lateList = chamReady ? (cham.lateArr.length? '<table class="bc-tbl"><thead><tr><th>Nhân sự</th><th class="num">Số lần</th></tr></thead><tbody>'
+      +cham.lateArr.map(function(o){return '<tr><td>'+esc(o.name)+'<div class="sub">'+esc(o.dept)+'</div></td><td class="num"><span class="late-badge">'+o.c+' lần</span></td></tr>';}).join('')
+      +'</tbody></table>' : '<div class="muted" style="padding:8px 0">Không có lượt đi trễ trong kỳ. 👏</div>') : '<div class="muted" style="padding:8px 0">Đang tải dữ liệu chấm công…</div>';
+  var secC='<div class="bc-sec"><div class="bc-sh"><span class="dot"></span><h3>Chấm công trong kỳ</h3>'
+    +(cmpCham?'<span class="sh-d '+(cham.rate>=champ.rate?'up':'down')+'">có mặt '+bcDeltaBare(cham.rate,champ.rate,'đ')+'</span>':'')+'</div>'
+    +'<div class="bc-cap">Tỷ lệ có mặt = (ngày công đủ + đi trễ) / ngày phải làm.</div>'
+    +bcStat('Ngày công đủ', cham.full, cmpCham?bcDelta(cham.full,champ.full,true):'', '')
+    +bcStat('Lượt đi trễ', cham.late, cmpCham?bcDelta(cham.late,champ.late,false):'', '')
+    +bcStat('Buổi vắng (K)', cham.absent, cmpCham?bcDelta(cham.absent,champ.absent,false):'', '')
+    +bcStat('Tỷ lệ có mặt', chamReady?(cham.rate+'%'):'—', '', '')
+    +'<div class="bc-minih">Chi tiết đi trễ trong kỳ</div>'+lateList
+    +'</div>';
+
+  /* Section D: Hợp đồng & hồ sơ */
+  var expRows=H.expire.length? H.expire.map(function(e){
+    var n=window.conLaiNum?window.conLaiNum(e.ngayConLai):null;
+    var cls=n===null?'':(n<0?'red':(n<=7?'red':(n<=30?'amber':'')));
+    var lbl=n===null?'—':(n<0?('Quá '+Math.abs(n)+'n'):('Còn '+n+'n'));
+    return '<tr><td>'+esc(e.hoTen)+'</td><td>'+esc((window.loaiHDShort?window.loaiHDShort(e.loaiHD):e.loaiHD)||'—')+'</td><td class="nw">'+esc(e.ngayHetHan||'—')+'</td><td><span class="pill '+cls+'">'+lbl+'</span></td></tr>';
+  }).join('') : '<tr><td colspan="4" class="muted">Không có HĐ hết hạn trong kỳ.</td></tr>';
+  var secD='<div class="bc-sec full"><div class="bc-sh"><span class="dot"></span><h3>Hợp đồng &amp; hồ sơ</h3>'
+    +(H.over>0?'<span class="sh-d down">'+H.over+' HĐ quá hạn</span>':'')+'</div>'
+    +'<div class="bc-cap">Hợp đồng đến hạn trong kỳ; quá hạn &amp; hồ sơ thiếu là ảnh chụp hiện tại.</div>'
+    +'<div class="bc-row2"><div><table class="bc-tbl"><thead><tr><th>Nhân sự</th><th>Loại HĐ</th><th>Hết hạn</th><th>Còn lại</th></tr></thead><tbody>'+expRows+'</tbody></table></div>'
+    +'<div>'+bcStat('HĐ hết hạn trong kỳ', H.expire.length, '', '')
+    +bcStat('HĐ đã quá hạn (hiện tại)', H.over, '', '')
+    +bcStat('Hồ sơ còn thiếu (hiện tại)', H.thieu, '', '')
+    +(H.expire.length?'<div class="bc-warn">⚠ '+H.expire.length+' hợp đồng đến hạn trong kỳ — kiểm tra để gia hạn/ký lại.</div>':'')
+    +'</div></div></div>';
+
+  var foot='<div class="bc-foot">Số liệu lấy trực tiếp từ dữ liệu web (Tuyển dụng · Hồ sơ · Chấm công). Kỳ: '+bcLabel(mode,p)+'.</div>';
+
+  if(typeof setTimeout==='function') setTimeout(function(){ bcInitChart(T.chart); }, 30);
+  return head+style+'<div id="baocao">'+controls+kpis+secA+'<div class="bc-grid2">'+secB+secC+'</div>'+secD+foot+'</div>';
+};
+
+function bcKpi(t, v, d){ return '<div class="bc-kpi"><div class="k-t">'+t+'</div><div class="k-v">'+v+'</div><div class="k-dw">'+(d||'')+'</div></div>'; }
+function bcStat(l, v, d, sub){ return '<div class="bc-stat"><div class="s-l">'+l+(sub?('<div class="sub">'+sub+'</div>'):'')+'</div><div class="s-r"><span class="s-v">'+v+'</span>'+(d||'')+'</div></div>'; }
+function bcDeltaBare(cur,prev,unit){ var d=Math.round((cur-prev)*10)/10; if(d===0) return '—'; return (d>0?'▲':'▼')+' '+Math.abs(d)+(unit||''); }
+
+function bcLoadCham(){
+  if(window.__ccLoading) return; window.__ccLoading=true;
+  fetch(window.__NS_FB).then(function(r){return r.json();}).then(function(d){
+    window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}}; window.__ccLoading=false;
+    if(window.currentTab==='bao-cao') window.go('bao-cao');
+  }).catch(function(e){ window.__ccLoading=false; });
+}
+
+function bcInitChart(c){
+  if(typeof echarts==='undefined') return;
+  var el=document.getElementById('bc-cvchart'); if(!el) return;
+  var teal='#35655B', teal2='#8FB3AC', muted='#8B897E', line='#E4DECF';
+  var FONT="'Be Vietnam Pro',sans-serif";
+  var ch=echarts.init(el);
+  ch.setOption({
+    grid:{left:6,right:10,top:22,bottom:22,containLabel:true},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},textStyle:{fontFamily:FONT,fontSize:12},
+      formatter:function(p){return p[0].name+': <b>'+p[0].value+'</b> CV';}},
+    xAxis:{type:'category',data:c.labels,axisLine:{lineStyle:{color:line}},axisTick:{show:false},axisLabel:{color:muted,fontFamily:FONT,fontSize:11,interval:(c.labels.length>15?2:0)}},
+    yAxis:{type:'value',splitLine:{lineStyle:{color:'#f0ebe0'}},axisLabel:{color:muted,fontFamily:FONT,fontSize:11},minInterval:1},
+    series:[{type:'bar',data:c.data,barWidth:'56%',
+      itemStyle:{color:teal,borderRadius:[4,4,0,0]},
+      label:{show:c.labels.length<=10,position:'top',color:muted,fontFamily:FONT,fontSize:11},
+      animationDuration:600}]
+  });
+  if(!window.__bcResize){ window.__bcResize=true; window.addEventListener('resize',function(){var e=document.getElementById('bc-cvchart'); if(e){var i=echarts.getInstanceByDom(e); if(i)i.resize();}}); }
+}
+
+function bcStyle(){ return '<style id="bc-style">'
+  +'#baocao{max-width:1120px}'
+  +'#baocao .bc-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:6px 0 2px}'
+  +'#baocao .bc-seg{display:inline-flex;background:#e8e2d5;border-radius:9px;padding:3px}'
+  +'#baocao .bc-seg button{border:0;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:#8B897E;padding:6px 18px;border-radius:6px;cursor:pointer}'
+  +'#baocao .bc-seg button.on{background:#fff;color:#21303B;box-shadow:0 1px 2px rgba(0,0,0,.08)}'
+  +'#baocao .bc-step{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #E4DECF;border-radius:9px;padding:4px 6px}'
+  +'#baocao .bc-step .arw{width:26px;height:26px;border-radius:6px;background:#f1ede3;color:#21303B;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;user-select:none}'
+  +'#baocao .bc-step .arw.dis{opacity:.35;pointer-events:none}'
+  +'#baocao .bc-step .lbl{font-size:13.5px;font-weight:600;color:#21303B;padding:0 8px;text-align:center;min-width:140px}'
+  +'#baocao .bc-step .lbl small{display:block;font-size:10.5px;font-weight:500;color:#8B897E}'
+  +'#baocao .bc-cmp{font-size:12px;color:#8B897E}'
+  +'#baocao .bc-pdf{margin-left:auto;display:inline-flex;align-items:center;background:#21303B;color:#fff;border:0;font-family:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:9px;cursor:pointer}'
+  +'#baocao .bc-cad{margin:12px 0 4px;font-size:12.5px;color:#414B54;background:#eef4f2;border:1px solid #d6e6e2;border-radius:9px;padding:8px 13px;display:inline-block}'
+  +'#baocao .bc-cad b{color:#35655B;font-weight:600}'
+  +'#baocao .bc-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin:16px 0 18px}'
+  +'#baocao .bc-kpi{background:#fff;border:1px solid #E4DECF;border-radius:12px;padding:15px 16px 13px}'
+  +'#baocao .bc-kpi .k-t{font-size:12px;color:#8B897E}'
+  +'#baocao .bc-kpi .k-v{font-family:Fraunces,Georgia,serif;font-size:28px;font-weight:600;color:#21303B;line-height:1;margin-top:7px}'
+  +'#baocao .bc-kpi .k-dw{margin-top:8px;min-height:16px}'
+  +'#baocao .bc-d{font-size:11.5px;font-weight:600}#baocao .bc-d small{color:#8B897E;font-weight:500}'
+  +'#baocao .bc-d.up{color:#2e7d5b}#baocao .bc-d.down{color:#A65A4B}#baocao .bc-d.flat{color:#8B897E}'
+  +'#baocao .sh-d{margin-left:auto;font-size:12px;font-weight:600}#baocao .sh-d.up{color:#2e7d5b}#baocao .sh-d.down{color:#A65A4B}'
+  +'#baocao .bc-sec{background:#fff;border:1px solid #E4DECF;border-radius:14px;padding:18px 20px;margin-bottom:16px}'
+  +'#baocao .bc-sh{display:flex;align-items:center;gap:9px;margin-bottom:3px}'
+  +'#baocao .bc-sh .dot{width:8px;height:8px;border-radius:50%;background:#35655B}'
+  +'#baocao .bc-sh h3{font-family:Fraunces,serif;font-size:17px;color:#21303B;font-weight:600;margin:0}'
+  +'#baocao .bc-cap{font-size:12px;color:#8B897E;margin-bottom:14px}'
+  +'#baocao .bc-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}'
+  +'#baocao .bc-row2{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;align-items:start}'
+  +'#baocao .bc-chart{width:100%;height:210px}'
+  +'#baocao .bc-tbl{width:100%;border-collapse:collapse}'
+  +'#baocao .bc-tbl th{font-size:11px;color:#8B897E;text-align:left;font-weight:600;padding:7px 6px;border-bottom:1px solid #E4DECF}'
+  +'#baocao .bc-tbl th.num{text-align:right}'
+  +'#baocao .bc-tbl td{font-size:13px;color:#21303B;padding:8px 6px;border-bottom:1px solid #f1ece1}'
+  +'#baocao .bc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums}'
+  +'#baocao .bc-tbl td .sub{font-size:11px;color:#8B897E;margin-top:1px}'
+  +'#baocao .bc-tbl tr.hl td{background:#f3f8f6}#baocao .bc-tbl tr.hl td:first-child{font-weight:600;color:#35655B}'
+  +'#baocao .bc-stat{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #f1ece1}'
+  +'#baocao .bc-stat .s-l{font-size:13px;color:#414B54}#baocao .bc-stat .s-l .sub{font-size:11px;color:#8B897E;margin-top:2px}'
+  +'#baocao .bc-stat .s-r{display:flex;align-items:baseline;gap:10px}'
+  +'#baocao .bc-stat .s-v{font-family:Fraunces,serif;font-size:19px;color:#21303B;font-weight:600;font-variant-numeric:tabular-nums}'
+  +'#baocao .bc-minih{font-size:12px;font-weight:600;color:#8B897E;margin:14px 0 2px}'
+  +'#baocao .late-badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:#fbf1df;color:#b07a43}'
+  +'#baocao .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:#eef4f2;color:#35655B}'
+  +'#baocao .pill.amber{background:#fbf1df;color:#b07a43}#baocao .pill.red{background:#fbe7df;color:#A65A4B}'
+  +'#baocao .muted{color:#9a8f78}'
+  +'#baocao .bc-warn{background:#fbf3e8;border:1px solid #ecd9b6;border-radius:9px;padding:10px 13px;font-size:12.5px;color:#8a6a2e;margin-top:12px}'
+  +'#baocao .bc-foot{margin-top:8px;font-size:12px;color:#8B897E;font-style:italic}'
+  +'@media(max-width:820px){#baocao .bc-kpis{grid-template-columns:repeat(2,1fr)}#baocao .bc-grid2,#baocao .bc-row2{grid-template-columns:1fr}}'
+  +'@media print{#sidebar{display:none!important}#main{margin:0!important}.topbar{display:none!important}#baocao .bc-controls .bc-pdf,#baocao .bc-seg,#baocao .bc-step .arw{display:none!important}}'
+  +'</style>';
+}
