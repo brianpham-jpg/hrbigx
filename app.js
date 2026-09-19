@@ -1204,6 +1204,7 @@ function go(id){
   else if(id==='cham-cong') content.innerHTML=renderChamCong();
   else if(id==='pt-nang-suat'){content.innerHTML=window.renderNangSuat();}
   else if(id==='bao-cao'){content.innerHTML=window.renderBaoCao();}
+  else if(id==='so-do'){content.innerHTML=window.renderSoDo();}
     else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
 }
@@ -1737,5 +1738,158 @@ function bcStyle(){ return '<style id="bc-style">'
   +'#baocao .bc-foot{margin-top:8px;font-size:12px;color:#8B897E;font-style:italic}'
   +'@media(max-width:820px){#baocao .bc-kpis{grid-template-columns:repeat(2,1fr)}#baocao .bc-grid2,#baocao .bc-row2{grid-template-columns:1fr}}'
   +'@media print{#sidebar{display:none!important}#main{margin:0!important}.topbar{display:none!important}#baocao .bc-controls .bc-pdf,#baocao .bc-seg,#baocao .bc-step .arw{display:none!important}}'
+  +'</style>';
+}
+
+
+/* ============================================================
+   TAB: SƠ ĐỒ TỔ CHỨC (so-do) — động, đọc người LIVE từ HR.nhansu
+   Cấu trúc khối/phòng cố định (từ onboarding), người theo phòng
+   tự cập nhật; bấm phòng → xem người (tên · chức danh) + nhiệm vụ.
+   ============================================================ */
+var SD_ORG = {
+  lead: [
+    { phong:'BOD',              label:'Ban giám đốc',      note:'Định hướng & quyết định cuối cùng' },
+    { phong:'Trợ lý Giám đốc',  label:'Trợ lý GĐ · PMO',   note:'Kết nối thông tin · Theo dõi KPI · Điều phối blocker' }
+  ],
+  blocks: [
+    { name:'Revenue & Growth', tag:'Tạo khách hàng',
+      goal:'Tạo lead chất lượng · Chốt deal · Tăng trưởng doanh thu',
+      depts:[
+        { phong:'Sales',     label:'Sales / BD',  tasks:['Tìm kiếm khách hàng mới','Tư vấn & giải pháp','Chốt deal & doanh thu','Pipeline management'] },
+        { phong:'Marketing', label:'Marketing',   tasks:['Brand & Communication','Content & Campaign','Lead Generation','Nurture & giáo dục thị trường'] }
+      ]},
+    { name:'Fulfillment / Outcome', tag:'Tạo kết quả & tái ký',
+      goal:'Thực thi hiệu quả · Đạt KPI GMV/ROI · Tái ký & mở rộng',
+      depts:[
+        { phong:'E - Com',  label:'E-Com / Video AI',    tasks:['Content Creative','Video AI','Video Editor','Creative Optimization'] },
+        { phong:'Booking',  label:'Booking KOC / KOL',   tasks:['Tìm kiếm & tuyển chọn','Quản lý KOC/KOL','Triển khai nội dung','Đo lường hiệu quả','Phân bổ voucher TSP'] },
+        { phong:'Account',  label:'Account Management',  tasks:['Quản trị khách hàng','Onboarding','Theo dõi hiệu quả','CS & Retention'] },
+        { phong:'TSP',      label:'TikTok Shop Partner', tasks:['Quản trị quan hệ TikTok Shop','Kết nối & triển khai chính sách','Hỗ trợ vận hành & xử lý vấn đề','Tối ưu cơ hội & nguồn lực','Cập nhật xu hướng & tính năng'] },
+        { phong:'Agency',   label:'Agency · Performance',tasks:['Quản trị vận hành shop','Performance Marketing · Ads','Livestream Management','Giá · Voucher · Flash Sale','Phân tích dữ liệu & báo cáo','Tối ưu Conversion & GMV'] }
+      ]},
+    { name:'Support & Infrastructure', tag:'Nền tảng & hỗ trợ',
+      goal:'Hỗ trợ vận hành · Tối ưu hệ thống · Giảm rủi ro · Năng lực dài hạn',
+      depts:[
+        { phong:'Kế toán - Nhân sự', label:'Kế toán – Nhân sự', tasks:['Tài chính · Công nợ · Thanh toán · Báo cáo','Tuyển dụng & Onboarding','Đào tạo & Phát triển','Chính sách & Phúc lợi'] },
+        { phong:'IT',                label:'IT & Hệ thống',     tasks:['Hạ tầng & bảo mật','Hệ thống & công cụ','Data & Automation'] }
+      ]}
+  ]
+};
+
+window.__sd = window.__sd || { sel:null };
+window.sdSelect = function(k){ window.__sd.sel = (window.__sd.sel===k?null:k); window.go('so-do'); };
+
+function sdActive(){ return ((window.HR&&window.HR.nhansu)||[]).filter(function(n){ return !(n.tinhTrang&&/nghỉ/i.test(n.tinhTrang)); }); }
+function sdByPhong(){
+  var m={}; sdActive().forEach(function(n){ var p=n.phong||'—'; (m[p]=m[p]||[]).push(n); });
+  Object.keys(m).forEach(function(p){ m[p].sort(function(a,b){ return String(a.hoTen||'').localeCompare(String(b.hoTen||''),'vi'); }); });
+  return m;
+}
+
+window.renderSoDo = function(){
+  var esc=window.nsEsc||function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  if(window.HR&&window.HR.error) return (window.errorBox?window.errorBox():'<div>Lỗi tải dữ liệu.</div>');
+  if(!(window.HR&&window.HR.loaded)) return (window.loadingBox?window.loadingBox():'<div>Đang tải…</div>');
+
+  var byP=sdByPhong();
+  var mapped={}; SD_ORG.lead.forEach(function(d){mapped[d.phong]=1;}); SD_ORG.blocks.forEach(function(b){b.depts.forEach(function(d){mapped[d.phong]=1;});});
+  var extra=Object.keys(byP).filter(function(p){return !mapped[p];}); // phòng có người nhưng chưa map → không bỏ sót
+  var totalActive=sdActive().length;
+  var deptCount=0; SD_ORG.blocks.forEach(function(b){deptCount+=b.depts.length;});
+
+  var sel=window.__sd.sel;
+
+  function box(d, cls){
+    var n=(byP[d.phong]||[]).length;
+    var on=sel===d.phong;
+    return '<div class="sd-box'+(cls?' '+cls:'')+(on?' on':'')+(n===0?' empty':'')+'" onclick="sdSelect(\''+d.phong.replace(/'/g,"\\'")+'\')">'
+      +'<div class="sd-b-l">'+esc(d.label)+'</div>'
+      +'<div class="sd-b-m">'+n+' người'+(d.note?' · '+esc(d.note):'')+'</div></div>';
+  }
+
+  var leadRow=SD_ORG.lead.map(function(d){return box(d,'lead');}).join('');
+  var blocksHtml=SD_ORG.blocks.map(function(b){
+    return '<div class="sd-block">'
+      +'<div class="sd-bk-h"><span class="sd-bk-n">'+esc(b.name)+'</span><span class="sd-bk-t">'+esc(b.tag)+'</span></div>'
+      +'<div class="sd-grid">'+b.depts.map(function(d){return box(d);}).join('')+'</div>'
+      +'<div class="sd-goal">🎯 '+esc(b.goal)+'</div>'
+      +'</div>';
+  }).join('');
+  var extraHtml='';
+  if(extra.length){
+    extraHtml='<div class="sd-block"><div class="sd-bk-h"><span class="sd-bk-n">Khác</span><span class="sd-bk-t">chưa xếp khối</span></div>'
+      +'<div class="sd-grid">'+extra.map(function(p){return box({phong:p,label:p});}).join('')+'</div></div>';
+  }
+
+  // detail panel
+  var panel;
+  if(sel){
+    var ppl=byP[sel]||[];
+    var meta=null;
+    SD_ORG.lead.forEach(function(d){if(d.phong===sel)meta=d;});
+    SD_ORG.blocks.forEach(function(b){b.depts.forEach(function(d){if(d.phong===sel)meta=d;});});
+    var label=meta?meta.label:sel;
+    var tasks=(meta&&meta.tasks)||[];
+    var pplHtml=ppl.length? ppl.map(function(n){
+      return '<div class="sd-p"><div class="sd-p-n">'+esc(n.hoTen||'—')+'</div><div class="sd-p-r">'+esc(n.chucVu||'—')+'</div></div>';
+    }).join('') : '<div class="sd-muted">Chưa có nhân sự đang làm ở phòng này.</div>';
+    var taskHtml=tasks.length? '<div class="sd-tasks"><div class="sd-t-h">Nhiệm vụ chính</div>'+tasks.map(function(t){return '<span class="sd-chip">'+esc(t)+'</span>';}).join('')+'</div>' : '';
+    panel='<div class="sd-panel"><div class="sd-pl-h"><span>'+esc(label)+'</span><span class="sd-pl-c">'+ppl.length+' người</span></div>'
+      +'<div class="sd-people">'+pplHtml+'</div>'+taskHtml+'</div>';
+  } else {
+    panel='<div class="sd-panel empty"><div class="sd-hint">Bấm một phòng bên trái để xem danh sách nhân sự (tên · chức danh) và nhiệm vụ chính.</div></div>';
+  }
+
+  if(typeof setTimeout==='function') setTimeout(function(){ var e=document.getElementById('sd-updated'); }, 10);
+
+  return '<div class="page-head"><div class="page-h1">Sơ đồ tổ chức</div>'
+    +'<div class="page-lead">Cơ cấu vận hành BigX — Ban giám đốc, 3 khối và các phòng ban. Số người và danh sách nhân sự cập nhật trực tiếp từ hồ sơ; bấm một phòng để xem chi tiết.</div></div>'
+    +sdStyle()
+    +'<div id="sodo"><div class="sd-stats"><span><b>'+totalActive+'</b> đang làm</span><span><b>'+deptCount+'</b> phòng ban</span><span><b>'+SD_ORG.blocks.length+'</b> khối</span></div>'
+    +'<div class="sd-main"><div class="sd-left">'
+    +'<div class="sd-block sd-lead"><div class="sd-bk-h"><span class="sd-bk-n">Ban điều hành</span></div><div class="sd-grid sd-grid-lead">'+leadRow+'</div></div>'
+    +blocksHtml+extraHtml
+    +'</div><div class="sd-right">'+panel+'</div></div></div>';
+};
+
+function sdStyle(){ return '<style id="sd-style">'
+  +'#sodo{max-width:1160px}'
+  +'#sodo .sd-stats{display:flex;gap:22px;margin:2px 0 18px;font-size:13px;color:#8B897E}'
+  +'#sodo .sd-stats b{font-family:Fraunces,Georgia,serif;font-size:18px;color:#21303B;margin-right:3px}'
+  +'#sodo .sd-main{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}'
+  +'#sodo .sd-block{margin-bottom:16px}'
+  +'#sodo .sd-lead{margin-bottom:22px}'
+  +'#sodo .sd-bk-h{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}'
+  +'#sodo .sd-bk-n{font-family:Fraunces,serif;font-size:16px;font-weight:600;color:#21303B}'
+  +'#sodo .sd-bk-t{font-size:11.5px;color:#8B897E;text-transform:uppercase;letter-spacing:.08em}'
+  +'#sodo .sd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}'
+  +'#sodo .sd-grid-lead{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}'
+  +'#sodo .sd-box{background:#fff;border:1px solid #E4DECF;border-radius:12px;padding:13px 15px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s;border-left:3px solid #cfc7b4}'
+  +'#sodo .sd-box:hover{border-color:#35655B;box-shadow:0 3px 12px rgba(0,0,0,.06);transform:translateY(-1px)}'
+  +'#sodo .sd-box.on{border-color:#35655B;border-left-color:#35655B;background:#f3f8f6;box-shadow:0 3px 12px rgba(53,101,91,.12)}'
+  +'#sodo .sd-box.lead{border-left-color:#B07A43}'
+  +'#sodo .sd-box.lead.on{border-left-color:#B07A43}'
+  +'#sodo .sd-box.empty{opacity:.6}'
+  +'#sodo .sd-b-l{font-weight:600;font-size:14px;color:#21303B}'
+  +'#sodo .sd-b-m{font-size:12px;color:#8B897E;margin-top:3px}'
+  +'#sodo .sd-goal{font-size:12px;color:#5c5647;background:#faf7f0;border:1px solid #ece5d6;border-radius:8px;padding:8px 12px;margin-top:10px}'
+  +'#sodo .sd-right{position:sticky;top:12px}'
+  +'#sodo .sd-panel{background:#fff;border:1px solid #E4DECF;border-radius:14px;padding:18px}'
+  +'#sodo .sd-panel.empty{background:#faf7f0;border-style:dashed}'
+  +'#sodo .sd-hint{font-size:13px;color:#8B897E;line-height:1.6}'
+  +'#sodo .sd-pl-h{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid #E4DECF;padding-bottom:10px;margin-bottom:6px}'
+  +'#sodo .sd-pl-h span:first-child{font-family:Fraunces,serif;font-size:17px;font-weight:600;color:#21303B}'
+  +'#sodo .sd-pl-c{font-size:12px;color:#8B897E}'
+  +'#sodo .sd-people{display:flex;flex-direction:column}'
+  +'#sodo .sd-p{padding:9px 0;border-bottom:1px solid #f1ece1}'
+  +'#sodo .sd-p:last-child{border-bottom:0}'
+  +'#sodo .sd-p-n{font-size:13.5px;color:#21303B;font-weight:500}'
+  +'#sodo .sd-p-r{font-size:12px;color:#8B897E;margin-top:1px}'
+  +'#sodo .sd-muted{font-size:13px;color:#9a8f78;padding:8px 0}'
+  +'#sodo .sd-tasks{margin-top:14px;border-top:1px solid #f1ece1;padding-top:12px}'
+  +'#sodo .sd-t-h{font-size:11.5px;color:#8B897E;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}'
+  +'#sodo .sd-chip{display:inline-block;font-size:12px;color:#35655B;background:#eef4f2;border:1px solid #d6e6e2;border-radius:20px;padding:3px 11px;margin:0 4px 6px 0}'
+  +'@media(max-width:860px){#sodo .sd-main{grid-template-columns:1fr}#sodo .sd-right{position:static}}'
   +'</style>';
 }
