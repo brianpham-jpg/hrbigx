@@ -1206,6 +1206,7 @@ function go(id){
   else if(id==='bao-cao'){content.innerHTML=window.renderBaoCao();}
   else if(id==='so-do'){content.innerHTML=window.renderSoDo();}
   else if(id==='calendar'){content.innerHTML=window.renderCalendar();}
+  else if(id==='nguon'){content.innerHTML=window.renderNguon();}
     else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
 }
@@ -2022,5 +2023,138 @@ function calStyle(){ return '<style id="cal-style">'
   +'#cal .cal-li-s{font-size:11.5px;color:#8B897E;margin-top:1px}'
   +'#cal .cal-empty{font-size:13px;color:#9a8f78;padding:10px 0}'
   +'@media(max-width:860px){#cal .cal-main{grid-template-columns:1fr}#cal .cal-side{position:static}#cal .cal-cell{min-height:72px}}'
+  +'</style>';
+}
+
+
+/* ============================================================
+   TAB: NGUỒN DỮ LIỆU (nguon) — trạng thái & sức khỏe nguồn (read-only)
+   Kiến trúc "1 nguồn": Hồ sơ + Tuyển dụng -> API hub (lọc PII, ghép Mã NV)
+   -> web; Chấm công qua Firebase. Trang này soi trạng thái + tính toàn vẹn.
+   ============================================================ */
+function ngNorm(s){ return String(s||'').toLowerCase().normalize('NFC').replace(/\s+/g,' ').trim(); }
+
+window.renderNguon = function(){
+  var esc=window.nsEsc||function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  if(window.HR&&window.HR.error) return (window.errorBox?window.errorBox():'<div>Lỗi tải dữ liệu.</div>');
+  if(!(window.HR&&window.HR.loaded)) return (window.loadingBox?window.loadingBox():'<div>Đang tải…</div>');
+
+  var ns=(window.HR.nhansu)||[], td=(window.HR.tuyendung)||[], vt=(window.HR.viTriList)||[];
+  var active=ns.filter(function(n){return !(n.tinhTrang&&/nghỉ/i.test(n.tinhTrang));});
+
+  /* chấm công (Firebase) — nạp nếu chưa có, không chặn trang */
+  var cc=window.__ccData;
+  if(!cc && !window.__ccLoading && window.__NS_FB){
+    window.__ccLoading=true;
+    fetch(window.__NS_FB).then(function(r){return r.json();}).then(function(d){
+      window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}}; window.__ccLoading=false;
+      if(window.currentTab==='nguon') window.go('nguon');
+    }).catch(function(){ window.__ccLoading=false; });
+  }
+
+  /* ---- kiểm tra tính toàn vẹn ---- */
+  // Mã NV
+  var reBIGX=/^BIGX-\d{3}$/;
+  var maBad=ns.filter(function(n){var m=(n.maNV||'').trim(); return m && !reBIGX.test(m);}).length;
+  var maEmpty=ns.filter(function(n){return !(n.maNV||'').trim();}).length;
+  var seen={}, dup={}; ns.forEach(function(n){var m=(n.maNV||'').trim(); if(!m)return; seen[m]=(seen[m]||0)+1; if(seen[m]>1)dup[m]=1;});
+  var maDup=Object.keys(dup).length;
+  // hồ sơ thiếu
+  var hoSoThieu=active.filter(function(n){return /thiếu/i.test(n.tinhTrangHoSo||'');}).length;
+  // HĐ chưa có ngày hết hạn (đang làm)
+  var hanTrong=active.filter(function(n){return !(n.ngayHetHan||'').trim();}).length;
+  // tuyển dụng thiếu vị trí / ngày nộp
+  var tdThieu=td.filter(function(c){return !(c.viTri||'').trim() || !(c.ngayNop||'').trim();}).length;
+  // PII scan: field nào chứa chuỗi >=9 chữ số liền (CCCD/SĐT) => rò rỉ
+  var piiHits=0;
+  function scan(rows){ rows.forEach(function(r){ Object.keys(r).forEach(function(k){ var v=r[k]; if(typeof v==='string' && /\d{9,}/.test(v.replace(/[\s.\-]/g,''))) piiHits++; }); }); }
+  scan(ns); scan(td);
+  // chấm công mapping
+  var ccEmp=(cc&&cc.employees)||[]; var ccKeys=cc?Object.keys(cc.cc_data||{}).length:0;
+  var nameSet={}; ns.forEach(function(n){nameSet[ngNorm(n.hoTen)]=1;});
+  var ccUnlinked=cc? ccEmp.filter(function(e){return !nameSet[ngNorm(e.name)];}).length : null;
+
+  function chk(ok, label, detail){
+    var cls=ok?'ok':'warn'; var ic=ok?'✓':'!';
+    return '<div class="ng-chk '+cls+'"><span class="ng-ic">'+ic+'</span><div class="ng-ck-b"><div class="ng-ck-l">'+label+'</div><div class="ng-ck-d">'+detail+'</div></div></div>';
+  }
+
+  var srcCards=''
+    +ngCard('API Hub (Apps Script)', (window.HR.loaded?'LIVE':'—'), 'Cập nhật: '+(esc(window.HR.updated)||'—'), 'ti', window.HR.loaded)
+    +ngCard('Hồ sơ nhân sự', ns.length+' bản ghi', active.length+' đang làm · '+(ns.length-active.length)+' đã nghỉ', 'ho', true)
+    +ngCard('Tuyển dụng', td.length+' CV', vt.length+' vị trí chuẩn', 'td', true)
+    +ngCard('Chấm công (Firebase)', cc?(ccEmp.length+' NV chấm công'):'đang tải…', cc?(ccKeys+' bảng công theo tháng'):'—', 'cc', !!cc);
+
+  var checks=''
+    +chk(maBad===0 && maEmpty===0, 'Mã NV đúng định dạng BIGX-0XX', maBad===0&&maEmpty===0?'Tất cả hợp lệ':(maBad+' sai định dạng · '+maEmpty+' bỏ trống'))
+    +chk(maDup===0, 'Mã NV không trùng', maDup===0?'Không có trùng':(maDup+' mã bị trùng'))
+    +chk(piiHits===0, 'PII sạch trên web (không lộ CCCD/SĐT)', piiHits===0?'Không phát hiện chuỗi ≥9 chữ số':(piiHits+' trường nghi lộ — cần kiểm API'))
+    +chk(tdThieu===0, 'Tuyển dụng đủ vị trí & ngày nộp', tdThieu===0?'Tất cả dòng hợp lệ':(tdThieu+' dòng thiếu'))
+    +chk(hoSoThieu===0, 'Hồ sơ nhân sự đầy đủ', hoSoThieu===0?'Không thiếu':(hoSoThieu+' người thiếu hồ sơ (đang làm)'))
+    +chk(hanTrong===0, 'HĐ có ngày hết hạn', hanTrong===0?'Đủ':(hanTrong+' người đang làm chưa có ngày hết hạn'))
+    +(cc?chk(ccUnlinked===0, 'Chấm công liên kết hồ sơ (theo tên)', ccUnlinked===0?'Khớp hết':(ccUnlinked+' NV chấm công chưa khớp hồ sơ')):'');
+
+  var warnCount=[maBad+maEmpty>0, maDup>0, piiHits>0, tdThieu>0, hoSoThieu>0, hanTrong>0, (cc&&ccUnlinked>0)].filter(Boolean).length;
+
+  var flow='<div class="ng-flow">'
+    +'<div class="ng-src"><div class="ng-fn">Hồ sơ nhân sự</div><div class="ng-fs">Google Sheet · PII gốc</div></div>'
+    +'<div class="ng-src"><div class="ng-fn">Tuyển dụng</div><div class="ng-fs">Google Sheet · CV</div></div>'
+    +'<div class="ng-arrow">→</div>'
+    +'<div class="ng-hub"><div class="ng-fn">API Hub</div><div class="ng-fs">Ghép theo Mã NV · lọc PII</div></div>'
+    +'<div class="ng-arrow">→</div>'
+    +'<div class="ng-web"><div class="ng-fn">Dashboard</div><div class="ng-fs">Mọi tab đọc từ đây</div></div>'
+    +'</div>'
+    +'<div class="ng-flow2"><div class="ng-src cc"><div class="ng-fn">Chấm công</div><div class="ng-fs">Firebase (điểm danh)</div></div><div class="ng-arrow">→</div><span class="ng-note2">nạp trực tiếp cho tab Chấm công · Báo cáo</span></div>';
+
+  return '<div class="page-head"><div class="page-h1">Nguồn dữ liệu</div>'
+    +'<div class="page-lead">Kiến trúc "1 nguồn": web đọc từ API hub (ghép theo Mã NV, đã lọc PII). Trang này theo dõi trạng thái từng nguồn và kiểm tra tính toàn vẹn dữ liệu.</div></div>'
+    +ngStyle()
+    +'<div id="nguon">'
+    +'<div class="ng-h">Trạng thái nguồn</div><div class="ng-cards">'+srcCards+'</div>'
+    +'<div class="ng-h">Kiểm tra tính toàn vẹn '+(warnCount===0?'<span class="ng-badge ok">Tất cả đạt</span>':'<span class="ng-badge warn">'+warnCount+' cần chú ý</span>')+'</div>'
+    +'<div class="ng-checks">'+checks+'</div>'
+    +'<div class="ng-h">Luồng dữ liệu</div><div class="ng-flow-wrap">'+flow+'</div>'
+    +'<div class="ng-pii">🔒 PII (CCCD · SĐT · địa chỉ · ảnh) không bao giờ rời file nguồn — API chỉ trả các cột đã lọc. HR xem PII trực tiếp trong file Hồ sơ.</div>'
+    +'</div>';
+};
+
+function ngCard(title, big, sub, ic, ok){
+  return '<div class="ng-card"><div class="ng-c-top"><span class="ng-dot '+(ok?'on':'off')+'"></span><span class="ng-c-t">'+title+'</span></div>'
+    +'<div class="ng-c-v">'+big+'</div><div class="ng-c-s">'+sub+'</div></div>';
+}
+
+function ngStyle(){ return '<style id="ng-style">'
+  +'#nguon{max-width:1080px}'
+  +'#nguon .ng-h{font-family:Fraunces,serif;font-size:16px;font-weight:600;color:#21303B;margin:20px 0 12px;display:flex;align-items:center;gap:10px}'
+  +'#nguon .ng-h:first-child{margin-top:2px}'
+  +'#nguon .ng-badge{font-size:11.5px;font-weight:600;padding:2px 10px;border-radius:20px}'
+  +'#nguon .ng-badge.ok{background:#e7f3ec;color:#2e7d5b}#nguon .ng-badge.warn{background:#fbf1df;color:#b07a43}'
+  +'#nguon .ng-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}'
+  +'#nguon .ng-card{background:#fff;border:1px solid #E4DECF;border-radius:12px;padding:15px 16px}'
+  +'#nguon .ng-c-top{display:flex;align-items:center;gap:8px}'
+  +'#nguon .ng-dot{width:8px;height:8px;border-radius:50%}#nguon .ng-dot.on{background:#2e7d5b}#nguon .ng-dot.off{background:#c9c2b2}'
+  +'#nguon .ng-c-t{font-size:12.5px;color:#8B897E}'
+  +'#nguon .ng-c-v{font-family:Fraunces,serif;font-size:22px;font-weight:600;color:#21303B;margin-top:8px;line-height:1.1}'
+  +'#nguon .ng-c-s{font-size:12px;color:#8B897E;margin-top:5px}'
+  +'#nguon .ng-checks{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
+  +'#nguon .ng-chk{display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid #E4DECF;border-radius:10px;padding:12px 14px;border-left:3px solid #2e7d5b}'
+  +'#nguon .ng-chk.warn{border-left-color:#b07a43}'
+  +'#nguon .ng-ic{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;background:#2e7d5b;flex:0 0 20px;margin-top:1px}'
+  +'#nguon .ng-chk.warn .ng-ic{background:#b07a43}'
+  +'#nguon .ng-ck-l{font-size:13.5px;color:#21303B;font-weight:500}'
+  +'#nguon .ng-ck-d{font-size:12px;color:#8B897E;margin-top:2px}'
+  +'#nguon .ng-flow-wrap{background:#fff;border:1px solid #E4DECF;border-radius:12px;padding:20px 18px}'
+  +'#nguon .ng-flow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}'
+  +'#nguon .ng-flow2{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px dashed #e4dece}'
+  +'#nguon .ng-src,#nguon .ng-hub,#nguon .ng-web{border:1px solid #E4DECF;border-radius:10px;padding:11px 14px;background:#fdfcf9;min-width:150px}'
+  +'#nguon .ng-hub{background:#f3f8f6;border-color:#bcd7cf}'
+  +'#nguon .ng-web{background:#eef4f2;border-color:#bcd7cf}'
+  +'#nguon .ng-src.cc{background:#faf7f0;border-color:#ece5d6}'
+  +'#nguon .ng-fn{font-size:13.5px;font-weight:600;color:#21303B}'
+  +'#nguon .ng-fs{font-size:11.5px;color:#8B897E;margin-top:2px}'
+  +'#nguon .ng-arrow{font-size:20px;color:#35655B}'
+  +'#nguon .ng-note2{font-size:12px;color:#8B897E}'
+  +'#nguon .ng-pii{margin-top:16px;background:#f3f8f6;border:1px solid #d6e6e2;border-radius:10px;padding:12px 15px;font-size:12.5px;color:#3d4b45;line-height:1.55}'
+  +'@media(max-width:860px){#nguon .ng-cards{grid-template-columns:repeat(2,1fr)}#nguon .ng-checks{grid-template-columns:1fr}}'
   +'</style>';
 }
