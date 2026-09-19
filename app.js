@@ -1205,6 +1205,7 @@ function go(id){
   else if(id==='pt-nang-suat'){content.innerHTML=window.renderNangSuat();}
   else if(id==='bao-cao'){content.innerHTML=window.renderBaoCao();}
   else if(id==='so-do'){content.innerHTML=window.renderSoDo();}
+  else if(id==='calendar'){content.innerHTML=window.renderCalendar();}
     else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
 }
@@ -1891,5 +1892,135 @@ function sdStyle(){ return '<style id="sd-style">'
   +'#sodo .sd-t-h{font-size:11.5px;color:#8B897E;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}'
   +'#sodo .sd-chip{display:inline-block;font-size:12px;color:#35655B;background:#eef4f2;border:1px solid #d6e6e2;border-radius:20px;padding:3px 11px;margin:0 4px 6px 0}'
   +'@media(max-width:860px){#sodo .sd-main{grid-template-columns:1fr}#sodo .sd-right{position:static}}'
+  +'</style>';
+}
+
+
+/* ============================================================
+   TAB: CALENDAR (calendar) — lịch HR động
+   Sự kiện LIVE từ HR.nhansu: 🎂 sinh nhật · 📄 hết hạn HĐ · 🎉 kỷ niệm vào làm
+   Lưới tháng, chuyển tháng, tô hôm nay, danh sách sự kiện trong tháng.
+   ============================================================ */
+window.__cal = window.__cal || null;   // {y,m} — null = tháng hiện tại
+
+function calState(){
+  if(window.__cal) return window.__cal;
+  var n=new Date(); window.__cal={y:n.getFullYear(), m:n.getMonth()+1}; return window.__cal;
+}
+window.calStep = function(d){ var s=calState(); var dt=new Date(s.y, s.m-1+d, 1); window.__cal={y:dt.getFullYear(), m:dt.getMonth()+1}; window.go('calendar'); };
+window.calToday = function(){ var n=new Date(); window.__cal={y:n.getFullYear(), m:n.getMonth()+1}; window.go('calendar'); };
+
+function calDMY(s){ var p=String(s||'').split('/'); if(p.length<2) return null; return {d:+p[0], m:+p[1], y:p[2]?+p[2]:null}; }
+
+/* Gom sự kiện cho tháng (y,m). type: bd | hd | anniv */
+function calEvents(y, m){
+  var ns=((window.HR&&window.HR.nhansu)||[]).filter(function(n){ return !(n.tinhTrang&&/nghỉ/i.test(n.tinhTrang)); });
+  var ev={}; // day -> [ {type,name,sub} ]
+  function push(day, o){ if(!day||day<1||day>31) return; (ev[day]=ev[day]||[]).push(o); }
+  ns.forEach(function(n){
+    var sn=calDMY(n.sinhNhat); if(sn && sn.m===m) push(sn.d, {type:'bd', name:n.hoTen, sub:'Sinh nhật'});
+    var hh=calDMY(n.ngayHetHan); if(hh && hh.m===m && hh.y===y) push(hh.d, {type:'hd', name:n.hoTen, sub:'Hết hạn HĐ · '+(window.loaiHDShort?window.loaiHDShort(n.loaiHD):(n.loaiHD||''))});
+    var nv=calDMY(n.ngayVao); if(nv && nv.m===m){ var yrs=(nv.y?(y-nv.y):null); push(nv.d, {type:'anniv', name:n.hoTen, sub:'Kỷ niệm vào làm'+(yrs&&yrs>0?(' · '+yrs+' năm'):'')}); }
+  });
+  return ev;
+}
+
+window.renderCalendar = function(){
+  var esc=window.nsEsc||function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  if(window.HR&&window.HR.error) return (window.errorBox?window.errorBox():'<div>Lỗi tải dữ liệu.</div>');
+  if(!(window.HR&&window.HR.loaded)) return (window.loadingBox?window.loadingBox():'<div>Đang tải…</div>');
+
+  var s=calState(), y=s.y, m=s.m;
+  var ev=calEvents(y,m);
+  var today=new Date(); var isCurMonth=(today.getFullYear()===y && today.getMonth()+1===m); var td=today.getDate();
+
+  var first=new Date(y, m-1, 1);
+  var startOff=(first.getDay()+6)%7;            // Mon=0
+  var days=new Date(y, m, 0).getDate();
+  var ICON={bd:'🎂', hd:'📄', anniv:'🎉'};
+
+  // grid cells
+  var cells='';
+  var totalCells=Math.ceil((startOff+days)/7)*7;
+  for(var i=0;i<totalCells;i++){
+    var dn=i-startOff+1;
+    if(dn<1||dn>days){ cells+='<div class="cal-cell out"></div>'; continue; }
+    var evs=ev[dn]||[];
+    var isTd=isCurMonth&&dn===td;
+    var chips=evs.slice(0,3).map(function(e){return '<div class="cal-chip '+e.type+'"><span>'+ICON[e.type]+'</span>'+esc(shortName(e.name))+'</div>';}).join('');
+    if(evs.length>3) chips+='<div class="cal-more">+'+(evs.length-3)+' nữa</div>';
+    cells+='<div class="cal-cell'+(isTd?' today':'')+'"><div class="cal-dn">'+dn+(isTd?'<span class="cal-td">hôm nay</span>':'')+'</div>'+chips+'</div>';
+  }
+
+  // month list
+  var listItems=[];
+  Object.keys(ev).map(Number).sort(function(a,b){return a-b;}).forEach(function(dn){
+    ev[dn].forEach(function(e){ listItems.push({dn:dn, e:e}); });
+  });
+  var listHtml=listItems.length? listItems.map(function(it){
+    return '<div class="cal-li"><div class="cal-li-d">'+(it.dn<10?'0'+it.dn:it.dn)+'/'+(m<10?'0'+m:m)+'</div>'
+      +'<div class="cal-li-i '+it.e.type+'">'+ICON[it.e.type]+'</div>'
+      +'<div class="cal-li-b"><div class="cal-li-n">'+esc(it.e.name)+'</div><div class="cal-li-s">'+esc(it.e.sub)+'</div></div></div>';
+  }).join('') : '<div class="cal-empty">Không có sự kiện trong tháng này.</div>';
+
+  var counts={bd:0,hd:0,anniv:0}; listItems.forEach(function(it){counts[it.e.type]++;});
+  var MONTHS=['','Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+  var wd=['T2','T3','T4','T5','T6','T7','CN'].map(function(w){return '<div class="cal-wd">'+w+'</div>';}).join('');
+
+  return '<div class="page-head"><div class="page-h1">Calendar</div>'
+    +'<div class="page-lead">Lịch HR — sinh nhật, hết hạn hợp đồng và kỷ niệm vào làm, tổng hợp trực tiếp từ hồ sơ nhân sự.</div></div>'
+    +calStyle()
+    +'<div id="cal">'
+    +'<div class="cal-bar">'
+    +'<div class="cal-step"><span class="arw" onclick="calStep(-1)">‹</span><span class="lbl">'+MONTHS[m]+' / '+y+'</span><span class="arw" onclick="calStep(1)">›</span></div>'
+    +'<button class="cal-today" onclick="calToday()">Hôm nay</button>'
+    +'<div class="cal-legend"><span><b class="d bd"></b>🎂 Sinh nhật</span><span><b class="d hd"></b>📄 Hết hạn HĐ</span><span><b class="d anniv"></b>🎉 Kỷ niệm vào làm</span></div>'
+    +'</div>'
+    +'<div class="cal-main"><div class="cal-cal">'
+    +'<div class="cal-wds">'+wd+'</div><div class="cal-grid">'+cells+'</div></div>'
+    +'<div class="cal-side"><div class="cal-side-h">Sự kiện trong '+MONTHS[m].toLowerCase()+' <span>('+listItems.length+')</span></div>'
+    +'<div class="cal-counts">🎂 '+counts.bd+' · 📄 '+counts.hd+' · 🎉 '+counts.anniv+'</div>'
+    +'<div class="cal-list">'+listHtml+'</div></div></div>'
+    +'</div>';
+};
+function shortName(full){ var p=String(full||'').trim().split(/\s+/); return p.length>1? (p[0]+' '+p[p.length-1]) : (p[0]||''); }
+
+function calStyle(){ return '<style id="cal-style">'
+  +'#cal{max-width:1160px}'
+  +'#cal .cal-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:2px 0 16px}'
+  +'#cal .cal-step{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #E4DECF;border-radius:10px;padding:4px 6px}'
+  +'#cal .cal-step .arw{width:28px;height:28px;border-radius:7px;background:#f1ede3;color:#21303B;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;user-select:none}'
+  +'#cal .cal-step .lbl{font-family:Fraunces,serif;font-size:16px;font-weight:600;color:#21303B;padding:0 12px;min-width:130px;text-align:center}'
+  +'#cal .cal-today{background:#21303B;color:#fff;border:0;font-family:inherit;font-size:13px;font-weight:600;padding:8px 15px;border-radius:9px;cursor:pointer}'
+  +'#cal .cal-legend{display:flex;gap:16px;margin-left:auto;font-size:12.5px;color:#5c5647;flex-wrap:wrap}'
+  +'#cal .cal-legend .d{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}'
+  +'#cal .d.bd{background:#B07A43}#cal .d.hd{background:#A65A4B}#cal .d.anniv{background:#35655B}'
+  +'#cal .cal-main{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}'
+  +'#cal .cal-cal{background:#fff;border:1px solid #E4DECF;border-radius:14px;padding:14px}'
+  +'#cal .cal-wds{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}'
+  +'#cal .cal-wd{text-align:center;font-size:11.5px;font-weight:600;color:#8B897E;padding:4px 0}'
+  +'#cal .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}'
+  +'#cal .cal-cell{min-height:92px;border:1px solid #f0ebe0;border-radius:9px;padding:6px;background:#fdfcf9;display:flex;flex-direction:column;gap:3px}'
+  +'#cal .cal-cell.out{background:transparent;border:0}'
+  +'#cal .cal-cell.today{border-color:#35655B;background:#f3f8f6;box-shadow:inset 0 0 0 1px #35655B}'
+  +'#cal .cal-dn{font-size:12.5px;color:#5c5647;font-weight:600;display:flex;align-items:center;gap:6px}'
+  +'#cal .cal-td{font-size:9.5px;font-weight:700;color:#35655B;background:#dcebe6;border-radius:10px;padding:1px 6px}'
+  +'#cal .cal-chip{font-size:10.5px;color:#21303B;background:#faf7f0;border:1px solid #ece5d6;border-radius:6px;padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:3px}'
+  +'#cal .cal-chip span{font-size:10px}'
+  +'#cal .cal-chip.bd{border-left:2px solid #B07A43}#cal .cal-chip.hd{border-left:2px solid #A65A4B}#cal .cal-chip.anniv{border-left:2px solid #35655B}'
+  +'#cal .cal-more{font-size:10px;color:#8B897E;padding-left:3px}'
+  +'#cal .cal-side{background:#fff;border:1px solid #E4DECF;border-radius:14px;padding:16px;position:sticky;top:12px}'
+  +'#cal .cal-side-h{font-family:Fraunces,serif;font-size:16px;font-weight:600;color:#21303B}'
+  +'#cal .cal-side-h span{color:#8B897E;font-family:"Be Vietnam Pro",sans-serif;font-size:13px}'
+  +'#cal .cal-counts{font-size:12.5px;color:#8B897E;margin:4px 0 12px;border-bottom:1px solid #f1ece1;padding-bottom:12px}'
+  +'#cal .cal-list{display:flex;flex-direction:column;max-height:520px;overflow:auto}'
+  +'#cal .cal-li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1ece1}'
+  +'#cal .cal-li:last-child{border-bottom:0}'
+  +'#cal .cal-li-d{font-size:12px;font-weight:600;color:#8B897E;font-variant-numeric:tabular-nums;min-width:38px}'
+  +'#cal .cal-li-i{font-size:16px;width:20px;text-align:center}'
+  +'#cal .cal-li-n{font-size:13.5px;color:#21303B;font-weight:500}'
+  +'#cal .cal-li-s{font-size:11.5px;color:#8B897E;margin-top:1px}'
+  +'#cal .cal-empty{font-size:13px;color:#9a8f78;padding:10px 0}'
+  +'@media(max-width:860px){#cal .cal-main{grid-template-columns:1fr}#cal .cal-side{position:static}#cal .cal-cell{min-height:72px}}'
   +'</style>';
 }
