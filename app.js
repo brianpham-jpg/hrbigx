@@ -1213,7 +1213,7 @@ function go(id){
 
 /* ---- Khởi động ---- */
 renderNav();
-loadData();
+loadData(true); // luôn fresh: người mới trong HSNS tự hiện, không kẹt cache máy chủ
 go('overview');
 
 /* ---- Cham cong & nang suat (pt-nang-suat) ---- */
