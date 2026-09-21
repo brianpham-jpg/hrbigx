@@ -2840,4 +2840,176 @@ button,input,select,textarea{font-family:inherit!important;}
 .card:has(#file-input-chieu){display:none!important;}
 div:has(> .card > div > #file-input-chieu){grid-template-columns:1fr!important;}
 </style>
+
+<!-- ============================================================
+     ➕ ĐỒNG BỘ TỪ HỒ SƠ — additive block (Cowork 2026-09-21)
+     Chỉ THÊM người mới vào danh sách nhân viên (bigx_employees).
+     TUYỆT ĐỐI không đụng bảng công / phép / điểm danh (bigx_cc, bigx_attendance, cc_summary).
+     26 người cũ giữ nguyên 100%. Người mới cấp mã BIGX từ Hồ sơ.
+     ============================================================ -->
+<style>
+#hs-sync-modal{position:fixed;inset:0;background:rgba(32,45,56,.45);z-index:99999;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;font-family:inherit}
+#hs-sync-modal .hs-card{background:#F6F0E2;border:1px solid #DCD3BE;border-radius:14px;max-width:760px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
+#hs-sync-modal .hs-head{padding:16px 20px;background:#274b43;color:#F6F0E2;display:flex;align-items:center;justify-content:space-between}
+#hs-sync-modal .hs-head h3{margin:0;font-size:15px;font-weight:700;letter-spacing:.2px}
+#hs-sync-modal .hs-head .hs-x{cursor:pointer;font-size:20px;line-height:1;opacity:.85;background:none;border:none;color:#F6F0E2}
+#hs-sync-modal .hs-body{padding:16px 20px;max-height:60vh;overflow:auto}
+#hs-sync-modal .hs-sub{font-size:12.5px;color:#5b5647;margin:0 0 12px}
+#hs-sync-modal table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #E4DECF}
+#hs-sync-modal thead tr{background:#EDE8DC}
+#hs-sync-modal th{padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#274b43;letter-spacing:.3px;white-space:nowrap}
+#hs-sync-modal td{padding:8px 10px;border-top:1px solid #EDE8DC;color:#21303B;vertical-align:middle}
+#hs-sync-modal .hs-foot{padding:14px 20px;border-top:1px solid #DCD3BE;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#F6F0E2}
+#hs-sync-modal .hs-btn{font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;border:none;font-family:inherit}
+#hs-sync-modal .hs-btn-go{background:#4A8375;color:#fff}
+#hs-sync-modal .hs-btn-go:disabled{opacity:.5;cursor:not-allowed}
+#hs-sync-modal .hs-btn-cancel{background:#EDE8DC;color:#414B54;border:1px solid #D4CBB6}
+#hs-sync-modal .hs-note{font-size:11.5px;color:#8f4a3d;background:#F0DED8;border:1px solid #e3c9c0;border-radius:8px;padding:8px 10px;margin:12px 0 0}
+#hs-sync-modal .hs-empty{padding:24px;text-align:center;color:#5b5647;font-size:13px}
+.hs-sync-btn{background:#35655B;color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;border:none;font-family:inherit}
+.hs-sync-btn:hover{opacity:.9}
+</style>
+<div id="hs-sync-modal">
+  <div class="hs-card">
+    <div class="hs-head"><h3>➕ Đồng bộ nhân sự từ Hồ sơ</h3><button class="hs-x" onclick="hsSyncClose()">×</button></div>
+    <div class="hs-body" id="hs-sync-body"></div>
+    <div class="hs-foot">
+      <label style="font-size:12px;color:#5b5647;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="hs-sync-all" onchange="hsSyncToggleAll(this.checked)"> Chọn tất cả</label>
+      <div style="display:flex;gap:8px">
+        <button class="hs-btn hs-btn-cancel" onclick="hsSyncClose()">Hủy</button>
+        <button class="hs-btn hs-btn-go" id="hs-sync-go" onclick="hsSyncApply()">Thêm người đã chọn</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+/* ĐỒNG BỘ TỪ HỒ SƠ — additive, không sửa code cũ. */
+(function(){
+  var HOSO_API = 'https://script.google.com/macros/s/AKfycbwEnVeOgLI8DSnLjCWDGyCZx-878CJNVRWtobRX8AXadpiXfy4lXCQvXx0KMNUSm2AQ/exec';
+  var pending = []; // ứng viên đang hiển thị
+
+  function hsNorm(s){ return String(s==null?'':s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/\s+/g,' ').trim(); }
+  function hsRawEmployees(){
+    try{ var d=JSON.parse(localStorage.getItem('bigx_employees')); if(d&&d.length) return d; }catch(e){}
+    return (typeof DEFAULT_EMPLOYEES!=='undefined')?DEFAULT_EMPLOYEES.slice():[];
+  }
+  function hsMapType(loaiHD){ var s=hsNorm(loaiHD); if(s.indexOf('part')>=0||s.indexOf('ban thoi gian')>=0) return 'parttime'; if(s.indexOf('thu viec')>=0) return 'probation'; return 'official'; }
+  function hsIsWorking(tt){ var s=hsNorm(tt); return s===''||(s.indexOf('nghi')<0); } // loại người đã nghỉ việc
+
+  function hsEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  window.hsSyncClose=function(){ document.getElementById('hs-sync-modal').style.display='none'; };
+  window.hsSyncToggleAll=function(on){ document.querySelectorAll('#hs-sync-body .hs-chk').forEach(function(c){ c.checked=on; }); };
+
+  window.hsSyncOpen=async function(){
+    var modal=document.getElementById('hs-sync-modal');
+    var body=document.getElementById('hs-sync-body');
+    var allChk=document.getElementById('hs-sync-all'); if(allChk) allChk.checked=false;
+    modal.style.display='flex';
+    body.innerHTML='<div class="hs-empty">⏳ Đang đọc Hồ sơ nhân sự…</div>';
+    var data;
+    try{ data=await fetch(HOSO_API,{cache:'no-store'}).then(function(r){return r.json();}); }
+    catch(e){ body.innerHTML='<div class="hs-empty">❌ Không đọc được Hồ sơ. Kiểm tra mạng rồi thử lại.</div>'; return; }
+    var nhansu=(data&&data.nhansu)||[];
+    // dedup: theo TÊN (bắt 26 người NVxxx cũ) + theo MÃ (bắt người BIGX đã thêm)
+    var emps=hsRawEmployees();
+    var nameSet={}, idSet={};
+    emps.forEach(function(e){ nameSet[hsNorm(e.name)]=1; idSet[hsNorm(e.id)]=1; });
+    pending = nhansu.filter(function(p){
+      if(!hsIsWorking(p.tinhTrang)) return false;
+      if(nameSet[hsNorm(p.hoTen)]) return false;
+      if(p.maNV && idSet[hsNorm(p.maNV)]) return false;
+      return true;
+    });
+    if(!pending.length){ body.innerHTML='<div class="hs-empty">✅ Không có người mới. Mọi nhân sự đang làm trong Hồ sơ đều đã có trong chấm công.</div>'; return; }
+    var rows=pending.map(function(p,i){
+      return '<tr>'+
+        '<td><input type="checkbox" class="hs-chk" data-i="'+i+'"></td>'+
+        '<td>'+hsEsc(p.hoTen)+'</td>'+
+        '<td>'+hsEsc(p.maNV||'—')+'</td>'+
+        '<td>'+hsEsc(p.phong||'—')+'</td>'+
+        '<td>'+hsEsc(p.chucVu||'—')+'</td>'+
+        '<td>'+hsEsc(p.loaiHD||'—')+'</td>'+
+      '</tr>';
+    }).join('');
+    body.innerHTML=
+      '<p class="hs-sub">Tìm thấy <b>'+pending.length+'</b> người đang làm trong Hồ sơ nhưng CHƯA có trong chấm công. Tích chọn người cần thêm:</p>'+
+      '<table><thead><tr><th></th><th>Họ tên</th><th>Mã (BIGX)</th><th>Phòng</th><th>Chức vụ</th><th>Loại HĐ</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<div class="hs-note">Chỉ thêm vào <b>danh sách nhân viên</b> — không tạo ngày công/phép. Người <b>chính thức</b> mới: sau khi thêm hãy vào “⚙ QUẢN LÝ NHÂN VIÊN” của người đó để nhập “Ngày phép còn lại” + <b>Lưu phép</b>. Người <b>thử việc</b> mặc định không có phép năm (đúng chuẩn).</div>';
+  };
+
+  // Đẩy cloud NGAY (await) để vòng auto-refresh 30s không ghi đè bản mới
+  async function hsPushNow(){
+    try{
+      var dismissed={};
+      Object.keys(localStorage).filter(function(k){return k.indexOf('bigx_dismissed_')===0;}).forEach(function(k){
+        dismissed[k.replace('bigx_dismissed_','')]=JSON.parse(localStorage.getItem(k)||'[]');
+      });
+      var payload={
+        attendance: JSON.parse(localStorage.getItem('bigx_attendance')||'{}'),
+        employees:  JSON.parse(localStorage.getItem('bigx_employees')||'[]'),
+        cc_data:    JSON.parse(localStorage.getItem('bigx_cc')||'{}'),
+        cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
+        dismissed: dismissed
+      };
+      await fetch(FIREBASE_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }catch(e){ console.warn('hsPushNow error:', e); }
+  }
+
+  window.hsSyncApply=async function(){
+    var picks=[];
+    document.querySelectorAll('#hs-sync-body .hs-chk:checked').forEach(function(c){ picks.push(pending[+c.getAttribute('data-i')]); });
+    if(!picks.length){ alert('Chưa chọn người nào.'); return; }
+    var go=document.getElementById('hs-sync-go'); go.disabled=true; go.textContent='⏳ Đang thêm…';
+
+    var emps=hsRawEmployees().slice();
+    var have={}; emps.forEach(function(e){ have[hsNorm(e.name)]=1; have[hsNorm(e.id)]=1; }); // chốt chặn trùng lần cuối
+    var added=0;
+    picks.forEach(function(p){
+      if(have[hsNorm(p.hoTen)]||(p.maNV&&have[hsNorm(p.maNV)])) return; // bỏ nếu bằng cách nào đó đã có
+      var type=hsMapType(p.loaiHD);
+      emps.push({
+        id: (p.maNV||'').trim(),
+        name: (p.hoTen||'').trim(),
+        dept: p.phong||'',
+        position: p.chucVu||'',
+        type: type,
+        noLeave: (type!=='official'),
+        officialFrom: null,
+        startDate: p.ngayVao||'',
+        leaveBalance: {remaining:0}
+      });
+      have[hsNorm(p.hoTen)]=1; if(p.maNV) have[hsNorm(p.maNV)]=1;
+      added++;
+    });
+
+    try{ setEmployees(emps); }catch(e){ localStorage.setItem('bigx_employees',JSON.stringify(emps)); }
+    await hsPushNow(); // đảm bảo cloud có bản mới ngay
+
+    // refresh giao diện tại chỗ (không reload để tránh kéo bản cũ từ cloud)
+    try{ if(typeof renderBangCC==='function') renderBangCC(); }catch(e){}
+    try{ if(typeof updateStats==='function') updateStats(); }catch(e){}
+    try{ if(typeof renderTodayAttendance==='function') renderTodayAttendance(); }catch(e){}
+
+    hsSyncClose();
+    alert('✅ Đã thêm '+added+' người vào danh sách chấm công (mã BIGX). 26 người cũ giữ nguyên. Đừng quên set phép cho người chính thức mới.');
+  };
+
+  // Gắn nút vào thanh công cụ "Xuất tổng nhân sự" (admin-only)
+  function hsMountBtn(){
+    if(document.getElementById('hs-sync-btn')) return;
+    var grp=document.querySelector('.export-group');
+    if(!grp) return;
+    var btn=document.createElement('button');
+    btn.id='hs-sync-btn'; btn.className='hs-sync-btn admin-only';
+    btn.type='button'; btn.textContent='➕ Đồng bộ từ Hồ sơ';
+    btn.onclick=window.hsSyncOpen;
+    grp.insertBefore(btn, grp.firstChild);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',hsMountBtn);
+  else hsMountBtn();
+  setTimeout(hsMountBtn, 1500); // phòng khi thanh công cụ dựng trễ
+})();
+</script>
+
 </body></html>
