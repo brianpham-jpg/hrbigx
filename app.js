@@ -1444,6 +1444,42 @@ window.bcSetMode = function(m){ window.__bc.mode=m; window.__bc.off=0; window.go
 window.bcStep    = function(d){ window.__bc.off += d; if(window.__bc.off>0) window.__bc.off=0; window.go('bao-cao'); };
 window.bcPrint   = function(){ window.print(); };
 
+/* Xuất PDF tải về (không qua hộp thoại in). Thư viện html2pdf chỉ nạp khi bấm. */
+window.bcExportPDF = function(){
+  var el=document.getElementById('baocao'); if(!el) return;
+  var btn=el.querySelector('.bc-pdf'), oldHtml=btn?btn.innerHTML:'';
+  function fail(msg){ if(btn){btn.disabled=false;btn.innerHTML=oldHtml;} alert(msg||'Không tạo được PDF, thử lại giúp em.'); }
+  function run(){
+    try{
+      var p=bcPeriod(window.__bc.mode, window.__bc.off), lbl=bcLabel(window.__bc.mode,p);
+      var slug=(window.__bc.mode==='week'? (bcDMY(p.start)+'_'+bcDMY(p.end)) : ('Thang_'+(p.start.getMonth()+1)+'-'+p.start.getFullYear())).replace(/\//g,'-');
+      var fname='BaoCao_HR_'+slug+'.pdf';
+      var controls=el.querySelector('.bc-controls'), cad=el.querySelector('.bc-cad');
+      var pc=controls?controls.style.display:'', pd=cad?cad.style.display:'';
+      if(controls) controls.style.display='none';
+      if(cad) cad.style.display='none';
+      var hdr=document.createElement('div'); hdr.className='bc-exphdr';
+      hdr.innerHTML='<div class="bc-exphdr-l"><div class="bc-exphdr-logo">BigX</div>'
+        +'<div><div class="bc-exphdr-t">BÁO CÁO NHÂN SỰ</div><div class="bc-exphdr-s">Kỳ: '+lbl+'</div></div></div>'
+        +'<div class="bc-exphdr-r">Ngày xuất: '+bcDMY(new Date())+'</div>';
+      el.insertBefore(hdr, el.firstChild);
+      el.classList.add('bc-exp');
+      function cleanup(){ el.classList.remove('bc-exp'); if(hdr&&hdr.parentNode)hdr.parentNode.removeChild(hdr); if(controls)controls.style.display=pc; if(cad)cad.style.display=pd; if(btn){btn.disabled=false;btn.innerHTML=oldHtml;} }
+      var opt={ margin:[10,10,12,10], filename:fname, image:{type:'jpeg',quality:0.98},
+        html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:el.scrollWidth},
+        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+        pagebreak:{mode:['css','legacy'],avoid:['.bc-sec','.bc-kpi','tr']} };
+      window.html2pdf().set(opt).from(el).save().then(cleanup, function(){ cleanup(); fail(); });
+    }catch(e){ fail(); }
+  }
+  if(btn){ btn.disabled=true; btn.innerHTML='⏳&nbsp; Đang tạo PDF…'; }
+  if(window.html2pdf){ run(); return; }
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+  s.onload=run; s.onerror=function(){ fail('Không tải được thư viện xuất PDF (kiểm tra mạng rồi thử lại).'); };
+  document.head.appendChild(s);
+};
+
 /* ---- helpers ---- */
 function bcYmd(dt){ var m=dt.getMonth()+1, d=dt.getDate(); return dt.getFullYear()+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d); }
 function bcDMY(dt){ var m=dt.getMonth()+1, d=dt.getDate(); return (d<10?'0'+d:d)+'/'+(m<10?'0'+m:m)+'/'+dt.getFullYear(); }
@@ -1579,7 +1615,7 @@ window.renderBaoCao = function(){
     +'<span class="lbl">'+bcLabel(mode,p)+'<small>'+offLbl+'</small></span>'
     +'<span class="arw'+(off>=0?' dis':'')+'" onclick="bcStep(1)">›</span></div>'
     +'<span class="bc-cmp">so với kỳ trước · '+bcLabel(mode,pv)+'</span>'
-    +'<button class="bc-pdf" onclick="bcPrint()">⎙&nbsp; In / Xuất PDF</button>'
+    +'<button class="bc-pdf" onclick="bcExportPDF()">⬇&nbsp; Xuất PDF</button>'
     +'</div>'
     +'<div class="bc-cad">◷&nbsp; Tự phát hành: <b>Thứ 2 hằng tuần</b> (báo cáo tuần trước) · <b>Ngày 1 hằng tháng</b> (báo cáo tháng trước) — gửi email brian.pham@bigx.vn</div>';
 
@@ -1738,6 +1774,14 @@ function bcStyle(){ return '<style id="bc-style">'
   +'#baocao .muted{color:#9a8f78}'
   +'#baocao .bc-warn{background:#fbf3e8;border:1px solid #ecd9b6;border-radius:9px;padding:10px 13px;font-size:12.5px;color:#8a6a2e;margin-top:12px}'
   +'#baocao .bc-foot{margin-top:8px;font-size:12px;color:#8B897E;font-style:italic}'
+  +'#baocao .bc-exphdr{display:none;align-items:center;justify-content:space-between;gap:14px;padding:0 2px 14px;margin-bottom:16px;border-bottom:2px solid #21303B}'
+  +'#baocao .bc-exphdr-l{display:flex;align-items:center;gap:12px}'
+  +'#baocao .bc-exphdr-logo{width:40px;height:40px;border-radius:10px;background:#21303B;color:#fff;font-family:Fraunces,serif;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center}'
+  +'#baocao .bc-exphdr-t{font-family:Fraunces,serif;font-size:19px;font-weight:600;color:#21303B;letter-spacing:.3px}'
+  +'#baocao .bc-exphdr-s{font-size:12.5px;color:#8B897E;margin-top:2px}'
+  +'#baocao .bc-exphdr-r{font-size:12px;color:#8B897E}'
+  +'#baocao.bc-exp .bc-exphdr{display:flex}'
+  +'#baocao .bc-sec,#baocao .bc-kpi{page-break-inside:avoid}'
   +'@media(max-width:820px){#baocao .bc-kpis{grid-template-columns:repeat(2,1fr)}#baocao .bc-grid2,#baocao .bc-row2{grid-template-columns:1fr}}'
   +'@media print{#sidebar{display:none!important}#main{margin:0!important}.topbar{display:none!important}#baocao .bc-controls .bc-pdf,#baocao .bc-seg,#baocao .bc-step .arw{display:none!important}}'
   +'</style>';
