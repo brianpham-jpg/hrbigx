@@ -2034,7 +2034,7 @@ function renderAbsentList(){
   const all=getAttendance();
   const presentIds=new Set((all[today]||[]).map(r=>r.id));
   const dismissed=new Set(getDismissed());
-  const emps=getEmployees().filter(e=>!RESIGNED_IDS.has(e.id)&&!(RESIGNED_FROM[e.id]&&todayStr()>=RESIGNED_FROM[e.id])&&ccStatusToday(e.id)!=='ĐÃ NGHỈ'&&!presentIds.has(e.id)&&!dismissed.has(e.id));
+  const emps=getEmployees().filter(e=>!RESIGNED_IDS.has(e.id)&&!(RESIGNED_FROM[e.id]&&todayStr()>=RESIGNED_FROM[e.id])&&(typeof ccStatusToday!=='function'||ccStatusToday(e.id)!=='ĐÃ NGHỈ')&&!presentIds.has(e.id)&&!dismissed.has(e.id));
   const el=document.getElementById('absent-list');
   const cnt=document.getElementById('absent-count');
   if(!el) return;
