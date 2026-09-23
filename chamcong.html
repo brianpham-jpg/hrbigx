@@ -1850,9 +1850,6 @@ async function handleFileUpload(e, session='sang'){
     const normText=normalizeViet(allLines.join(' '));
     const emps=getEmployees();
     const matched=emps.filter(emp=>matchEmpInText(emp,normText));
-    console.log('[OCR lines]', allLines);
-    console.log('[OCR norm]', normText.slice(0,300));
-    console.log('[OCR matched]', matched.map(m=>m.name));
     showOcrMatches(matched,allLines,session);
     statusEl.style.display='none';
   }catch(err){
@@ -2807,7 +2804,7 @@ async function ccOcrPasted(file){
     var matched=emps.filter(function(emp){return matchEmpInText(emp,normText);});
     showOcrMatches(matched,lines,session);
     if(st)st.style.display='none';
-  }catch(err){ if(st)st.innerHTML='\u274c LLoi OCR: '+(err&&err.message||err); }
+  }catch(err){ if(st)st.innerHTML='\u274c Lỗi OCR: '+(err&&err.message||err); }
 }
 document.addEventListener('paste',function(e){
   try{
