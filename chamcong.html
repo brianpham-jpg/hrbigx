@@ -2976,7 +2976,7 @@ div:has(> .card > div > #file-input-chieu){grid-template-columns:1fr!important;}
     modal.style.display='flex';
     body.innerHTML='<div class="hs-empty">⏳ Đang đọc Hồ sơ nhân sự…</div>';
     var data;
-    try{ data=await fetch(HOSO_API,{cache:'no-store'}).then(function(r){return r.json();}); }
+    try{ data=await bxAuthedFetch(HOSO_API,{cache:'no-store'}).then(function(r){return r.json();}); }
     catch(e){ body.innerHTML='<div class="hs-empty">❌ Không đọc được Hồ sơ. Kiểm tra mạng rồi thử lại.</div>'; return; }
     var nhansu=(data&&data.nhansu)||[];
     // dedup: theo TÊN (bắt 26 người NVxxx cũ) + theo MÃ (bắt người BIGX đã thêm)

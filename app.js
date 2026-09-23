@@ -1266,7 +1266,7 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_APP_URL   = 'chamcong.html?cc=11'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
+var CC_APP_URL   = 'chamcong.html?cc=12'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
 
 function renderChamCong(){
