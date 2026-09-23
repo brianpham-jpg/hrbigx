@@ -423,7 +423,7 @@ async function kcvSubmit(){
       var b64=await readB64(kcvFiles[i].file);
       items.push({ hoTen:String(kcvFiles[i].hoTen).trim(), email:String(kcvFiles[i].email||'').trim(), gioiTinh:String(kcvFiles[i].gt||'').trim(), sdt:String(kcvFiles[i].sdt||'').trim(), fileName:kcvFiles[i].file.name, mimeType:kcvFiles[i].file.type||'application/octet-stream', b64:b64 });
     }
-    var r=await fetch(API_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ key:API_KEY, viTri:vt, items:items }) });
+    var r=await (window.bxAuthedFetch ? window.bxAuthedFetch(API_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ key:API_KEY, viTri:vt, items:items }) }) : fetch(API_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ key:API_KEY, viTri:vt, items:items }) }));
     var d=await r.json();
     if(d.ok){
       status.textContent='';
@@ -1266,7 +1266,7 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_APP_URL   = 'chamcong.html?cc=10'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
+var CC_APP_URL   = 'chamcong.html?cc=11'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
 
 function renderChamCong(){

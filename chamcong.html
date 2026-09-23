@@ -2783,7 +2783,7 @@ function bxSheetPayload(){
 }
 function bxPushSheet(){
     var __now=Date.now(); if(window.__sheetPushInFlight && (__now-window.__sheetPushInFlight)<15000) return; window.__sheetPushInFlight=__now;
-  try{ fetch('https://script.google.com/macros/s/AKfycbwUP4tkTbtyKEjMb8hsb-D9XklP-2YBpS3-qhoD3jR6dbNDJRIAP0XznACuywlMOKjS/exec',{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'silent=1&data='+encodeURIComponent(JSON.stringify(bxSheetPayload()))}).catch(function(e){console.warn('sheet push',e);}); }catch(e){console.warn('sheet push',e);}
+  try{ bxAuthedFetch('https://script.google.com/macros/s/AKfycbwUP4tkTbtyKEjMb8hsb-D9XklP-2YBpS3-qhoD3jR6dbNDJRIAP0XznACuywlMOKjS/exec',{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'silent=1&data='+encodeURIComponent(JSON.stringify(bxSheetPayload()))}).catch(function(e){console.warn('sheet push',e);}); }catch(e){console.warn('sheet push',e);}
 }
 async function autoPushSheet(force){try{if(window._guestMode)return;var cc=localStorage.getItem('bigx_cc')||'',at=localStorage.getItem('bigx_attendance')||'';var sig=cc.length+'|'+at.length+'|'+cc.slice(-60)+'|'+at.slice(-60);var now=Date.now();if(!force){if(sig===window.__sheetSig)return;if(now-(window.__sheetPushAt||0)<120000)return;}window.__sheetPushAt=now;window.__sheetSig=sig;bxPushSheet();}catch(e){}}
 try{setTimeout(function(){autoPushSheet(true);},8000);setInterval(function(){autoPushSheet(false);},120000);}catch(e){}
