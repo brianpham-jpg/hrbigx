@@ -1069,7 +1069,7 @@ function ovCountUp(){
 
 function ovInit(){
   ovCountUp();
-  var all=HR.tuyendung||[]; var act=ovActive();
+  var all=HR.tuyendung||[]; var act=ovActive(); var ns=HR.nhansu||[];
 
   /* funnel tuyển dụng rút gọn */
   var fn=tdFunnel(all);
@@ -1090,24 +1090,99 @@ function ovInit(){
     yAxis:{type:'category',data:dept.map(function(x){return x[0];}).reverse(),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:PTC.text,fontFamily:PTFONT,fontSize:11}},
     series:[{type:'bar',data:dept.map(function(x){return x[1];}).reverse(),barWidth:'56%',itemStyle:{color:PTC.teal,borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:PTC.muted,fontFamily:PTFONT,fontSize:11}}]
   });
+
+  /* sparkline KPI: Tổng nhân sự / Đang làm / Tổng CV — chuỗi tháng thật (cùng logic tab Chỉ số & xu hướng / Hiệu quả tuyển dụng) */
+  function sparkOpt(labels,data,color,unit){
+    return {
+      grid:{left:0,right:0,top:2,bottom:0},
+      xAxis:{type:'category',show:false,data:labels},
+      yAxis:{type:'value',show:false,scale:true},
+      tooltip:ptTip({trigger:'axis',formatter:function(p){var d=p[0];return 'Tháng '+d.axisValue+'<br/><b>'+d.data+'</b>'+(unit||'');}}),
+      series:[{type:'line',data:data,smooth:.35,showSymbol:false,symbol:'circle',symbolSize:5,
+        lineStyle:{width:2,color:color},itemStyle:{color:color,borderColor:PTC.paper,borderWidth:2},
+        areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:color+'4D'},{offset:1,color:color+'03'}]}}
+      }]
+    };
+  }
+  var flow=csMonthlyFlow(ns);
+  var mLabels=flow.map(function(x){return x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');});
+  var cum=0, tongSpark=flow.map(function(x){cum+=x.inn;return cum;});
+  var dangLam=act.length, dangSpark=[], run=dangLam;
+  for(var i=flow.length-1;i>=0;i--){ dangSpark[i]=run; run-=flow[i].net; }
+  var cvMo=tdMonths(all);
+  var cvLabels=cvMo.map(function(x){return x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');});
+  var cvSpark=cvMo.map(function(x){return x.n;});
+  if(tongSpark.length) ptMk('ov-s-tong', sparkOpt(mLabels,tongSpark,PTC.teal,' người'));
+  if(dangSpark.length) ptMk('ov-s-dang', sparkOpt(mLabels,dangSpark,PTC.teal2,' người'));
+  if(cvSpark.length)   ptMk('ov-s-cv',   sparkOpt(cvLabels,cvSpark,PTC.clay,' CV'));
 }
 
 function renderOverview(){
   if(HR.error) return errorBox();
   if(!HR.loaded) return loadingBox();
-  var ns=HR.nhansu||[]; var act=ovActive();
+  var ns=HR.nhansu||[]; var act=ovActive(); var allCV=HR.tuyendung||[];
   var tong=ns.length, dangLam=act.length;
   var nghi=ns.filter(function(e){return (e.tinhTrang||'').trim()==='Nghỉ việc';}).length;
   var rateNghi=tong?Math.round(nghi/tong*1000)/10:0;
-  var totalCV=(HR.tuyendung||[]).length;
-  var viTriMo=(HR.viTriList&&HR.viTriList.length)?HR.viTriList.length:0;
+  var totalCV=allCV.length;
 
-  var kpis=[
-    ['Tổng nhân sự', tong, 0, '', 'ti-users'],
-    ['Đang làm', dangLam, 0, '', 'ti-user-check'],
-    ['Tỷ lệ nghỉ', rateNghi, 1, '%', 'ti-trending-down'],
-    ['Tổng CV tuyển dụng', totalCV, 0, '', 'ti-files']
-  ].map(function(k){return '<div class="stat"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[4]+'"></i></div><div class="stat-val ov-num" data-to="'+k[1]+'" data-dec="'+k[2]+'" data-suf="'+k[3]+'">0'+k[3]+'</div></div>';}).join('');
+  /* ---- chuỗi tháng thật cho sparkline KPI — cùng nguồn dữ liệu với tab Chỉ số & xu hướng / Hiệu quả tuyển dụng, không tự bịa số ---- */
+  var flow=csMonthlyFlow(ns);
+  var cum=0, tongSpark=flow.map(function(x){cum+=x.inn;return cum;});
+  var dangSpark=[], run=dangLam;
+  for(var i=flow.length-1;i>=0;i--){ dangSpark[i]=run; run-=flow[i].net; }
+  var cvMo=tdMonths(allCV);
+  var cvSpark=cvMo.map(function(x){return x.n;});
+  function trend(arr){
+    if(arr.length<2) return '';
+    var a=arr[arr.length-2], b=arr[arr.length-1], d=b-a, up=d>=0;
+    return '<span class="'+(up?'up':'down')+'"><i class="ti '+(up?'ti-arrow-up-right':'ti-arrow-down-right')+'"></i> '+(up?'+':'')+d+'</span> so với tháng trước ('+a+'→'+b+')';
+  }
+
+  /* ---- so sánh tỷ lệ nghỉ: toàn công ty vs phòng ban cao nhất (≥3 người — cùng ngưỡng tab Biến động nhân sự) ---- */
+  var deptRates=bdByDept().filter(function(r){return r.tong>=3;});
+  var worstDept=deptRates.slice().sort(function(a,b){return b.rate-a.rate;})[0];
+
+  function statSpark(label,icon,chartId,value,deltaHtml){
+    return '<div class="stat"><div class="stat-top"><span class="stat-lbl">'+label+'</span><i class="ti '+icon+'"></i></div>'+
+      '<div class="stat-val ov-num" data-to="'+value+'" data-dec="0" data-suf="">0</div>'+
+      '<div id="'+chartId+'" class="stat-spark"></div>'+
+      (deltaHtml?('<div class="stat-delta">'+deltaHtml+'</div>'):'')+
+    '</div>';
+  }
+  var kpiCVDelta=cvSpark.length?('T'+parseInt(cvMo[cvMo.length-1].k.split('/')[0],10)+' riêng: <b>'+cvSpark[cvSpark.length-1]+' CV</b> ('+pct(cvSpark[cvSpark.length-1],totalCV)+'% tổng)'):'';
+  var kpis=''+
+    statSpark('Tổng nhân sự','ti-users','ov-s-tong',tong,trend(tongSpark))+
+    statSpark('Đang làm','ti-user-check','ov-s-dang',dangLam,trend(dangSpark))+
+    '<div class="stat"><div class="stat-top"><span class="stat-lbl">Tỷ lệ nghỉ</span><i class="ti ti-gauge"></i></div>'+
+      '<div class="stat-val ov-num" data-to="'+rateNghi+'" data-dec="1" data-suf="%">0%</div>'+
+      '<div class="stat-cmp">'+
+        '<div class="stat-cmp-row"><span class="cl">Toàn cty</span><span class="cbg"><span class="cbar" style="width:'+Math.min(100,rateNghi)+'%;background:var(--muted)"></span></span><span class="cv">'+rateNghi+'%</span></div>'+
+        (worstDept?('<div class="stat-cmp-row"><span class="cl" style="color:var(--rust)">'+esc(worstDept.phong)+'</span><span class="cbg"><span class="cbar" style="width:'+Math.min(100,worstDept.rate)+'%;background:var(--rust)"></span></span><span class="cv" style="color:var(--rust)">'+worstDept.rate+'%</span></div>'):'')+
+      '</div></div>'+
+    statSpark('Tổng CV tuyển dụng','ti-files','ov-s-cv',totalCV,kpiCVDelta);
+
+  /* ---- ticker nhận định — tổng hợp từ các tab Phân tích, mọi số đều tính trực tiếp từ HR/tuyendung ---- */
+  var dated=bdDated(); var tenArr=dated.map(bdTenureAtLeave).filter(function(x){return x!=null;});
+  var som=tenArr.filter(function(t){return t<6;}).length;
+  var pctSom=tenArr.length?Math.round(som/tenArr.length*1000)/10:0;
+  var undated=nghi-dated.length;
+  var fnAll=tdFunnel(allCV);
+  var convsAll=fnAll.map(function(s,i){return i===0?null:pct(s.n,fnAll[i-1].n);});
+  var minCA=101,minIA=-1; convsAll.forEach(function(c,i){if(c!==null&&c<minCA){minCA=c;minIA=i;}});
+
+  var chips=[];
+  if(worstDept) chips.push({sev:worstDept.rate>=50?'critical':'warning',
+    html:'<b>'+esc(worstDept.phong)+'</b>: tỷ lệ nghỉ '+worstDept.rate+'% ('+worstDept.left+'/'+worstDept.tong+')'+(rateNghi?(' — cao gấp '+(Math.round(worstDept.rate/rateNghi*10)/10)+' lần trung bình công ty'):'')+'.', src:'Biến động nhân sự'});
+  if(tenArr.length) chips.push({sev:pctSom>=50?'warning':'neutral',
+    html:pctSom+'% người nghỉ ('+som+'/'+tenArr.length+' có ngày) rời trong <b>6 tháng đầu</b> — rủi ro giai đoạn thử việc/hội nhập.', src:'Biến động nhân sự'});
+  if(minIA>0) chips.push({sev:minCA<30?'warning':'neutral',
+    html:'Điểm nghẽn phễu tuyển dụng: <b>'+esc(fnAll[minIA].label)+'</b>, chỉ '+minCA+'% qua được bước này.', src:'Hiệu quả tuyển dụng'});
+  if(undated>0) chips.push({sev:'neutral',
+    html:undated+'/'+nghi+' hồ sơ nghỉ việc thiếu ngày nghỉ chính thức — cần bổ sung để phân tích chính xác hơn.', src:'Hồ sơ nhân sự'});
+  var tickerHtml=chips.length?('<div class="ov-ticker">'+chips.slice(0,4).map(function(c){
+    return '<div class="ov-chip sev-'+c.sev+'"><span class="dot"></span><div>'+c.html+'<span class="src">'+c.src+'</span></div></div>';
+  }).join('')+'</div>'):'';
 
   /* ---- Hợp đồng cần ký ---- */
   var canKy=ovCanKy(); var giaHan=ovGiaHan();
@@ -1126,6 +1201,7 @@ function renderOverview(){
                (soon.length?('<div class="ov-sub-h">Sắp hết hạn ≤30 ngày ('+soon.length+')</div>'+soonRows):'')+
                (over.length?('<div class="ov-more"><i class="ti ti-alert-triangle"></i> Và <b>'+over.length+'</b> hợp đồng đã quá hạn cần ký lại.</div>'):'');
   if(!ckBody) ckBody='<div class="ov-empty">Không có hợp đồng cần xử lý.</div>';
+  var ckNote = (over.length && ckTotal) ? ('<div style="font-size:11.5px;color:var(--text);margin-top:8px">'+Math.round(over.length/ckTotal*100)+'% ('+over.length+'/'+ckTotal+') việc cần xử lý đã <b style="color:var(--rust)">quá hạn</b> — ưu tiên ký lại nhóm này trước.</div>') : '';
 
   /* ---- Sinh nhật sắp tới ---- */
   var bds=ovBirthdays();
@@ -1137,17 +1213,35 @@ function renderOverview(){
       '<span class="ov-li-sub">'+esc(b.phong||'')+'</span><span class="ov-tag '+(soon?'gold':'teal')+'">'+b.dd+' · '+when+'</span></div>';
   }).join('') : '<div class="ov-empty">Không có sinh nhật trong tháng '+curM+'–'+nextM+'.</div>';
 
+  /* ---- đánh giá tự động: Phễu tuyển dụng (rút gọn từ tab Hiệu quả tuyển dụng) ---- */
+  var vt=tdByViTri(allCV).map(function(r){return {viTri:r.viTri,cv:r.total,rate:pct(r.trung,r.total)};});
+  var worstVt=vt.filter(function(x){return x.cv>=10;}).slice().sort(function(a,b){return a.rate-b.rate;})[0];
+  var trungAll=fnAll[5]?fnAll[5].n:0;
+  var funnelEval='<div class="ov-eval"><div class="callout-k"><i class="ti ti-bulb"></i>Đánh giá tự động</div><div class="empty-list">'+
+    (minIA>0?'<div class="empty-li"><i class="ti ti-point"></i><span>Điểm nghẽn phễu: <b>'+esc(fnAll[minIA].label)+'</b> — chỉ '+minCA+'% qua bước này.</span></div>':'')+
+    '<div class="empty-li"><i class="ti ti-point"></i><span>HR lọc CV: <b>'+pct(fnAll[1].n,fnAll[0].n)+'%</b> qua vòng scan; đậu chung <b>'+pct(trungAll,fnAll[0].n)+'%</b> ('+trungAll+'/'+fnAll[0].n+').</span></div>'+
+    (worstVt?'<div class="empty-li"><i class="ti ti-point"></i><span>Vị trí khó tuyển nhất: <b>'+esc(worstVt.viTri)+'</b> — '+worstVt.cv+' CV, đậu '+worstVt.rate+'%.</span></div>':'')+
+  '</div></div>';
+
+  /* ---- đánh giá tự động: Cơ cấu phòng ban ---- */
+  var deptCount=csCount(act,'phong');
+  var deptEval='<div class="ov-eval"><div class="callout-k"><i class="ti ti-bulb"></i>Đánh giá tự động</div><div class="empty-list">'+
+    (deptCount.length?'<div class="empty-li"><i class="ti ti-point"></i><span>Phòng đông nhất: <b>'+esc(deptCount[0][0])+'</b> ('+deptCount[0][1]+' người) trên '+deptCount.length+' phòng ban.</span></div>':'')+
+    (worstDept?'<div class="empty-li"><i class="ti ti-point"></i><span><b>'+esc(worstDept.phong)+'</b> có tỷ lệ nghỉ cao nhất công ty — <b style="color:var(--rust)">'+worstDept.rate+'%</b> ('+worstDept.left+'/'+worstDept.tong+').</span></div>':'')+
+  '</div></div>';
+
   setTimeout(ovInit,30);
 
   return ''+
     '<div class="page-head"><div class="page-h1">Bảng điều khiển</div>'+
     '<div class="page-lead">Nhìn nhanh trong 10 giây — nhân sự, việc cần xử lý và tuyển dụng. Tự cập nhật theo nguồn dữ liệu.</div></div>'+
     '<div class="stat-row">'+kpis+'</div>'+
+    tickerHtml+
 
     '<div class="grid-2">'+
       '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Hợp đồng cần ký</span>'+
         '<span class="sec-badge'+(ckTotal?' on':'')+'">'+ckTotal+'</span></div>'+
-        '<div class="card ov-card" onclick="go(\'hop-dong\')">'+ckBody+
+        '<div class="card ov-card" onclick="go(\'hop-dong\')">'+ckBody+ckNote+
         '<div class="ov-foot">Xem tab Hợp đồng <i class="ti ti-arrow-right"></i></div></div></div>'+
       '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Sinh nhật sắp tới</span>'+
         '<span class="sec-badge'+(bds.length?' on':'')+'">'+bds.length+'</span></div>'+
@@ -1157,9 +1251,9 @@ function renderOverview(){
 
     '<div class="grid-2">'+
       '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Phễu tuyển dụng</span><span class="sec-sub">tóm tắt</span></div>'+
-        '<div class="card"><div id="ov-funnel" class="ec ec-tall"></div></div></div>'+
+        '<div class="card"><div id="ov-funnel" class="ec ec-tall"></div>'+funnelEval+'</div></div>'+
       '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Cơ cấu phòng ban</span><span class="sec-sub">nhân sự đang làm</span></div>'+
-        '<div class="card"><div id="ov-dept" class="ec ec-tall"></div></div></div>'+
+        '<div class="card"><div id="ov-dept" class="ec ec-tall"></div>'+deptEval+'</div></div>'+
     '</div>'+
 
     '<div class="ov-nav">'+

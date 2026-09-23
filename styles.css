@@ -470,6 +470,37 @@ table.dt td.nw{white-space:nowrap;}
 .ov-more i{font-size:14px;flex-shrink:0;}
 .ov-more b{font-variant-numeric:tabular-nums;}
 
+/* ---- Bảng điều khiển v2: sparkline KPI, ticker nhận định, đánh giá tự động (bổ sung, không đổi khối cũ) ---- */
+.stat-spark{height:34px;margin-top:6px;}
+.stat-delta{margin-top:6px;font-size:11px;color:var(--muted);line-height:1.5;}
+.stat-delta .up{color:var(--teal);font-weight:600;}
+.stat-delta .down{color:var(--rust);font-weight:600;}
+.stat-delta i{font-size:12px;vertical-align:-1px;}
+.stat-delta b{color:var(--ink);}
+.stat-cmp{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+.stat-cmp-row{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--text);}
+.stat-cmp-row .cl{width:64px;flex-shrink:0;text-align:right;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stat-cmp-row .cbg{flex:1;height:6px;border-radius:4px;background:var(--line-soft);overflow:hidden;}
+.stat-cmp-row .cbar{display:block;height:100%;border-radius:4px;}
+.stat-cmp-row .cv{width:34px;flex-shrink:0;font-weight:700;font-variant-numeric:tabular-nums;}
+
+.ov-ticker{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:1180px;margin-bottom:22px;}
+.ov-chip{display:flex;gap:9px;align-items:flex-start;padding:11px 13px;border-radius:10px;
+  background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow);font-size:12px;line-height:1.55;color:var(--text);}
+.ov-chip .dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.ov-chip.sev-critical .dot{background:var(--rust);}
+.ov-chip.sev-warning .dot{background:var(--clay);}
+.ov-chip.sev-neutral .dot{background:var(--muted);}
+.ov-chip b{color:var(--ink);}
+.ov-chip .src{display:block;margin-top:4px;font-size:9.5px;color:var(--faint);letter-spacing:.5px;text-transform:uppercase;}
+
+.ov-eval{margin-top:16px;background:linear-gradient(0deg,rgba(176,122,67,.06),rgba(176,122,67,.06)),var(--paper);
+  border:1px solid #E4C99A;border-radius:var(--radius);padding:13px 16px;}
+.ov-eval .callout-k{margin-bottom:7px;}
+.ov-eval .empty-list{margin-top:0;gap:6px;}
+.ov-eval .empty-li{font-size:12px;}
+@media(max-width:900px){.ov-ticker{grid-template-columns:1fr 1fr;}}
+
 /* ---- Chấm công (iframe nhúng, gọn trong khung tab) ---- */
 .cc-frame-wrap{position:relative;max-width:1320px;border:1px solid var(--line);border-radius:var(--radius);
   overflow:hidden;box-shadow:var(--shadow);background:var(--paper);}
