@@ -281,6 +281,26 @@ body.guest-mode .admin-only{display:none!important}
   </div>
 </div>
 
+<!-- ===== GOOGLE AUTH GATE (bao mat - chi brian.pham@bigx.vn) ===== -->
+<div id="google-gate" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:var(--cream,#f7f5f0)">
+  <div class="login-card">
+    <div class="login-head">
+      <div class="login-logo">BigX</div>
+      <div class="login-logo-sub">QUẢN LÝ CHẤM CÔNG</div>
+    </div>
+    <div class="login-body" style="text-align:center">
+      <div class="login-title">Đăng nhập</div>
+      <div class="login-sub">Khu vực bảo mật — chỉ quản trị viên</div>
+      <button class="login-btn" id="google-gate-btn" type="button" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%">
+        <svg width="18" height="18" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-2.1 14.1-5.5l-6.5-5.5C29.6 34.9 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.5 5.5C41.9 35.8 44 30.2 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+        Đăng nhập bằng Google
+      </button>
+      <div class="login-error" id="google-gate-error" style="display:none"></div>
+      <div class="login-note">🔒 Chỉ dành cho quản trị nhân sự</div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== APP ===== -->
 <div id="app" style="display:flex;flex-direction:column">
 
@@ -1225,6 +1245,73 @@ body.guest-mode .admin-only{display:none!important}
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script>
+// ============================
+// FIREBASE AUTH (bao mat cham cong - chi brian.pham@bigx.vn)
+// ============================
+const firebaseConfig = {
+  apiKey: "AIzaSyBX9fCTBfE0Z7WWtJaZu_n8F4NySn1Dq1U",
+  authDomain: "bigx-chamcong-hr.firebaseapp.com",
+  databaseURL: "https://bigx-chamcong-hr-default-rtdb.firebaseio.com",
+  projectId: "bigx-chamcong-hr",
+  storageBucket: "bigx-chamcong-hr.firebasestorage.app",
+  messagingSenderId: "576164766996",
+  appId: "1:576164766996:web:37dcc1e67b61ac661cce01",
+  measurementId: "G-LXK6VD31Q6"
+};
+firebase.initializeApp(firebaseConfig);
+const bxAuth = firebase.auth();
+const BX_ALLOWED_EMAIL = 'brian.pham@bigx.vn';
+
+async function bxAuthedFetch(url, opts){
+  var token = null;
+  try{ if (bxAuth.currentUser) token = await bxAuth.currentUser.getIdToken(); }catch(e){}
+  var sep = url.indexOf('?') > -1 ? '&' : '?';
+  var finalUrl = token ? (url + sep + 'auth=' + token) : url;
+  return fetch(finalUrl, opts);
+}
+
+function bxBootApp(){
+  var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'none';
+  var ap = document.getElementById('app'); if (ap) ap.style.display = 'flex';
+  try{ state.currentUser = BX_ALLOWED_EMAIL; }catch(e){}
+  try{ localStorage.setItem(LS_USER, BX_ALLOWED_EMAIL); }catch(e){}
+  var te = document.getElementById('topbar-user-email'); if (te) te.textContent = BX_ALLOWED_EMAIL;
+  try{ initApp(); }catch(e){ console.warn('initApp error', e); }
+}
+
+bxAuth.onAuthStateChanged(function(user){
+  var gate = document.getElementById('google-gate');
+  var errEl = document.getElementById('google-gate-error');
+  if (user && user.email === BX_ALLOWED_EMAIL) {
+    if (gate) gate.style.display = 'none';
+    if (errEl) errEl.style.display = 'none';
+    if (!window.__bxAppBooted) { window.__bxAppBooted = true; bxBootApp(); }
+  } else {
+    if (user) {
+      if (errEl) { errEl.textContent = 'Tài khoản ' + user.email + ' không có quyền truy cập trang này.'; errEl.style.display = 'block'; }
+      bxAuth.signOut();
+    }
+    var ap = document.getElementById('app'); if (ap) ap.style.display = 'none';
+    if (gate) gate.style.display = 'flex';
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('google-gate-btn');
+  if (btn) btn.addEventListener('click', function(){
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ login_hint: BX_ALLOWED_EMAIL });
+    bxAuth.signInWithPopup(provider).catch(function(e){
+      var err = document.getElementById('google-gate-error');
+      if (err) { err.textContent = 'Đăng nhập thất bại: ' + (e && e.message ? e.message : e); err.style.display = 'block'; }
+    });
+  });
+});
+</script>
+
 <script>
 // ============================
 // CLOUD SYNC (JSONBlob)
@@ -1236,7 +1323,7 @@ let _lastSync = 0;
 
 async function loadFromCloud() {
   try {
-    const resp = await fetch(FIREBASE_URL);
+    const resp = await bxAuthedFetch(FIREBASE_URL);
     if (!resp.ok) return;
     const data = await resp.json();
     if (!data) return;
@@ -1279,7 +1366,7 @@ function syncToCloud() {
         cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
         dismissed
       };
-      await fetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       _lastSync = Date.now(); bxPushSheet();
     } catch(e) { console.warn('Cloud sync error:', e); }
   }, 1500);
@@ -1588,8 +1675,8 @@ function doLogout(){
   localStorage.removeItem(LS_USER);
   state.currentUser = null;
   document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('login-email').value='';
+  window.__bxAppBooted = false;
+  try{ bxAuth.signOut(); }catch(e){}
 }
 
 // ============================
@@ -2708,22 +2795,10 @@ function openGSheet(){
 // (đã gỡ rác: hàm exportEmpExcel — nút "Tải Excel" không còn dùng, không nơi nào gọi)
 
 
-// Auto-init on load
+// Auto-init on load - DA CHUYEN sang bxBootApp(), chi chay sau khi dang nhap Google thanh cong (xem onAuthStateChanged o tren)
 (function(){
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  const saved = localStorage.getItem(LS_USER);
-  if (saved) {
-    state.currentUser = saved;
-    document.getElementById('topbar-user-email').textContent = saved;
-  } else {
-    window._guestMode = true;
-    document.body.classList.add('guest-mode');
-    document.getElementById('topbar-user-email').textContent = 'Chỉ xem';
-    loadFromCloud().then(() => { renderBangCC(); updateStats(); });
-    setTimeout(() => switchMainTab(1), 0);
-  }
-  initApp();
+  document.getElementById('app').style.display = 'none';
 })();
 
 // ============================
@@ -2749,7 +2824,7 @@ async function doPublish() {
       cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
       dismissed
     };
-    await fetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     _lastSync = Date.now();
     bxPushSheet();
     if (btn) { btn.textContent = '✅ Đã lưu'; }
@@ -2945,7 +3020,7 @@ div:has(> .card > div > #file-input-chieu){grid-template-columns:1fr!important;}
         cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
         dismissed: dismissed
       };
-      await fetch(FIREBASE_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      await bxAuthedFetch(FIREBASE_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     }catch(e){ console.warn('hsPushNow error:', e); }
   }
 
