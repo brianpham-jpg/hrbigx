@@ -91,7 +91,8 @@ function applyData(d, fromCache){
 
 function fetchHR(tries, fresh){
   var url = API_URL + (fresh?'?fresh=1':'');
-  return fetch(url,{cache:'no-store'})
+  var p = window.bxAuthedFetch ? window.bxAuthedFetch(url,{cache:'no-store'}) : fetch(url,{cache:'no-store'});
+  return p
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
     .catch(function(e){
       if(tries>0){ return new Promise(function(res){ setTimeout(res,1200); }).then(function(){ return fetchHR(tries-1, fresh); }); }
@@ -1305,10 +1306,12 @@ function go(id){
   content.scrollTop=0;
 }
 
-/* ---- Khởi động ---- */
-renderNav();
-loadData(true); // luôn fresh: người mới trong HSNS tự hiện, không kẹt cache máy chủ
-go('overview');
+/* ---- Khởi động (chỉ chạy sau khi dang nhap Google thanh cong - xem index.html) ---- */
+window.bxMainBoot = function(){
+  renderNav();
+  loadData(true); // luôn fresh: người mới trong HSNS tự hiện, không kẹt cache máy chủ
+  go('overview');
+};
 
 /* ---- Cham cong & nang suat (pt-nang-suat) ---- */
 window.__NS_FB="https://bigx-chamcong-hr-default-rtdb.firebaseio.com/public.json";
@@ -1324,7 +1327,7 @@ window.nsuatData=function(){
 };
 window.nsuatLoadFirebase=function(){
   if(window.__ccLoading) return; window.__ccLoading=true;
-  fetch(window.__NS_FB).then(function(r){return r.json();}).then(function(d){
+  (window.bxAuthedFetch ? window.bxAuthedFetch(window.__NS_FB) : fetch(window.__NS_FB)).then(function(r){return r.json();}).then(function(d){
     window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}};
     window.__ccLoading=false;
     if(document.querySelector('#nsuat')) window.go && window.go('pt-nang-suat');
@@ -1793,7 +1796,7 @@ function bcDeltaBare(cur,prev,unit){ var d=Math.round((cur-prev)*10)/10; if(d===
 
 function bcLoadCham(){
   if(window.__ccLoading) return; window.__ccLoading=true;
-  fetch(window.__NS_FB).then(function(r){return r.json();}).then(function(d){
+  (window.bxAuthedFetch ? window.bxAuthedFetch(window.__NS_FB) : fetch(window.__NS_FB)).then(function(r){return r.json();}).then(function(d){
     window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}}; window.__ccLoading=false;
     if(window.currentTab==='bao-cao') window.go('bao-cao');
   }).catch(function(e){ window.__ccLoading=false; });
@@ -2184,7 +2187,7 @@ window.renderNguon = function(){
   var cc=window.__ccData;
   if(!cc && !window.__ccLoading && window.__NS_FB){
     window.__ccLoading=true;
-    fetch(window.__NS_FB).then(function(r){return r.json();}).then(function(d){
+    (window.bxAuthedFetch ? window.bxAuthedFetch(window.__NS_FB) : fetch(window.__NS_FB)).then(function(r){return r.json();}).then(function(d){
       window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}}; window.__ccLoading=false;
       if(window.currentTab==='nguon') window.go('nguon');
     }).catch(function(){ window.__ccLoading=false; });
