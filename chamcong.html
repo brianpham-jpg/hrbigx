@@ -1215,7 +1215,7 @@ body.guest-mode .admin-only{display:none!important}
       </div>
       <div class="form-group">
         <label class="form-label">GHI CHÚ</label>
-        <input class="form-input" id="day-note" type="text" placeholder="Ví dụ: về sớm 2 tiếng, off từ 16h...">
+        <input class="form-input" id="day-note" type="text" placeholder="Ví dụ: về sớm 2 tiếng, off từ 16h..."><div class="form-group"><label class="form-label" style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="day-face-issue" style="width:15px;height:15px;accent-color:var(--red)"> THIẾU GÓC MẶT LÚC CHECK-IN</label></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1528,7 +1528,7 @@ function syncAttToCC(dateStr){
   function mergeSessions(recs){
     if(recs.length === 1) {
       const r = recs[0];
-      return { status: toCC(r), lateMin: r.lateMin||0, note: r.note||'' };
+      return { status: toCC(r), lateMin: r.lateMin||0, note: r.note||'', faceIssue: !!r.faceIssue };
     }
     // Sort: sang first, chieu second
     const sang = recs.find(r=>(r.session||'sang')==='sang');
@@ -1547,7 +1547,7 @@ function syncAttToCC(dateStr){
     }
     const lateMin = (sang&&sang.lateMin||0) + (chieu&&chieu.lateMin||0);
     const notes = [sang&&sang.note, chieu&&chieu.note].filter(Boolean).join(' | ');
-    return { status, lateMin, note: notes };
+    return { status, lateMin, note: notes, faceIssue: !!(sang&&sang.faceIssue) || !!(chieu&&chieu.faceIssue) };
   }
   Object.keys(byId).forEach(id => {
     const key = id + '_' + cycleYear + '_' + cycleMonth;
@@ -1880,7 +1880,7 @@ function showOcrMatches(matched,rawLines,session='sang'){
     const done=existIds.has(m.id);
     html+=`<label style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:${done?'#E4DECF':'#fff'};border-radius:6px;border:1px solid var(--gray-bd);cursor:${done?'default':'pointer'}">` +
       `<input type="checkbox" data-id="${m.id}" data-name="${m.name}" ${done?'disabled checked':'checked'} style="accent-color:var(--purple)">` +
-      `<span style="${done?'color:var(--gray);text-decoration:line-through':''}">${m.name}</span></label>`;
+      `<span style="${done?'color:var(--gray);text-decoration:line-through':''}">${m.name}</span><span style="display:flex;align-items:center;gap:2px;margin-left:4px;padding-left:6px;border-left:1px solid var(--gray-bd)" title="Tick nếu ảnh check-in của người này bị thiếu góc mặt"><input type="checkbox" class="face-issue-chk" data-faceid="${m.id}" ${done?'disabled':''} style="accent-color:var(--red)"><span style="font-size:10px;color:var(--red)">thiếu mặt</span></span></label>`;
   }
   html+=`</div><div style="display:flex;gap:8px">` +
     `<button onclick="applyOcrMatches('${session}')" style="flex:1;padding:7px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">✅ Thêm vào điểm danh</button>` +
@@ -1888,7 +1888,7 @@ function showOcrMatches(matched,rawLines,session='sang'){
   box.innerHTML=html+(rawLines&&rawLines.length?`<details style='margin-top:8px;font-size:11px'><summary style='cursor:pointer;color:var(--gray)'>Text OCR đọc được</summary><div style='padding:6px;background:#F6F3EC;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#414B54'>${rawLines.join('<br>')}</div></details>`:'');
 }
 function applyOcrMatches(session='sang'){
-  const checks=document.querySelectorAll('#ocr-result-box-'+session+' input[type=checkbox]:not(:disabled):checked');
+  const checks=document.querySelectorAll('#ocr-result-box-'+session+' input[type=checkbox][data-id]:not(:disabled):checked');
   const today=todayStr(); const all=getAttendance();
   if(!all[today]) all[today]=[];
   const existIds=new Set(all[today].map(r=>r.id));
@@ -1896,7 +1896,7 @@ function applyOcrMatches(session='sang'){
   let added=0;
   checks.forEach(cb=>{
     if(!existIds.has(cb.dataset.id)){
-      all[today].push({id:cb.dataset.id,name:cb.dataset.name,time,status:'1',lateMin:0,session});
+      all[today].push(Object.assign({id:cb.dataset.id,name:cb.dataset.name,time,status:'1',lateMin:0,session},(document.querySelector('#ocr-result-box-'+session+' .face-issue-chk[data-faceid="'+cb.dataset.id+'"]')||{}).checked?{faceIssue:true}:{}));
       added++;
     }
   });
@@ -2496,7 +2496,7 @@ function renderCalGrid(empId, year, month, empCC){
         statusHtml+=`<div class="day-note">${cc.note}</div>`;
       }
     }
-    html+=`<div class="day-cell ${isWeekend?'wknd-cell':''} ${isToday?'today-cell':''}"
+    if(cc&&cc.faceIssue){statusHtml+=`<div style="margin-top:2px;font-size:9px;font-weight:700;color:var(--red)" title="Thiếu góc mặt lúc điểm danh">● thiếu mặt</div>`;}html+=`<div class="day-cell ${isWeekend?'wknd-cell':''} ${isToday?'today-cell':''}"
       onclick="${isWeekend?'':'openDayModal(\''+empId+'\',\''+d+'\')'}">
       <div class="day-num ${isWeekend?'wknd-num':''}">${displayDate}</div>
       ${statusHtml}
@@ -2532,7 +2532,7 @@ function openDayModal(empId, dateStr){
   const isLate=cur.status&&['T-S','T-C','T-S-P','T-C-P'].includes(cur.status);
   document.getElementById('day-late-group').style.display=isLate?'block':'none';
   document.getElementById('day-late-min').value=cur.lateMin||'';
-  document.getElementById('day-note').value=cur.note||'';
+  document.getElementById('day-note').value=cur.note||'';document.getElementById('day-face-issue').checked=!!cur.faceIssue;
   document.getElementById('modal-day').classList.add('show');
 }
 function selectDayStatus(code){
@@ -2548,9 +2548,9 @@ function saveDayStatus(){
   if(!selected){ alert('Vui lòng chọn trạng thái'); return; }
   const code=selected.querySelector('.status-opt-badge').textContent;
   const lateMin=parseInt(document.getElementById('day-late-min').value)||0;
-  const noteVal=document.getElementById('day-note').value.trim();
+  const noteVal=document.getElementById('day-note').value.trim();const faceIssue=document.getElementById('day-face-issue').checked;
   const entry={status:code, lateMin, manualOverride:true};
-  if(noteVal) entry.note=noteVal;
+  if(noteVal) entry.note=noteVal;if(faceIssue) entry.faceIssue=true;
   const all=getCCData();
   const key=`${empId}_${state.calViewYear||state.currentYear}_${state.calViewMonth||state.currentMonth}`;
   if(!all[key]) all[key]={};
@@ -2634,7 +2634,7 @@ function bxSheetPayload(){
       var st=_s||'';
       if((st==='T-S-P'||st==='T-C-P')&&v.lateMin){var c=tinhCongNgay(v);return parseFloat(c.toFixed(4));}
       if((st==='T-S'||st==='T-C'||st==='T-C2')&&v.lateMin){return st+' '+v.lateMin+"'";}
-      return st;});
+      return st;});const faceFlags=dates.map(dt=>{const v=cd[dt]; return !!(v&&v.faceIssue);});
     var phepConLai, phepCap;
     var off=empOfficialFrom(e.id);
     var preOfficial=off&&(y<off.y||(y===off.y&&m<off.m));
@@ -2649,7 +2649,7 @@ function bxSheetPayload(){
       // gây thổi phồng (bỏ qua phép đã dùng các tháng trước). Nay dùng đúng công thức chung.
     }
     var ngayLuong=+Math.min(wd,cong+nghiPhep+nghiLe).toFixed(3);
-    return {id:e.id,name:e.name,dept:e.dept||'',statuses,cong:+cong.toFixed(3),nghiPhep:+(+nghiPhep).toFixed(3),nghiKL:nghiKL,nghiLe:nghiLe,phep2025:0,phepCap:phepCap,ngayLuong:ngayLuong,phep:phepConLai,phut:phut,phat:phat,nghi:nghi,noLeave:isNoLeave(e.id),thuViec:(empType(e.id)==='probation')};
+    return {id:e.id,name:e.name,dept:e.dept||'',statuses,faceFlags,cong:+cong.toFixed(3),nghiPhep:+(+nghiPhep).toFixed(3),nghiKL:nghiKL,nghiLe:nghiLe,phep2025:0,phepCap:phepCap,ngayLuong:ngayLuong,phep:phepConLai,phut:phut,phat:phat,nghi:nghi,noLeave:isNoLeave(e.id),thuViec:(empType(e.id)==='probation')};
   });
   const p2=n=>String(n).padStart(2,'0');
   ;(function(){try{
