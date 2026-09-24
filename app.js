@@ -2472,10 +2472,10 @@ function ngStyle(){ return '<style id="ng-style">'
     var da=a.due||'9999', db=b.due||'9999'; if(da!==db) return da<db?-1:1;
     return (PRI_W[a.pri]||1)-(PRI_W[b.pri]||1);
   }
-  /* Việc tồn ở các tháng trước (chỉ nhắc HĐ/thử việc + việc tự thêm; 12 tháng gần nhất) */
+  /* Việc tồn ở các tháng trước (chỉ nhắc HĐ/thử việc + việc tự thêm; 36 tháng gần nhất) */
   function backlog(){
     var res=[], cm=curMonth();
-    for(var k=1;k<=12;k++){
+    for(var k=1;k<=36;k++){ // 3 năm gần nhất
       var ym=shiftMonth(cm,-k);
       var n=itemsFor(ym).filter(function(t){ return isOpen(t) && (t.group==='manual' || t.kind==='hd' || t.kind==='tv'); }).length;
       if(n) res.push([ym,n]);
