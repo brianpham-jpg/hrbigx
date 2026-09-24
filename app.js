@@ -1309,7 +1309,7 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_APP_URL   = 'chamcong.html?cc=14'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
+var CC_APP_URL   = 'chamcong.html?cc=15'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
 
 function renderChamCong(){
@@ -1690,6 +1690,7 @@ function bcCham(p){
         return;
       }
       if(/^T-[SC]/.test(st)){ full++; return; }    // [B2] trễ <3' hoặc có phép: tính là có mặt đúng giờ
+      if(st==='CS'||st==='CC'){ full++; return; }    // [2S] có check-in 1 buổi: tính là có mặt
       if(st==='K'){ absent++; return; }
       // các mã nửa buổi N-S/N-C… tính vào "work" nhưng không phải full/late/absent
     });

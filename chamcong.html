@@ -735,6 +735,8 @@ const STATUS_CODES = {
   'T-C-P':{ label:'Xin về sớm',  bg:'var(--amber-bg)',  color:'var(--amber)' },
   'N-C-K':{ label:'Nửa+Vắng',  bg:'var(--red-bg)',    color:'var(--red)' },
   'N-S-K':{ label:'Nửa+Vắng',  bg:'var(--red-bg)',    color:'var(--red)' },
+  'CS':   { label:'Chỉ có sáng', bg:'#F6EBD3',          color:'#8a5a12' },   // [2S] 0,5 công — buổi chiều chờ xử lý
+  'CC':   { label:'Chỉ có chiều', bg:'#F6EBD3',         color:'#8a5a12' },   // [2S] 0,5 công — buổi sáng chờ xử lý
 };
 const SIMPLE_STATUSES = ['1','T-S','T-C2','T-C','T-S-P','T-C-P','N-S','N-C','P','P-KL','K','NL']; // [B1] thêm T-C2/T-C/N-C
 const RESIGNED_IDS = new Set(['NV027','NV037','NV040','NV031']); // NV031 = Brian (admin)
@@ -950,7 +952,30 @@ function syncAttToCC(dateStr){
     return STATUS_CODES[r.status] ? r.status : (r.status==='ok'?'1':r.status==='late'?(((r.lateMin||0)<3)?'1':'T-S'):'K');
   }
   // Merge 2 sessions into 1 daily status
+  const TWO_SESSION_FROM='2026-09-25'; // [2S] từ ngày này mỗi buổi = 0,5 công
+  const _UN2=['T-S','T-C','T-C2'], _W2=x=>x==='1'||_UN2.includes(x);
   function mergeSessions(recs){
+    const _m=mergeSessions0(recs);
+    if(dateStr<TWO_SESSION_FROM) return _m;
+    const _sL=recs.filter(r=>(r.session||'sang')==='sang'), _cL=recs.filter(r=>r.session==='chieu');
+    const _pk=l=>l.find(r=>toCC(r)!=='1')||l[0]||null, sa=_pk(_sL), ch=_pk(_cL);
+    const sS=sa?toCC(sa):null, cS=ch?toCC(ch):null;
+    const lateOf=(r,c)=> (r && _UN2.includes(c) && (+r.lateMin||0)>0) ? [{c:c, m:+r.lateMin}] : [];
+    // Chỉ có 1 buổi làm việc → CS/CC (0,5 công, buổi kia chờ anh xử lý tay)
+    if(sa && !ch && _W2(sS)){ _m.status='CS'; const L=lateOf(sa,sS); if(L.length) _m.lates=L; else delete _m.lates; return _m; }
+    if(ch && !sa && _W2(cS)){ _m.status='CC'; const L=lateOf(ch,cS); if(L.length) _m.lates=L; else delete _m.lates; return _m; }
+    // 1 buổi làm + 1 buổi nghỉ phép → nửa ngày trừ phép (N-C / N-S); nghỉ không lương → N-C-K / N-S-K
+    if(sa && ch){
+      let st=null, L=[];
+      if(_W2(sS) && cS==='P'){ st='N-C'; L=lateOf(sa,sS); }
+      else if(_W2(cS) && sS==='P'){ st='N-S'; L=lateOf(ch,cS); }
+      else if(_W2(sS) && cS==='P-KL'){ st='N-C-K'; L=lateOf(sa,sS); }
+      else if(_W2(cS) && sS==='P-KL'){ st='N-S-K'; L=lateOf(ch,cS); }
+      if(st){ _m.status=st; _m.lateMin=L.length?L[0].m:0; if(L.length) _m.lates=L; else delete _m.lates; }
+    }
+    return _m;
+  }
+  function mergeSessions0(recs){
     if(recs.length === 1) {
       const r = recs[0];
       const _one = { status: toCC(r), lateMin: r.lateMin||0, note: r.note||'', faceIssue: !!r.faceIssue };
@@ -1138,19 +1163,52 @@ function renderAttList(session, records){
       <div class="att-avatar ${r.manual?'manual':''}">${getInitials(r.name)}</div>
       <div style="flex:1">
         <div class="att-name">${r.name}${r.manual?' <span class="att-manual-tag">· thủ công</span>':''}</div>
-        ${(['T-S','T-C'].includes(r.status))&&r.lateMin?`<div style="font-size:10px;color:var(--amber)">${r.status==='T-C'?'Về sớm':'Trễ'} ${r.lateMin} phút</div>`:''}
+        ${(['T-S','T-C','T-C2'].includes(r.status))&&r.lateMin?`<div style="font-size:10px;color:var(--amber)">${r.status==='T-C'?'Về sớm':(r.status==='T-C2'?'Trễ chiều':'Trễ sáng')} ${r.lateMin} phút</div>`:''}
         ${r.note?`<div style="font-size:10px;color:var(--gray)">${r.note}</div>`:''}
+        ${session==='sang'?chieuCtl(r.id,r.name):''}
       </div>
       ${r.time&&r.time!=='--:--'?`<span class="att-time">${r.time}</span>`:''}
       <span class="s-badge" style="background:${(STATUS_CODES[r.status]||STATUS_CODES['1']).bg};color:${(STATUS_CODES[r.status]||STATUS_CODES['1']).color}">
         ${(STATUS_CODES[r.status]||{label:'?'}).label}
       </span>
       <div class="att-actions">
+        <button class="att-action" onclick="quickLate('${r.id}','${r.session||'sang'}')" title="${(r.session||'sang')==='chieu'?'Đánh dấu trễ chiều':'Đánh dấu trễ sáng'}">⏱</button>
         <button class="att-action" onclick="editAttendance('${r.id}','${r.session||'sang'}')" title="Sửa">✏</button>
         <button class="att-action del" onclick="deleteAttendance('${r.id}','${r.session||'sang'}')" title="Xoá">🗑</button>
       </div>
     </div>
   `).join('');
+}
+/* [2S] Nút "Chiều…" cho người ĐÃ check-in sáng: Trễ chiều / Nghỉ chiều có phép / Nghỉ chiều không phép.
+   Đã có dữ liệu chiều → hiện nhãn trạng thái chiều thay cho nút. */
+function chieuCtl(id, name){
+  const today=todayStr(); if(today<'2026-09-25') return '';
+  const recs=getAttendance()[today]||[];
+  const sang=recs.find(r=>r.id===id && (r.session||'sang')==='sang');
+  if(!sang || ['P','P-KL','K','NL','ĐÃ NGHỈ'].includes(sang.status)) return ''; // chỉ cho người đã làm buổi sáng
+  const ch=recs.find(r=>r.id===id && r.session==='chieu');
+  if(ch){
+    const lb=ch.status==='P'?'Nghỉ (có phép)':ch.status==='K'?'Nghỉ (không phép)':ch.status==='T-C2'?('Trễ '+(ch.lateMin||0)+"'"):ch.status==='T-C'?('Về sớm '+(ch.lateMin||0)+"'"):'Có mặt';
+    return `<div style="font-size:10px;color:#3f7669;margin-top:2px">Chiều: <b>${lb}</b></div>`;
+  }
+  const nm=String(name).replace(/'/g,"\\'");
+  return `<select onchange="setChieu('${id}','${nm}',this.value);this.selectedIndex=0" title="Xử lý buổi chiều" style="margin-top:3px;font-size:10.5px;padding:1px 4px;border:1px solid #cfe0da;border-radius:6px;background:#fff;color:#3f7669;max-width:150px">
+    <option value="">Chiều…</option><option value="late">⏱ Trễ chiều…</option><option value="P">🌿 Nghỉ chiều – có phép</option><option value="K">✗ Nghỉ chiều – không phép</option></select>`;
+}
+function setChieu(id, name, kind){
+  if(!kind) return;
+  if(kind==='late'){ // mở ô nhập số phút, chọn sẵn Trễ chiều
+    openAddModal(null,'chieu');
+    const ne=document.getElementById('modal-name'); if(ne) ne.value=id;
+    const st=document.getElementById('modal-status'); st.value='T-C2'; try{ toggleModalFields(); }catch(e){}
+    const lm=document.getElementById('modal-late-min'); if(lm){ lm.value=''; lm.focus(); }
+    return;
+  }
+  const today=todayStr(), all=getAttendance(); if(!all[today]) all[today]=[];
+  if(all[today].some(r=>r.id===id && r.session==='chieu')) return;
+  all[today].push({id, name, time:'--:--', status:kind, lateMin:0, session:'chieu', manual:true, note:kind==='P'?'Nghỉ chiều có phép':'Nghỉ chiều không phép'});
+  setAttendance(all);
+  renderTodayAttendance(); renderAbsentList(); updateStats(); renderHistory();
 }
 function renderTodayAttendance(){
   const all = getAttendance();
@@ -1170,7 +1228,7 @@ function updateStats(){
   const emps = getEmployees();
   const presentIds=new Set(records.filter(r=>r.status!=='K').map(r=>r.id));
   document.getElementById('stat-present').textContent = presentIds.size;
-  document.getElementById('stat-late').textContent    = records.filter(r=>(r.status==='T-S'||r.status==='T-C')&&(r.lateMin||0)>=3).length;
+  document.getElementById('stat-late').textContent    = records.filter(r=>(r.status==='T-S'||r.status==='T-C'||r.status==='T-C2')&&(r.lateMin||0)>=3).length; /* [2S] tính cả trễ chiều */
   document.getElementById('stat-absent').textContent  = Math.max(0, emps.filter(e=>!presentIds.has(e.id)).length);
   document.getElementById('stat-total').textContent   = emps.length || records.length;
 }
@@ -1371,6 +1429,13 @@ function openAddModal(editId=null, session='sang'){
   nameEl.focus();
 }
 function editAttendance(id, session){ openAddModal(id, session||'sang'); }
+/* [2S] Đánh dấu trễ nhanh: sáng → T-S (trễ sáng), chiều → T-C2 (trễ chiều); nhập số phút rồi Lưu */
+function quickLate(id, session){
+  openAddModal(id, session||'sang');
+  const st=document.getElementById('modal-status'); st.value=(session==='chieu')?'T-C2':'T-S';
+  try{ toggleModalFields(); }catch(e){}
+  const lm=document.getElementById('modal-late-min'); if(lm){ lm.focus(); lm.select&&lm.select(); }
+}
 function deleteAttendance(id, session){
   if(!confirm('Xác nhận xoá?')) return;
   const all=getAttendance(); const today=todayStr();
@@ -1437,8 +1502,8 @@ function getDismissed(){
 function setDismissed(ids){
   localStorage.setItem('bigx_dismissed_'+todayStr(),JSON.stringify(ids));
 }
-function dismissAbsent(id){
-  const ids=getDismissed();
+function dismissAbsent(id, session){
+  const ids=getDismissed(); if(session==='chieu') id=id+'|chieu'; // [2S] bỏ qua theo buổi
   if(!ids.includes(id)){ ids.push(id); setDismissed(ids); }
   renderAbsentList();
 }
@@ -1449,6 +1514,7 @@ function dismissAbsent(id){
 function renderAbsentList(){
   const today=todayStr();
   const all=getAttendance();
+  if(today>='2026-09-25') return renderAbsentList2S(); // [2S]
   const presentIds=new Set((all[today]||[]).map(r=>r.id));
   const dismissed=new Set(getDismissed());
   const emps=getEmployees().filter(e=>!RESIGNED_IDS.has(e.id)&&!(RESIGNED_FROM[e.id]&&todayStr()>=RESIGNED_FROM[e.id])&&(typeof ccStatusToday!=='function'||ccStatusToday(e.id)!=='ĐÃ NGHỈ')&&!presentIds.has(e.id)&&!dismissed.has(e.id));
@@ -1474,14 +1540,39 @@ function renderAbsentList(){
     </div>`;
   }).join('');
 }
-function quickAddAttendance(id,name){
+/* [2S] Chưa check-in theo TỪNG BUỔI. Nghỉ cả ngày (P, P-KL, K, NL) ghi ở 1 buổi = đã xử lý cả 2 buổi. */
+function renderAbsentList2S(){
+  const today=todayStr(), recs=getAttendance()[today]||[];
+  const DAY=['P','P-KL','K','NL','ĐÃ NGHỈ'];
+  const has=(id,ses)=>recs.some(r=>r.id===id && ((r.session||'sang')===ses || DAY.includes(r.status)));
+  const dis=new Set(getDismissed());
+  const base=getEmployees().filter(e=>!RESIGNED_IDS.has(e.id)&&!(RESIGNED_FROM[e.id]&&today>=RESIGNED_FROM[e.id])&&(typeof ccStatusToday!=='function'||ccStatusToday(e.id)!=='ĐÃ NGHỈ'));
+  const showChieu=new Date().getHours()>=12 || recs.some(r=>r.session==='chieu');
+  const miss={sang:base.filter(e=>!has(e.id,'sang')&&!dis.has(e.id)), chieu:showChieu?base.filter(e=>!has(e.id,'chieu')&&!dis.has(e.id+'|chieu')):[]};
+  const el=document.getElementById('absent-list'), cnt=document.getElementById('absent-count'); if(!el) return;
+  cnt.textContent=miss.sang.length+miss.chieu.length;
+  const row=(emp,ses)=>{ const ini=emp.name.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase(); const nm=emp.name.replace(/'/g,"\\'");
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${ini}</div><span style="font-size:13px;color:#21303B">${emp.name}</span></div>
+      <div style="display:flex;gap:5px">
+        <button onclick="dismissAbsent('${emp.id}','${ses}')" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
+        <button onclick="quickAddAttendance('${emp.id}','${nm}','${ses}')" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+      </div></div>${ses==='chieu'?`<div style="margin:-2px 0 2px 46px">${chieuCtl(emp.id,emp.name)}</div>`:''}`; };
+  const head=t=>`<div style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.5px;margin:6px 2px 2px">${t}</div>`;
+  let h='';
+  h+=head('🌅 CHƯA CHECK-IN SÁNG ('+miss.sang.length+')')+(miss.sang.length?miss.sang.map(e=>row(e,'sang')).join(''):'<div class="att-empty" style="color:var(--green);font-weight:600">✅ Sáng đủ</div>');
+  if(showChieu) h+=head('🌆 CHƯA CHECK-IN CHIỀU ('+miss.chieu.length+')')+(miss.chieu.length?miss.chieu.map(e=>row(e,'chieu')).join(''):'<div class="att-empty" style="color:var(--green);font-weight:600">✅ Chiều đủ</div>');
+  el.innerHTML=h;
+}
+function quickAddAttendance(id,name,session){
+  const ses=session||'sang'; // [2S] thêm đúng buổi
   const today=todayStr();
   const all=getAttendance();
   if(!all[today]) all[today]=[];
-  if(all[today].find(r=>r.id===id)) return;
+  if(all[today].find(r=>r.id===id && (r.session||'sang')===ses)) return;
   const now=new Date();
   const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  all[today].push({id,name,time,status:'1',lateMin:0,session:'sang'});
+  all[today].push({id,name,time,status:'1',lateMin:0,session:ses});
   setAttendance(all);
   renderTodayAttendance(); renderAbsentList(); updateStats(); renderHistory();
 }
@@ -1693,6 +1784,7 @@ window.bxDay=function(v){
   else if(UN.indexOf(s)>=0){ r.cong=Math.max(0,1-0.5*over); r.phep=0.5*over; r.nghi=0.5*over; }
   else if(s==='N-S'||s==='N-C'){ r.cong=Math.max(0,0.5-0.5*over); r.phep=0.5+0.5*over; r.nghi=0.5+0.5*over; }
   else if(s==='N-S-K'||s==='N-C-K'){ r.cong=Math.max(0,0.5-0.5*over); r.phep=0.5*over; r.nghi=0.5+0.5*over; }
+  else if(s==='CS'||s==='CC'){ r.cong=Math.max(0,0.5-0.5*over); r.phep=0.5*over; r.nghi=0.5+0.5*over; } // [2S] chỉ 1 buổi: 0,5 công, buổi còn lại chờ xử lý (chưa tính)
   else if(s==='T-S-P'||s==='T-C-P'){ r.cong=Math.max(0,1-lm/480-0.5*over); r.phep=lm/480+0.5*over; r.nghi=r.phep; }
   else if(s==='P'){ r.phep=1; r.nghi=1; }
   else if(s==='K'||s==='P-KL'){ r.nghi=1; }
@@ -1910,7 +2002,7 @@ function renderCalendarExpand(emp, year, month){
       <div class="cal-legend">
         ${Object.entries({
           '1':'Đủ công','T-S':'Trễ sáng','T-C2':'Đi trễ chiều','T-C':'Về sớm chiều',
-          'N-S':'Nửa ngày','N-C':'Nửa ngày','P':'Phép (trừ phép năm)','P-KL':'Nghỉ ko trừ phép (ko tính công)','K':'Vắng','NL':'Nghỉ lễ'
+          'N-S':'Nửa ngày','N-C':'Nửa ngày','CS':'Chỉ có sáng','CC':'Chỉ có chiều','P':'Phép (trừ phép năm)','P-KL':'Nghỉ ko trừ phép (ko tính công)','K':'Vắng','NL':'Nghỉ lễ'
         }).map(([code,lbl])=>`
           <div class="leg-item">
             <span class="day-status" style="background:${STATUS_CODES[code]?.bg};color:${STATUS_CODES[code]?.color};font-size:9px">${code}</span>
@@ -2092,7 +2184,7 @@ function bxSheetPayload(){
         var _lp=v.lates.map(function(x){return x.c+' '+x.m+"'";}).join(' · ');
         if(st==='T-S-P'||st==='T-C-P') return st+' '+(+v.lateMin||0)+"' · "+_lp;
         if(TULATE.includes(st)) return _lp;
-        return st+' · '+_lp;
+        return st+' · '+_lp; // N-S · T-C2 10' | CS · T-S 10'
       }
       if((st==='T-S-P'||st==='T-C-P')&&v.lateMin){var c=tinhCongNgay(v);return parseFloat(c.toFixed(4));}
       if((st==='T-S'||st==='T-C'||st==='T-C2')&&v.lateMin){return st+' '+v.lateMin+"'";}
@@ -2131,9 +2223,10 @@ function bxSheetPayload(){
    +'isP,ARRAYFORMULA(N(REGEXMATCH(t,"^T-[SC]-P "))),'
    +'isN,ARRAYFORMULA(N(REGEXMATCH(t,"^N-[SC]"))),'
    +'isNK,ARRAYFORMULA(N(REGEXMATCH(t,"^N-[SC]-K"))),'
-   +'u_a,(isT+isN)*m_a,u_b,m_b,ov,(u_a>45)+(u_b>45),'
-   +'cong,SUM(r)+SUMPRODUCT(ARRAYFORMULA(IF(isT*(1-0.5*ov)<0,0,isT*(1-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isN*(0.5-0.5*ov)<0,0,isN*(0.5-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isP*(1-m_a/480-0.5*ov)<0,0,isP*(1-m_a/480-0.5*ov)))),'
-   +'req,COUNTIF(r,"P")+0.5*SUMPRODUCT(isN-isNK)+SUMPRODUCT(ARRAYFORMULA(IF(ISNUMBER(r),IF(r<1,1-r,0),0)))+SUMPRODUCT(isP*m_a/480)+0.5*SUMPRODUCT((isT+isN+isP)*ov),'
+   +'isH,ARRAYFORMULA(N(REGEXMATCH(t,"^C[SC]( |$)"))),'
+   +'u_a,(isT+isN+isH)*m_a,u_b,m_b,ov,(u_a>45)+(u_b>45),'
+   +'cong,SUM(r)+SUMPRODUCT(ARRAYFORMULA(IF(isT*(1-0.5*ov)<0,0,isT*(1-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isN*(0.5-0.5*ov)<0,0,isN*(0.5-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isP*(1-m_a/480-0.5*ov)<0,0,isP*(1-m_a/480-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isH*(0.5-0.5*ov)<0,0,isH*(0.5-0.5*ov)))),'
+   +'req,COUNTIF(r,"P")+0.5*SUMPRODUCT(isN-isNK)+SUMPRODUCT(ARRAYFORMULA(IF(ISNUMBER(r),IF(r<1,1-r,0),0)))+SUMPRODUCT(isP*m_a/480)+0.5*SUMPRODUCT((isT+isN+isP+isH)*ov),'
    +'cap,'+CAPNUM+',';
  var F={};
  F.cong='='+LH+'cong))';
@@ -2255,7 +2348,7 @@ function ccStatusToday(id){
 }
 /* Dán ảnh Ctrl+V để chấm công (dùng lại pipeline OCR sẵn có) */
 async function ccOcrPasted(file){
-  var session='sang';
+  var session=(new Date().getHours()>=12)?'chieu':'sang'; // [2S] dán ảnh sau 12h = buổi chiều
   var st=document.getElementById('upload-status-'+session);
   try{ if(st){st.style.display='block';st.innerHTML='\u23f3 \u0110ang \u0111\u1ecdc \u1ea3nh d\u00e1n...';} }catch(_){ }
   try{
@@ -2284,7 +2377,7 @@ document.addEventListener('paste',function(e){
 });
 /* Đổi nhãn cột khi đã bỏ buổi chiều */
 function ccRelabelSang(){ try{ var sp=Array.prototype.slice.call(document.querySelectorAll('span')).find(function(x){return /BU\u1ed4I S\u00c1NG/.test(x.textContent);}); if(sp) sp.textContent='\ud83d\udccb \u0110I\u1ec2M DANH H\u00d4M NAY'; }catch(_){} }
-ccRelabelSang(); setTimeout(ccRelabelSang,600);
+/* [2S] không đổi nhãn nữa (đã có lại buổi chiều) */
 </script>
 <style id="cc-sync">
 /* Font đồng bộ dashboard */
@@ -2298,9 +2391,7 @@ button,input,select,textarea{font-family:inherit!important;}
 .topbar-logout{background:#fff!important;color:var(--red)!important;border:1px solid var(--gray-bd)!important;}
 .cc-login-guest{background:#fff!important;color:var(--green)!important;border:1px solid var(--gray-bd)!important;}
 .publish-btn{border:1px solid #e7c200!important;}
-/* Gộp 1 lần check-in: ẩn cột Buổi chiều, cột Buổi sáng full */
-.card:has(#file-input-chieu){display:none!important;}
-div:has(> .card > div > #file-input-chieu){grid-template-columns:1fr!important;}
+/* [2S] Từ 25/9: check-in 2 buổi (sáng + chiều) — hiện lại cột Buổi chiều */
 </style>
 
 <!-- ============================================================
