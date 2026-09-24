@@ -2354,13 +2354,16 @@ function ngStyle(){ return '<style id="ng-style">'
    HĐ quá hạn / sắp hết hạn (≤30 ngày, thử việc → "Đánh giá hết thử việc"), hồ sơ thiếu, sinh nhật 14 ngày tới.
    Lưu Firebase: public/hrtasks = { tasks:{id:{...}}, autoDone:{key:'YYYY-MM-DD'} }
    (ghi từng task riêng; chamcong.html đã đổi sang PATCH nên không xoá nhánh này)
+   [H] Feedback sếp: Gửi duyệt → Duyệt đạt / Cần sửa (ghi nội dung). log:[{d,t:'submit'|'fix'|'ok',note}]
+       Số lần sửa = số lần 'Cần sửa'; task xong ghi "Đạt lần N" (N = lần sửa + 1); không feedback = đạt ngay lần đầu.
    ============================================================ */
 (function(){
   var FB_TASKS='https://bigx-chamcong-hr-default-rtdb.firebaseio.com/public/hrtasks';
   var BAK='bx_hrtasks_bak';
   var S=window.__cv={ loaded:false, loading:false, err:null, tasks:{}, autoDone:{}, emptyCloud:false,
     f:{ q:'', st:'open', owner:'', src:'' }, form:null };
-  var ST={todo:'Chưa làm', doing:'Đang làm', done:'Xong'};
+  var ST={todo:'Chưa làm', doing:'Đang làm', review:'Chờ duyệt', fix:'Cần sửa', done:'Xong'};
+  var OPEN_ID=null; // task đang mở lịch sử feedback
   var PRI={cao:'Cao', tb:'Trung bình', thap:'Thấp'};
   var PRI_W={cao:0, tb:1, thap:2};
   function e_(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -2433,7 +2436,8 @@ function ngStyle(){ return '<style id="ng-style">'
     var q=S.f.q.trim().toLowerCase();
     return allItems().filter(function(t){
       if(S.f.st==='open' && !isOpen(t)) return false;
-      if(S.f.st && S.f.st!=='open' && S.f.st!=='all' && t.status!==S.f.st) return false;
+      if(S.f.st==='hasfb'){ if(t.auto||!fixes(t)) return false; }
+      else if(S.f.st && S.f.st!=='open' && S.f.st!=='all' && t.status!==S.f.st) return false;
       if(S.f.owner && (t.owner||'')!==S.f.owner) return false;
       if(S.f.src==='manual' && t.auto) return false;
       if(S.f.src==='auto' && !t.auto) return false;
@@ -2441,6 +2445,7 @@ function ngStyle(){ return '<style id="ng-style">'
       return true;
     }).sort(function(a,b){
       var oa=isOpen(a)?0:1, ob=isOpen(b)?0:1; if(oa!==ob) return oa-ob;
+      var fa=a.status==='fix'?0:1, fb=b.status==='fix'?0:1; if(fa!==fb) return fa-fb;
       var da=a.due||'9999', db=b.due||'9999'; if(da!==db) return da<db?-1:1;
       return (PRI_W[a.pri]||1)-(PRI_W[b.pri]||1);
     });
@@ -2461,6 +2466,11 @@ function ngStyle(){ return '<style id="ng-style">'
      +'.cv-done td{color:var(--faint)!important}.cv-done .dt-name{text-decoration:line-through;color:var(--faint)}'
      +'.cv-note{font-size:11.5px;color:var(--muted);margin-top:2px}.cv-due-over{color:var(--rust);font-weight:600}.cv-due-soon{color:var(--clay);font-weight:600}'
      +'.cv-banner{max-width:1180px;margin-bottom:14px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--rust-bg);color:var(--rust);font-size:12.5px;display:flex;gap:10px;align-items:center}'
+     +'.cv-ok{border-color:#B9D3C8;color:var(--teal)}.cv-bad{border-color:#E2BCB3;color:var(--rust)}.cv-btn+.cv-btn{margin-left:4px}.cv-btn{margin-right:2px}'
+     +'.cv-st-fix{border-color:#E2BCB3;color:var(--rust)}.cv-st-review{border-color:#E4C99A;color:var(--clay)}'
+     +'.cv-hist td{background:var(--paper-2)}.cv-h-title{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px}'
+     +'.cv-h-list{margin:0;padding-left:18px;font-size:12.5px;line-height:1.7}.cv-h-fix{color:var(--rust)}.cv-h-ok{color:var(--teal)}'
+     +'.cv-fb{margin-top:8px}.cv-fb textarea{width:100%;min-height:60px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:#fff;resize:vertical;box-sizing:border-box}'
      +'@media(max-width:760px){.cv-grid{grid-template-columns:1fr}}';
     document.head.appendChild(s);
   }
@@ -2510,19 +2520,36 @@ function ngStyle(){ return '<style id="ng-style">'
     var id=f.id || ('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
     var old=S.tasks[id]||{};
     var t={ title:f.title.trim(), owner:f.owner.trim(), dept:f.dept.trim(), due:f.due||'', pri:f.pri||'tb', status:f.status||'todo', note:f.note.trim(),
-      createdAt: old.createdAt||todayISO(), doneAt: (f.status==='done' ? (old.doneAt||todayISO()) : '') };
+      createdAt: old.createdAt||todayISO(), doneAt: (f.status==='done' ? (old.doneAt||todayISO()) : ''), log: old.log||[] };
     var btn=document.getElementById('cvf-save'); if(btn){ btn.disabled=true; }
     fetchJ(FB_TASKS+'/tasks/'+id+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(t)})
       .then(function(){ S.tasks[id]=t; saveBak(); S.form=null; rerender(); })
       .catch(function(e){ if(btn) btn.disabled=false; alert('Chưa lưu được (kiểm tra đăng nhập / mạng): '+(e.message||e)); });
   };
-  window.cvSetStatus=function(id, st){
-    var t=S.tasks[id]; if(!t) return;
-    var nt=Object.assign({}, t, {status:st, doneAt: st==='done'?(t.doneAt||todayISO()):''});
-    fetchJ(FB_TASKS+'/tasks/'+id+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(nt)})
+  function fixes(t){ return (t.log||[]).filter(function(x){return x.t==='fix';}).length; }
+  function putTask(id, nt){
+    return fetchJ(FB_TASKS+'/tasks/'+id+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(nt)})
       .then(function(){ S.tasks[id]=nt; saveBak(); rerender(); })
       .catch(function(e){ alert('Chưa lưu được: '+(e.message||e)); rerender(); });
+  }
+  /* Đổi trạng thái; Chờ duyệt / Cần sửa / Xong (từ Chờ duyệt) được ghi vào lịch sử feedback */
+  window.cvSetStatus=function(id, st, note){
+    var t=S.tasks[id]; if(!t) return;
+    if(st==='fix' && note==null){ OPEN_ID=id; S.fixDraft=id; rerender(); setTimeout(function(){ var el=document.getElementById('cv-fb-'+id); if(el) el.focus(); },0); return; } // mở ô nhập feedback
+    var log=(t.log||[]).slice(), d=todayISO();
+    if(st==='review' && t.status!=='review') log.push({d:d, t:'submit'});
+    if(st==='fix') log.push({d:d, t:'fix', note:String(note||'').trim()});
+    if(st==='done' && t.status!=='done' && log.length) log.push({d:d, t:'ok'});
+    var nt=Object.assign({}, t, {status:st, log:log, doneAt: st==='done'?(t.status==='done'?(t.doneAt||d):d):''});
+    S.fixDraft=null; putTask(id, nt);
   };
+  window.cvFixSubmit=function(id){
+    var el=document.getElementById('cv-fb-'+id); var note=el?el.value.trim():'';
+    if(!note){ alert('Nhập nội dung feedback của sếp.'); if(el) el.focus(); return; }
+    window.cvSetStatus(id,'fix',note);
+  };
+  window.cvFixCancel=function(){ S.fixDraft=null; rerender(); };
+  window.cvToggle=function(id){ OPEN_ID=(OPEN_ID===id?null:id); S.fixDraft=null; renderBody(); };
   window.cvDel=function(id){
     var t=S.tasks[id]; if(!t) return;
     if(!confirm('Xoá việc "'+t.title+'"?')) return;
@@ -2551,21 +2578,43 @@ function ngStyle(){ return '<style id="ng-style">'
     if(n<=7) return '<span class="cv-due-soon">'+e_(s)+' · còn '+n+' ngày</span>';
     return e_(s);
   }
+  function fixCell(t){
+    if(t.auto) return '<span class="dt-muted">—</span>';
+    var n=fixes(t);
+    if(t.status==='done') return n ? '<span class="pill clay" title="Sửa '+n+' lần">Đạt lần '+(n+1)+'</span>' : '<span class="pill teal">Đạt lần 1</span>';
+    return n ? '<span class="pill rust">'+n+' lần</span>' : '<span class="dt-muted">0</span>';
+  }
+  function histRow(t){
+    var log=t.log||[], sub=0, fx=0;
+    var items=log.map(function(x){
+      if(x.t==='submit'){ sub++; return '<li><b>'+dmy(x.d)+'</b> · Gửi duyệt lần '+sub+'</li>'; }
+      if(x.t==='fix'){ fx++; return '<li class="cv-h-fix"><b>'+dmy(x.d)+'</b> · Cần sửa (lần '+fx+')'+(x.note?': '+e_(x.note):'')+'</li>'; }
+      return '<li class="cv-h-ok"><b>'+dmy(x.d)+'</b> · Sếp duyệt đạt'+(fx?' (sau '+fx+' lần sửa)':' ngay lần đầu')+'</li>';
+    }).join('');
+    var fb = S.fixDraft===t.id
+      ? '<div class="cv-fb"><textarea id="cv-fb-'+t.id+'" placeholder="Dán nội dung feedback của sếp…"></textarea><div class="cv-actions"><button class="cv-btn" onclick="cvFixCancel()">Huỷ</button><button class="cv-btn cv-bad" onclick="cvFixSubmit(\''+t.id+'\')">Ghi "Cần sửa"</button></div></div>'
+      : '<div style="margin-top:8px"><button class="cv-btn cv-bad" onclick="cvSetStatus(\''+t.id+'\',\'fix\')">✎ Ghi feedback cần sửa</button></div>';
+    return '<tr class="cv-hist"><td colspan="8"><div class="cv-h-title">Lịch sử feedback — '+e_(t.title)+'</div>'
+      +(items?'<ul class="cv-h-list">'+items+'</ul>':'<div class="dt-muted" style="font-size:12px">Chưa có feedback. Bấm "Gửi duyệt" khi nộp cho sếp.</div>')+fb+'</td></tr>';
+  }
   function priPill(p){ var c=p==='cao'?'rust':(p==='tb'?'clay':'gray'); return '<span class="pill '+c+'">'+(PRI[p]||'—')+'</span>'; }
 
   function renderBody(){
     var body=document.getElementById('cv-body'); if(!body) return;
     var rows=filtered();
     var cnt=document.getElementById('cv-count'); if(cnt) cnt.textContent=rows.length+' việc';
-    if(!rows.length){ body.innerHTML='<tr><td colspan="7" class="dt-empty">Không có việc nào khớp bộ lọc.</td></tr>'; return; }
+    if(!rows.length){ body.innerHTML='<tr><td colspan="8" class="dt-empty">Không có việc nào khớp bộ lọc.</td></tr>'; return; }
     body.innerHTML=rows.map(function(t){
       var stCell, act;
       if(t.auto){
         stCell=t.status==='done' ? '<span class="pill teal">Xong</span>' : '<span class="pill gray">Chưa làm</span>';
         act=t.status==='done' ? '<button class="cv-btn" onclick="cvAutoDone(\''+t.id+'\',false)">↺ Mở lại</button>' : '<button class="cv-btn" onclick="cvAutoDone(\''+t.id+'\',true)">✓ Xong</button>';
       } else {
-        stCell='<select class="cv-st" onchange="cvSetStatus(\''+t.id+'\',this.value)">'+Object.keys(ST).map(function(k){return '<option value="'+k+'"'+(k===t.status?' selected':'')+'>'+ST[k]+'</option>';}).join('')+'</select>';
-        act='<button class="cv-ico" title="Sửa" onclick="cvEdit(\''+t.id+'\')"><i class="ti ti-pencil"></i></button><button class="cv-ico" title="Xoá" onclick="cvDel(\''+t.id+'\')"><i class="ti ti-trash"></i></button>';
+        stCell='<select class="cv-st cv-st-'+t.status+'" onchange="cvSetStatus(\''+t.id+'\',this.value)">'+Object.keys(ST).map(function(k){return '<option value="'+k+'"'+(k===t.status?' selected':'')+'>'+ST[k]+'</option>';}).join('')+'</select>';
+        var q='\''+t.id+'\'';
+        var flow = t.status==='review' ? '<button class="cv-btn cv-ok" onclick="cvSetStatus('+q+',\'done\')">✓ Đạt</button><button class="cv-btn cv-bad" onclick="cvSetStatus('+q+',\'fix\')">✎ Cần sửa</button>'
+                 : (t.status==='done' ? '' : '<button class="cv-btn" onclick="cvSetStatus('+q+',\'review\')">Gửi duyệt</button>');
+        act=flow+'<button class="cv-ico" title="Lịch sử feedback" onclick="cvToggle('+q+')"><i class="ti ti-message-2"></i></button><button class="cv-ico" title="Sửa" onclick="cvEdit('+q+')"><i class="ti ti-pencil"></i></button><button class="cv-ico" title="Xoá" onclick="cvDel('+q+')"><i class="ti ti-trash"></i></button>';
       }
       return '<tr class="'+(t.status==='done'?'cv-done':'')+'">'
         +'<td><div class="dt-name">'+e_(t.title)+(t.auto?' <span class="pill teal" style="margin-left:4px">Tự động</span>':'')+'</div>'+(t.note?'<div class="cv-note">'+e_(t.note)+'</div>':'')+'</td>'
@@ -2574,8 +2623,9 @@ function ngStyle(){ return '<style id="ng-style">'
         +'<td class="nw">'+dueCell(t)+'</td>'
         +'<td class="nw">'+priPill(t.pri)+'</td>'
         +'<td class="nw">'+stCell+'</td>'
+        +'<td class="nw" style="text-align:center">'+fixCell(t)+'</td>'
         +'<td class="nw" style="text-align:right">'+act+'</td>'
-        +'</tr>';
+        +'</tr>'+(!t.auto && OPEN_ID===t.id ? histRow(t) : '');
     }).join('');
   }
 
@@ -2589,24 +2639,31 @@ function ngStyle(){ return '<style id="ng-style">'
     var soon=open.filter(function(t){ var n=daysTo(t.due); return n!==null && n>=0 && n<=7; }).length;
     var ym=todayISO().slice(0,7);
     var doneM=items.filter(function(t){ return t.status==='done' && String(t.doneAt||'').slice(0,7)===ym; }).length;
-    var kpis=[['Đang mở',open.length,'ti-checklist',''],['Quá hạn',over,'ti-alert-triangle',over?'danger':''],['Đến hạn ≤7 ngày',soon,'ti-clock-exclamation',soon?'warn':''],['Xong trong tháng',doneM,'ti-circle-check','']]
+    var man=items.filter(function(t){ return !t.auto; });
+    var manDone=man.filter(function(t){ return t.status==='done'; });
+    var firstOk=manDone.filter(function(t){ return !fixes(t); }).length;
+    var rate=manDone.length ? Math.round(firstOk/manDone.length*100)+'%' : '—';
+    var review=man.filter(function(t){ return t.status==='review'; }).length;
+    var fixM=0; man.forEach(function(t){ (t.log||[]).forEach(function(x){ if(x.t==='fix' && String(x.d).slice(0,7)===ym) fixM++; }); });
+    var kpis=[['Đang mở',open.length,'ti-checklist',''],['Quá hạn',over,'ti-alert-triangle',over?'danger':''],['Chờ sếp duyệt',review,'ti-hourglass',review?'warn':''],['Xong trong tháng',doneM,'ti-circle-check',''],
+      ['Đạt ngay lần đầu',rate+(manDone.length?'<span style="font-size:13px;color:var(--muted);font-family:inherit"> '+firstOk+'/'+manDone.length+'</span>':''),'ti-award',''],['Lần sửa trong tháng',fixM,'ti-arrow-back-up',fixM?'warn':'']]
       .map(function(k){ return '<div class="stat'+(k[3]==='warn'?' stat-warn':(k[3]==='danger'?' stat-danger':''))+'"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[2]+'"></i></div><div class="stat-val">'+k[1]+'</div></div>'; }).join('');
     var sel=function(id,opts,v){ return '<select id="'+id+'" onchange="cvOn()">'+opts.map(function(o){ return '<option value="'+e_(o[0])+'"'+(o[0]===v?' selected':'')+'>'+e_(o[1])+'</option>'; }).join('')+'</select>'; };
     var html='<div class="page-head"><div class="page-h1">Công việc HR</div>'
-      +'<div class="page-lead">Việc anh tự thêm + việc web tự nhắc từ dữ liệu (HĐ sắp/đã hết hạn, hết thử việc, hồ sơ thiếu, sinh nhật 14 ngày tới). Sắp theo deadline — quá hạn lên đầu.</div></div>';
+      +'<div class="page-lead">Việc anh tự thêm + việc web tự nhắc từ dữ liệu (HĐ sắp/đã hết hạn, hết thử việc, hồ sơ thiếu, sinh nhật 14 ngày tới). Nộp cho sếp: bấm <b>Gửi duyệt</b> → sếp OK thì <b>✓ Đạt</b>, có feedback thì <b>✎ Cần sửa</b> (ghi nội dung). Không feedback = đạt ngay lần đầu.</div></div>';
     if(S.err) html+='<div class="cv-banner"><i class="ti ti-wifi-off"></i>Không đọc được danh sách việc ('+e_(S.err)+'). Việc tự động vẫn hiện bên dưới. <button class="cv-btn" onclick="cvReload()">Thử lại</button></div>';
     if(S.emptyCloud) html+='<div class="cv-banner"><i class="ti ti-alert-triangle"></i>Danh sách việc trên cloud đang trống, nhưng máy này còn bản lưu. <button class="cv-btn" onclick="cvRestore()">Khôi phục</button></div>';
     html+='<div class="stat-row">'+kpis+'</div>'
       +formHtml()
       +'<div class="toolbar">'
       +'<div class="tb-search"><i class="ti ti-search"></i><input id="cv-q" placeholder="Tìm việc, người, phòng…" value="'+e_(S.f.q)+'" oninput="cvOn()"></div>'
-      +sel('cv-st',[['open','Đang mở'],['all','Tất cả'],['todo','Chưa làm'],['doing','Đang làm'],['done','Xong']],S.f.st)
+      +sel('cv-st',[['open','Đang mở'],['all','Tất cả'],['todo','Chưa làm'],['doing','Đang làm'],['review','Chờ duyệt'],['fix','Cần sửa'],['done','Xong'],['hasfb','Có feedback sửa']],S.f.st)
       +sel('cv-owner',[['','Mọi người phụ trách']].concat(ownersList().map(function(o){return [o,o];})),S.f.owner)
       +sel('cv-src',[['','Mọi nguồn'],['manual','Tự nhập'],['auto','Tự động']],S.f.src)
       +'<span class="tb-count" id="cv-count"></span>'
       +(S.form?'':'<button class="btn-primary" onclick="cvAdd()" style="margin-left:6px"><i class="ti ti-plus"></i>Thêm việc</button>')
       +'</div>'
-      +'<div class="table-wrap"><table class="dt"><thead><tr><th>Việc</th><th>Phụ trách</th><th>Phòng ban</th><th>Deadline</th><th>Ưu tiên</th><th>Trạng thái</th><th></th></tr></thead><tbody id="cv-body"></tbody></table></div>';
+      +'<div class="table-wrap"><table class="dt"><thead><tr><th>Việc</th><th>Phụ trách</th><th>Phòng ban</th><th>Deadline</th><th>Ưu tiên</th><th>Trạng thái</th><th style="text-align:center">Lần sửa</th><th></th></tr></thead><tbody id="cv-body"></tbody></table></div>';
     setTimeout(renderBody,0);
     return html;
   };
