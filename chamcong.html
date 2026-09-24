@@ -1076,6 +1076,9 @@ function renderTodayDate(){
 // ============================
 // ATTENDANCE - TODAY
 // ============================
+/* [C3] Chống chèn mã: hx() cho chữ đưa vào HTML; jsAttr() cho chữ đưa vào onclick="fn(...)" */
+function hx(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function jsAttr(s){ return hx(JSON.stringify(String(s==null?'':s))); }
 function getInitials(name){
   const parts = name.trim().split(' ');
   if(parts.length===1) return parts[0].substring(0,2).toUpperCase();
@@ -1099,7 +1102,7 @@ function renderFineTable(){
   });
   if(!rows.length){ el.innerHTML='<div class="att-empty">Chu kỳ này chưa ai bị phạt 🎉</div>'; return; }
   rows.sort((a,b)=>b.fine-a.fine||b.mins-a.mins);
-  el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--gray);text-align:left"><th style="padding:4px">Nhân viên</th><th>Số lần</th><th>Tổng phút</th><th>Trừ 0,5 công</th><th style="text-align:right">Tiền phạt</th></tr>'+rows.map(r=>'<tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">'+r.name+'</td><td>'+r.cnt+'</td><td>'+r.mins+String.fromCharCode(39)+'</td><td>'+(r.halfDays||'—')+'</td><td style="text-align:right;font-weight:700;color:var(--red)">'+r.fine.toLocaleString('vi-VN')+'đ</td></tr>').join('')+'</table>';
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--gray);text-align:left"><th style="padding:4px">Nhân viên</th><th>Số lần</th><th>Tổng phút</th><th>Trừ 0,5 công</th><th style="text-align:right">Tiền phạt</th></tr>'+rows.map(r=>'<tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">'+hx(r.name)+'</td><td>'+r.cnt+'</td><td>'+r.mins+String.fromCharCode(39)+'</td><td>'+(r.halfDays||'—')+'</td><td style="text-align:right;font-weight:700;color:var(--red)">'+r.fine.toLocaleString('vi-VN')+'đ</td></tr>').join('')+'</table>';
 }
 function renderAttList(session, records){
   renderFineTable();
@@ -1113,11 +1116,11 @@ function renderAttList(session, records){
   }
   list.innerHTML = records.map(r=>`
     <div class="att-row" id="att-row-${r.id}">
-      <div class="att-avatar ${r.manual?'manual':''}">${getInitials(r.name)}</div>
+      <div class="att-avatar ${r.manual?'manual':''}">${hx(getInitials(r.name))}</div>
       <div style="flex:1">
-        <div class="att-name">${r.name}${r.manual?' <span class="att-manual-tag">· thủ công</span>':''}</div>
+        <div class="att-name">${hx(r.name)}${r.manual?' <span class="att-manual-tag">· thủ công</span>':''}</div>
         ${(['T-S','T-C','T-C2'].includes(r.status))&&r.lateMin?`<div style="font-size:10px;color:var(--amber)">${r.status==='T-C'?'Về sớm':(r.status==='T-C2'?'Trễ chiều':'Trễ sáng')} ${r.lateMin} phút</div>`:''}
-        ${r.note?`<div style="font-size:10px;color:var(--gray)">${r.note}</div>`:''}
+        ${r.note?`<div style="font-size:10px;color:var(--gray)">${hx(r.note)}</div>`:''}
         ${session==='sang'?chieuCtl(r.id,r.name):''}
       </div>
       ${r.time&&r.time!=='--:--'?`<span class="att-time">${r.time}</span>`:''}
@@ -1144,8 +1147,7 @@ function chieuCtl(id, name){
     const lb=ch.status==='P'?'Nghỉ (có phép)':ch.status==='K'?'Nghỉ (không phép)':ch.status==='T-C2'?('Trễ '+(ch.lateMin||0)+"'"):ch.status==='T-C'?('Về sớm '+(ch.lateMin||0)+"'"):'Có mặt';
     return `<div style="font-size:10px;color:#3f7669;margin-top:2px">Chiều: <b>${lb}</b></div>`;
   }
-  const nm=String(name).replace(/'/g,"\\'");
-  return `<select onchange="setChieu('${id}','${nm}',this.value);this.selectedIndex=0" title="Xử lý buổi chiều" style="margin-top:3px;font-size:10.5px;padding:1px 4px;border:1px solid #cfe0da;border-radius:6px;background:#fff;color:#3f7669;max-width:150px">
+  return `<select onchange="setChieu('${id}',${jsAttr(name)},this.value);this.selectedIndex=0" title="Xử lý buổi chiều" style="margin-top:3px;font-size:10.5px;padding:1px 4px;border:1px solid #cfe0da;border-radius:6px;background:#fff;color:#3f7669;max-width:150px">
     <option value="">Chiều…</option><option value="late">⏱ Trễ chiều…</option><option value="P">🌿 Nghỉ chiều – có phép</option><option value="K">✗ Nghỉ chiều – không phép</option></select>`;
 }
 function setChieu(id, name, kind){
@@ -1294,7 +1296,7 @@ function showOcrMatches(matched,rawLines,session='sang'){
   }
   const rawHtml=rawLines&&rawLines.length?
     `<details style="margin-top:8px;font-size:11px"><summary style="cursor:pointer;color:var(--gray)">Xem text OCR đọc được (${rawLines.length} dòng)</summary>
-    <div style="margin-top:4px;padding:6px;background:#F6F3EC;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#414B54">${rawLines.join('<br>')}</div></details>`:'';
+    <div style="margin-top:4px;padding:6px;background:#F6F3EC;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#414B54">${rawLines.map(hx).join('<br>')}</div></details>`:'';
   if(!matched.length){
     box.innerHTML='<div style="color:var(--gray);text-align:center">Không nhận diện được tên nào. Vui lòng thêm thủ công.</div>'+rawHtml;
     return;
@@ -1308,13 +1310,13 @@ function showOcrMatches(matched,rawLines,session='sang'){
   for(const m of matched){
     const done=existIds.has(m.id);
     html+=`<label style="display:flex;align-items:center;gap:4px;padding:4px 8px;background:${done?'#E4DECF':'#fff'};border-radius:6px;border:1px solid var(--gray-bd);cursor:${done?'default':'pointer'}">` +
-      `<input type="checkbox" data-id="${m.id}" data-name="${m.name}" ${done?'disabled checked':'checked'} style="accent-color:var(--purple)">` +
-      `<span style="${done?'color:var(--gray);text-decoration:line-through':''}">${m.name}</span><span style="display:flex;align-items:center;gap:2px;margin-left:4px;padding-left:6px;border-left:1px solid var(--gray-bd)" title="Tick nếu ảnh check-in của người này bị thiếu góc mặt"><input type="checkbox" class="face-issue-chk" data-faceid="${m.id}" ${done?'disabled':''} style="accent-color:var(--red)"><span style="font-size:10px;color:var(--red)">thiếu mặt</span></span></label>`;
+      `<input type="checkbox" data-id="${m.id}" data-name="${hx(m.name)}" ${done?'disabled checked':'checked'} style="accent-color:var(--purple)">` +
+      `<span style="${done?'color:var(--gray);text-decoration:line-through':''}">${hx(m.name)}</span><span style="display:flex;align-items:center;gap:2px;margin-left:4px;padding-left:6px;border-left:1px solid var(--gray-bd)" title="Tick nếu ảnh check-in của người này bị thiếu góc mặt"><input type="checkbox" class="face-issue-chk" data-faceid="${m.id}" ${done?'disabled':''} style="accent-color:var(--red)"><span style="font-size:10px;color:var(--red)">thiếu mặt</span></span></label>`;
   }
   html+=`</div><div style="display:flex;gap:8px">` +
     `<button onclick="applyOcrMatches('${session}')" style="flex:1;padding:7px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">✅ Thêm vào điểm danh</button>` +
     `<button onclick="document.getElementById('ocr-result-box-${session}').remove()" style="padding:7px 12px;background:#fff;border:1px solid var(--gray-bd);border-radius:8px;font-size:12px;cursor:pointer">Bỏ</button></div>`;
-  box.innerHTML=html+(rawLines&&rawLines.length?`<details style='margin-top:8px;font-size:11px'><summary style='cursor:pointer;color:var(--gray)'>Text OCR đọc được</summary><div style='padding:6px;background:#F6F3EC;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#414B54'>${rawLines.join('<br>')}</div></details>`:'');
+  box.innerHTML=html+(rawLines&&rawLines.length?`<details style='margin-top:8px;font-size:11px'><summary style='cursor:pointer;color:var(--gray)'>Text OCR đọc được</summary><div style='padding:6px;background:#F6F3EC;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#414B54'>${rawLines.map(hx).join('<br>')}</div></details>`:'');
 }
 function applyOcrMatches(session='sang'){
   const checks=document.querySelectorAll('#ocr-result-box-'+session+' input[type=checkbox][data-id]:not(:disabled):checked');
@@ -1485,11 +1487,11 @@ function renderAbsentList(){
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${initials}</div>
-        <span style="font-size:13px;color:#21303B">${emp.name}</span>
+        <span style="font-size:13px;color:#21303B">${hx(emp.name)}</span>
       </div>
       <div style="display:flex;gap:5px">
         <button onclick="dismissAbsent('${emp.id}')" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance('${emp.id}','${emp.name.replace(/'/g,"&#39;")}')" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+        <button onclick="quickAddAttendance('${emp.id}',${jsAttr(emp.name)})" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div>
     </div>`;
   }).join('');
@@ -1505,12 +1507,12 @@ function renderAbsentList2S(){
   const miss={sang:base.filter(e=>!has(e.id,'sang')&&!dis.has(e.id)), chieu:showChieu?base.filter(e=>!has(e.id,'chieu')&&!dis.has(e.id+'|chieu')):[]};
   const el=document.getElementById('absent-list'), cnt=document.getElementById('absent-count'); if(!el) return;
   cnt.textContent=miss.sang.length+miss.chieu.length;
-  const row=(emp,ses)=>{ const ini=emp.name.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase(); const nm=emp.name.replace(/'/g,"\\'");
+  const row=(emp,ses)=>{ const ini=emp.name.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase(); const nm=null; // [C3] dùng jsAttr
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${ini}</div><span style="font-size:13px;color:#21303B">${emp.name}</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${ini}</div><span style="font-size:13px;color:#21303B">${hx(emp.name)}</span></div>
       <div style="display:flex;gap:5px">
         <button onclick="dismissAbsent('${emp.id}','${ses}')" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance('${emp.id}','${nm}','${ses}')" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
+        <button onclick="quickAddAttendance('${emp.id}',${jsAttr(emp.name)},'${ses}')" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
       </div></div>${ses==='chieu'?`<div style="margin:-2px 0 2px 46px">${chieuCtl(emp.id,emp.name)}</div>`:''}`; };
   const head=t=>`<div style="font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.5px;margin:6px 2px 2px">${t}</div>`;
   let h='';
@@ -1681,8 +1683,8 @@ function renderBangCC(){
     return `
       <tr class="${isExpanded?'has-expand':''}">
         <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">${getInitials(emp.name)}</div>
-          ${emp.name}${empTypeBadge(emp.id)}
+          <div class="emp-avatar-sm">${hx(getInitials(emp.name))}</div>
+          ${hx(emp.name)}${empTypeBadge(emp.id)}
         </div></td>
         <td style="color:var(--gray);font-size:12px">${emp.id||'—'}</td>
         
@@ -1888,10 +1890,10 @@ function renderCalendarExpand(emp, year, month){
     <div class="cal-expand-inner">
       <div class="cal-exp-header">
         <div class="cal-emp-info">
-          <div class="cal-emp-avatar">${getInitials(emp.name)}</div>
+          <div class="cal-emp-avatar">${hx(getInitials(emp.name))}</div>
           <div>
-            <div class="cal-emp-name">${emp.name}</div>
-            <div class="cal-emp-sub">${emp.position||''} · ${emp.dept||''}</div>
+            <div class="cal-emp-name">${hx(emp.name)}</div>
+            <div class="cal-emp-sub">${hx(emp.position||'')} · ${hx(emp.dept||'')}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1989,7 +1991,7 @@ function renderCalGrid(empId, year, month, empCC){
         statusHtml+=`<div class="late-min">Trễ ${cc.lateMin} phút</div>`;
       }
       if(cc.note&&!cc.note.toLowerCase().startsWith('trễ')){
-        statusHtml+=`<div class="day-note">${cc.note}</div>`;
+        statusHtml+=`<div class="day-note">${hx(cc.note)}</div>`;
       }
     }
     if(cc&&cc.faceIssue){const _fs=faceSessOf(cc);const _fm={S:['#e65100','thiếu mặt sáng'],C:['#1f5f8b','thiếu mặt chiều'],SC:['#9b1c1c','thiếu mặt cả 2']}[_fs]||['var(--red)','thiếu mặt'];statusHtml+=`<div style="margin-top:2px;font-size:9px;font-weight:700;color:${_fm[0]}" title="Thiếu góc mặt lúc điểm danh">● ${_fm[1]}</div>`;}html+=`<div class="day-cell ${isWeekend?'wknd-cell':''} ${isToday?'today-cell':''}"

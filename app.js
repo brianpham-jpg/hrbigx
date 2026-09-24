@@ -647,7 +647,7 @@ function ptDrawFunnel(){
   var list=ptFilteredList(); var fn=tdFunnel(list);
   var convs=fn.map(function(s,i){return (i===0||!fn[i-1].n)?null:pct(s.n,fn[i-1].n);}); // [D] bước trước = 0 → không tính
   ptMk('pt-funnel',{
-    tooltip:ptTip({trigger:'item',formatter:function(p){var i=p.dataIndex;var cv=i===0?'100% tổng':((convs[i]==null?'—':convs[i]+'%')+' vs bước trên · '+pct(fn[i].n,fn[0].n)+'% tổng');return '<b>'+p.name+'</b><br/>'+p.value+' ứng viên<br/><span style="color:'+PTC.muted+'">'+cv+'</span>';}}),
+    tooltip:ptTip({trigger:'item',formatter:function(p){var i=p.dataIndex;var cv=i===0?'100% tổng':((convs[i]==null?'—':convs[i]+'%')+' vs bước trên · '+pct(fn[i].n,fn[0].n)+'% tổng');return '<b>'+esc(p.name)+'</b><br/>'+p.value+' ứng viên<br/><span style="color:'+PTC.muted+'">'+cv+'</span>';}}),
     series:[{type:'funnel',left:'6%',right:'6%',top:8,bottom:8,minSize:'22%',maxSize:'100%',sort:'none',gap:3,
       label:{show:true,position:'inside',color:'#fff',fontFamily:PTFONT,fontWeight:600,fontSize:12,formatter:function(p){return p.name+'  '+p.value;}},
       labelLine:{show:false},itemStyle:{borderWidth:0},emphasis:{label:{fontSize:13}},
@@ -671,7 +671,7 @@ function ptInitCharts(){
   /* donut kết quả cuối */
   var b={xuly:0,trung:0,loai:0}; all.forEach(function(c){var k=tdStage(c).bucket; b[k]=(b[k]||0)+1;});
   ptMk('pt-donut',{
-    tooltip:ptTip({trigger:'item',formatter:function(p){return '<b>'+p.name+'</b><br/>'+p.value+' CV · '+p.percent+'%';}}),
+    tooltip:ptTip({trigger:'item',formatter:function(p){return '<b>'+esc(p.name)+'</b><br/>'+p.value+' CV · '+p.percent+'%';}}),
     legend:{bottom:2,icon:'roundRect',itemWidth:11,itemHeight:11,textStyle:{color:PTC.text,fontFamily:PTFONT,fontSize:12}},
     series:[{type:'pie',radius:['52%','74%'],center:['50%','44%'],avoidLabelOverlap:true,padAngle:2,
       itemStyle:{borderColor:PTC.paper,borderWidth:2},
@@ -687,7 +687,7 @@ function ptInitCharts(){
   var mh=ptMonthsHire(all);
   var mLab=mh.map(function(x){return x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');});
   ptMk('pt-months',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){var s='<b>Tháng '+a[0].axisValue+'</b>';a.forEach(function(x){s+='<br/>'+x.marker+x.seriesName+': <b>'+x.value+'</b>';});var cv=a[0].value,hi=(a[1]?a[1].value:0);s+='<br/><span style="color:'+PTC.muted+'">Tỷ lệ đậu: '+(cv?(hi/cv*100).toFixed(1):0)+'%</span>';return s;}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){var s='<b>Tháng '+esc(a[0].axisValue)+'</b>';a.forEach(function(x){s+='<br/>'+x.marker+x.seriesName+': <b>'+x.value+'</b>';});var cv=a[0].value,hi=(a[1]?a[1].value:0);s+='<br/><span style="color:'+PTC.muted+'">Tỷ lệ đậu: '+(cv?(hi/cv*100).toFixed(1):0)+'%</span>';return s;}}),
     legend:{top:0,right:0,icon:'roundRect',itemWidth:11,itemHeight:11,textStyle:{color:PTC.text,fontFamily:PTFONT,fontSize:12}},
     grid:{left:8,right:8,top:34,bottom:4,containLabel:true},
     xAxis:{type:'category',data:mLab,axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
@@ -700,7 +700,7 @@ function ptInitCharts(){
   var dd={}; all.forEach(function(c){var r=ptFirstDrop(c); if(r) dd[r]=(dd[r]||0)+1;});
   var da=Object.keys(dd).map(function(k){return [k,dd[k]];}).sort(function(a,b){return a[1]-b[1];}); // asc để lớn nhất trên đầu (yAxis)
   ptMk('pt-drops',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' ứng viên';}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+esc(a[0].axisValue)+'</b><br/>'+a[0].value+' ứng viên';}}),
     grid:{left:6,right:30,top:8,bottom:4,containLabel:true},
     xAxis:{type:'value',splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
     yAxis:{type:'category',data:da.map(function(x){return x[0];}),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:PTC.text,fontFamily:PTFONT,fontSize:11.5}},
@@ -815,7 +815,7 @@ function csInit(){
   /* biến động nhân sự theo tháng: vào (bar) / nghỉ (bar) / ròng (line) — cùng thang đếm */
   var fl=csMonthlyFlow(ns);
   ptMk('cs-hires',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){var s='<b>Tháng '+a[0].axisValue+'</b>';a.forEach(function(x){s+='<br/>'+x.marker+x.seriesName+': <b>'+x.value+'</b>';});return s;}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){var s='<b>Tháng '+esc(a[0].axisValue)+'</b>';a.forEach(function(x){s+='<br/>'+x.marker+x.seriesName+': <b>'+x.value+'</b>';});return s;}}),
     legend:{top:0,right:0,icon:'roundRect',itemWidth:11,itemHeight:11,textStyle:{color:PTC.text,fontFamily:PTFONT,fontSize:12}},
     grid:{left:8,right:8,top:34,bottom:4,containLabel:true},
     xAxis:{type:'category',data:fl.map(function(x){return x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');}),axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
@@ -830,7 +830,7 @@ function csInit(){
   /* cơ cấu phòng ban (đang làm) */
   var dept=csCount(act,'phong');
   ptMk('cs-dept',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' người';}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+esc(a[0].axisValue)+'</b><br/>'+a[0].value+' người';}}),
     grid:{left:6,right:28,top:8,bottom:4,containLabel:true},
     xAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
     yAxis:{type:'category',data:dept.map(function(x){return x[0];}).reverse(),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:PTC.text,fontFamily:PTFONT,fontSize:11.5}},
@@ -839,7 +839,7 @@ function csInit(){
 
   function donut(id,pairs,colors){
     ptMk(id,{
-      tooltip:ptTip({trigger:'item',formatter:function(p){return '<b>'+p.name+'</b><br/>'+p.value+' người · '+p.percent+'%';}}),
+      tooltip:ptTip({trigger:'item',formatter:function(p){return '<b>'+esc(p.name)+'</b><br/>'+p.value+' người · '+p.percent+'%';}}),
       legend:{bottom:0,type:'scroll',icon:'roundRect',itemWidth:10,itemHeight:10,textStyle:{color:PTC.text,fontFamily:PTFONT,fontSize:11}},
       series:[{type:'pie',radius:['50%','72%'],center:['50%','42%'],avoidLabelOverlap:true,padAngle:2,itemStyle:{borderColor:PTC.paper,borderWidth:2},
         label:{show:true,position:'outside',color:PTC.text,fontFamily:PTFONT,fontSize:10.5,formatter:'{b}: {c}'},
@@ -855,7 +855,7 @@ function csInit(){
   var bk=[['< 6 tháng',0],['6–12 tháng',0],['1–2 năm',0],['2–3 năm',0],['3 năm+',0]];
   act.forEach(function(e){var m=csTenureMonths(e);if(m==null)return;if(m<6)bk[0][1]++;else if(m<12)bk[1][1]++;else if(m<24)bk[2][1]++;else if(m<36)bk[3][1]++;else bk[4][1]++;});
   ptMk('cs-tenure',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' người';}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+esc(a[0].axisValue)+'</b><br/>'+a[0].value+' người';}}),
     grid:{left:8,right:8,top:12,bottom:4,containLabel:true},
     xAxis:{type:'category',data:bk.map(function(x){return x[0];}),axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
     yAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
@@ -957,7 +957,7 @@ function bdInit(){
   var mo=bdByMonth();
   var moRate=mo.map(function(x){return bdMonthRate(x.k);}); // [B1] tỷ lệ nghỉ từng tháng
   ptMk('bd-month',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>Tháng '+a[0].axisValue+'</b><br/>'+a[0].value+' người nghỉ'+(a[1]?' · tỷ lệ nghỉ tháng <b>'+a[1].value+'%</b>':'');}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>Tháng '+esc(a[0].axisValue)+'</b><br/>'+a[0].value+' người nghỉ'+(a[1]?' · tỷ lệ nghỉ tháng <b>'+a[1].value+'%</b>':'');}}),
     grid:{left:8,right:8,top:12,bottom:4,containLabel:true},
     xAxis:{type:'category',data:mo.map(function(x){return x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');}),axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
     yAxis:[{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
@@ -970,7 +970,7 @@ function bdInit(){
   var bk=[['< 3 tháng',0],['3–6 tháng',0],['6–12 tháng',0],['1–2 năm',0],['2 năm+',0]];
   bdDated().forEach(function(e){var m=bdTenureAtLeave(e);if(m==null)return;if(m<3)bk[0][1]++;else if(m<6)bk[1][1]++;else if(m<12)bk[2][1]++;else if(m<24)bk[3][1]++;else bk[4][1]++;});
   ptMk('bd-tenure',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' người';}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+esc(a[0].axisValue)+'</b><br/>'+a[0].value+' người';}}),
     grid:{left:8,right:8,top:12,bottom:4,containLabel:true},
     xAxis:{type:'category',data:bk.map(function(x){return x[0];}),axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
     yAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
@@ -980,7 +980,7 @@ function bdInit(){
   /* nghỉ theo phòng ban — bar ngang (toàn bộ đã nghỉ) */
   var dept=bdByDept().filter(function(r){return r.left>0;}).slice().sort(function(a,b){return a.left-b.left;});
   ptMk('bd-dept',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){var r=dept[a[0].dataIndex];return '<b>'+r.phong+'</b><br/>'+r.left+' người nghỉ · tỷ lệ '+r.rate+'%';}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){var r=dept[a[0].dataIndex];return '<b>'+esc(r.phong)+'</b><br/>'+r.left+' người nghỉ · tỷ lệ '+r.rate+'%';}}),
     grid:{left:6,right:30,top:8,bottom:4,containLabel:true},
     xAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
     yAxis:{type:'category',data:dept.map(function(r){return r.phong;}),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:PTC.text,fontFamily:PTFONT,fontSize:11.5}},
@@ -1122,7 +1122,7 @@ function ovInit(){
   /* funnel tuyển dụng rút gọn */
   var fn=tdFunnel(all);
   ptMk('ov-funnel',{
-    tooltip:ptTip({trigger:'item',formatter:function(p){var i=p.dataIndex;return '<b>'+p.name+'</b><br/>'+p.value+' ứng viên'+(i>0?'<br/><span style="color:'+PTC.muted+'">'+pct(fn[i].n,fn[0].n)+'% tổng</span>':'');}}),
+    tooltip:ptTip({trigger:'item',formatter:function(p){var i=p.dataIndex;return '<b>'+esc(p.name)+'</b><br/>'+p.value+' ứng viên'+(i>0?'<br/><span style="color:'+PTC.muted+'">'+pct(fn[i].n,fn[0].n)+'% tổng</span>':'');}}),
     series:[{type:'funnel',left:'6%',right:'6%',top:6,bottom:6,minSize:'26%',maxSize:'100%',sort:'none',gap:3,
       label:{show:true,position:'inside',color:'#fff',fontFamily:PTFONT,fontWeight:600,fontSize:11.5,formatter:function(p){return p.name+'  '+p.value;}},
       labelLine:{show:false},itemStyle:{borderWidth:0},emphasis:{label:{fontSize:12.5}},
@@ -1132,7 +1132,7 @@ function ovInit(){
   /* cơ cấu phòng ban (đang làm) — bar ngang */
   var dept=csCount(act,'phong');
   ptMk('ov-dept',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+a[0].axisValue+'</b><br/>'+a[0].value+' người';}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>'+esc(a[0].axisValue)+'</b><br/>'+a[0].value+' người';}}),
     grid:{left:6,right:28,top:8,bottom:4,containLabel:true},
     xAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
     yAxis:{type:'category',data:dept.map(function(x){return x[0];}).reverse(),axisTick:{show:false},axisLine:{show:false},axisLabel:{color:PTC.text,fontFamily:PTFONT,fontSize:11}},
@@ -1145,7 +1145,7 @@ function ovInit(){
       grid:{left:0,right:0,top:2,bottom:0},
       xAxis:{type:'category',show:false,data:labels},
       yAxis:{type:'value',show:false,scale:true},
-      tooltip:ptTip({trigger:'axis',formatter:function(p){var d=p[0];return 'Tháng '+d.axisValue+'<br/><b>'+d.data+'</b>'+(unit||'');}}),
+      tooltip:ptTip({trigger:'axis',formatter:function(p){var d=p[0];return 'Tháng '+esc(d.axisValue)+'<br/><b>'+d.data+'</b>'+(unit||'');}}),
       series:[{type:'line',data:data,smooth:.35,showSymbol:false,symbol:'circle',symbolSize:5,
         lineStyle:{width:2,color:color},itemStyle:{color:color,borderColor:PTC.paper,borderWidth:2},
         areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:color+'4D'},{offset:1,color:color+'03'}]}}
@@ -1313,7 +1313,7 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_APP_URL   = 'chamcong.html?cc=17'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
+var CC_APP_URL   = 'chamcong.html?cc=18'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 
 function renderChamCong(){
   return '<div class="cc-frame-wrap"><iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe></div>';
@@ -1472,14 +1472,14 @@ window.renderNangSuat=function(){
   var topLate=dArr.slice().filter(function(x){return x.n>=3;}).sort(function(a,b){return b.rate-a.rate;})[0];
   var kpis='<div class="ns-kpis">'
     +'<div class="ns-kpi"><div class="v">'+rows.length+'</div><div class="l">Nhân viên có chấm công</div></div>'
-    +'<div class="ns-kpi"><div class="v">'+sumFull.toLocaleString('vi')+'</div><div class="l">Ngày công đủ ('+months[0]+'–'+months[months.length-1]+')</div></div>'
+    +'<div class="ns-kpi"><div class="v">'+sumFull.toLocaleString('vi')+'</div><div class="l">Ngày công đủ ('+esc(months[0])+'–'+esc(months[months.length-1])+')</div></div>'
     +'<div class="ns-kpi"><div class="v">'+sumLate+'</div><div class="l">Lượt đi trễ</div></div>'
     +'<div class="ns-kpi"><div class="v">'+rate.toFixed(1).replace('.',',')+'%</div><div class="l">Tỷ lệ ngày đi trễ</div></div>'
     +'</div>';
   var note='<div class="ns-note"><b>Đọc nhanh:</b> '
     +(topLate?('phòng <b>'+esc(topLate.d)+'</b> có tỷ lệ đi trễ cao nhất ('+topLate.rate.toFixed(1).replace('.',',')+'%). '):'')
     +'Đã liên kết '+rows.length+'/'+emp.length+' mã chấm công (NVxxx) ↔ hồ sơ (BIGX). '
-    +noAtt.length+' NV đang làm không chấm công (BOD/cố vấn/quản lý). Tháng gần nhất ('+months[months.length-1]+') đang trong kỳ nên ngày công còn thấp. <i>Di chuột lên biểu đồ để xem chi tiết.</i></div>';
+    +noAtt.length+' NV đang làm không chấm công (BOD/cố vấn/quản lý). Tháng gần nhất ('+esc(months[months.length-1])+') đang trong kỳ nên ngày công còn thấp. <i>Di chuột lên biểu đồ để xem chi tiết.</i></div>';
   var charts='<div class="ns-head"><h3 style="margin-top:6px">Xu hướng theo tháng</h3>'
     +'<span class="ns-seg" id="ns-seg"><button data-k="full" class="on">Ngày công đủ</button><button data-k="late">Đi trễ</button></span></div>'
     +'<div class="ns-card"><div class="ns-chart tall" id="ns-trend"></div></div>'
@@ -1487,14 +1487,14 @@ window.renderNangSuat=function(){
     +'<div class="ns-card"><div class="ct">Ngày công đủ theo phòng</div><div class="cs">Quy mô đóng góp ngày công</div><div class="ns-chart" id="ns-dfull"></div></div>'
     +'<div class="ns-card"><div class="ct">Tỷ lệ đi trễ theo phòng</div><div class="cs">Lượt đi trễ / tổng ngày chấm (%)</div><div class="ns-chart" id="ns-dlate"></div></div>'
     +'</div>';
-  var mBtns='<button data-k="all" class="on">Toàn kỳ</button>'+months.map(function(m){return '<button data-k="'+m+'">'+m+'</button>';}).join('');
+  var mBtns='<button data-k="all" class="on">Toàn kỳ</button>'+months.map(function(m){return '<button data-k="'+esc(m)+'">'+esc(m)+'</button>';}).join(''); // [C3]
   var lateTop='<div class="ns-head"><h3 style="margin-top:26px">Đi trễ nhiều nhất — Top 10</h3>'
     +'<span class="ns-seg" id="ns-late-seg">'+mBtns+'</span></div>'
     +'<div class="ns-card"><div class="cs" style="margin:-2px 0 3px">Xếp theo số lần đi trễ · di chuột để xem tổng phút &amp; tiền phạt ước tính</div><div class="ns-chart tall" id="ns-top-late"></div></div>';
   var thead='<tr><th>Mã BIGX</th><th>Mã CC</th><th>Họ tên</th><th>Phòng ban</th><th>Tháng có dữ liệu</th><th class="num">Ngày đã chấm</th><th class="num">Ngày công đủ</th><th class="num">Lượt đi trễ</th></tr>';
   var tbody=rows.map(function(r){
     return '<tr><td class="code">'+esc(r.bigx)+'</td><td class="nvcode">'+esc(r.nv)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.phong)+'</td>'
-      +'<td>'+r.months.map(function(m){return '<span class="mtag">'+m+'</span>';}).join('')+'</td>'
+      +'<td>'+r.months.map(function(m){return '<span class="mtag">'+esc(m)+'</span>';}).join('')+'</td>'
       +'<td class="num">'+r.totalRec+'</td><td class="num">'+r.fullDays+'</td>'
       +'<td class="num '+(r.lateCnt>0?'late':'muted')+'">'+r.lateCnt+'</td></tr>';
   }).join('');
@@ -1523,7 +1523,7 @@ window.nsInit=function(){
     var isLate=metric==='late';
     return {
       grid:{left:6,right:16,top:34,bottom:22,containLabel:true},
-      tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var d=M[p[0].dataIndex];return '<b>'+d.m+'</b>'+(d.partial?' <span style="color:'+clay+'">(đang trong kỳ)</span>':'')+'<br/>Ngày công đủ: <b>'+d.full+'</b><br/>Lượt đi trễ: <b>'+d.late+'</b><br/>NV chấm công: '+d.emp;}}),
+      tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var d=M[p[0].dataIndex];return '<b>'+esc(d.m)+'</b>'+(d.partial?' <span style="color:'+clay+'">(đang trong kỳ)</span>':'')+'<br/>Ngày công đủ: <b>'+d.full+'</b><br/>Lượt đi trễ: <b>'+d.late+'</b><br/>NV chấm công: '+d.emp;}}),
       xAxis:Object.assign({type:'category',data:M.map(function(x){return x.m;})},axis),
       yAxis:Object.assign({type:'value'},axis),
       series:[{type:'bar',barWidth:'46%',
@@ -1541,7 +1541,7 @@ window.nsInit=function(){
   var df=D.byDept.slice().sort(function(a,b){return a.full-b.full;});
   window.ptMk('ns-dfull',{
     grid:{left:6,right:34,top:8,bottom:4,containLabel:true},
-    tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){return '<b>'+p[0].name+'</b><br/>Ngày công đủ: <b>'+p[0].value+'</b>';}}),
+    tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){return '<b>'+esc(p[0].name)+'</b><br/>Ngày công đủ: <b>'+p[0].value+'</b>';}}),
     xAxis:Object.assign({type:'value'},axis),
     yAxis:Object.assign({type:'category',data:df.map(function(x){return x.d;})},axis,{axisLabel:{color:navy,fontFamily:FONT,fontSize:11.5}}),
     series:[{type:'bar',barWidth:'62%',data:df.map(function(x){return x.full;}),itemStyle:{color:teal,borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:muted,fontFamily:FONT,fontSize:11},animationDuration:700,animationDelay:function(i){return i*40;}}]
@@ -1549,7 +1549,7 @@ window.nsInit=function(){
   var dl=D.byDept.slice().sort(function(a,b){return a.rate-b.rate;});
   window.ptMk('ns-dlate',{
     grid:{left:6,right:44,top:8,bottom:4,containLabel:true},
-    tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var o=dl[p[0].dataIndex];return '<b>'+o.d+'</b><br/>Tỷ lệ đi trễ: <b>'+o.rate.toFixed(1).replace('.',',')+'%</b><br/>'+o.late+' / '+o.rec+' ngày';}}),
+    tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var o=dl[p[0].dataIndex];return '<b>'+esc(o.d)+'</b><br/>Tỷ lệ đi trễ: <b>'+o.rate.toFixed(1).replace('.',',')+'%</b><br/>'+o.late+' / '+o.rec+' ngày';}}),
     xAxis:Object.assign({type:'value',axisLabel:{color:muted,fontFamily:FONT,fontSize:11.5,formatter:'{value}%'}},axis),
     yAxis:Object.assign({type:'category',data:dl.map(function(x){return x.d;})},axis,{axisLabel:{color:navy,fontFamily:FONT,fontSize:11.5}}),
     series:[{type:'bar',barWidth:'62%',data:dl.map(function(x){return x.rate;}),itemStyle:{color:function(p){var r=dl[p.dataIndex].rate;return r>=10?rust:(r>=6?clay:teal2);},borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:muted,fontFamily:FONT,fontSize:11,formatter:function(o){return o.value.toFixed(1).replace('.',',')+'%';}},animationDuration:700,animationDelay:function(i){return i*40;}}]
@@ -1562,7 +1562,7 @@ window.nsInit=function(){
     arr=arr.slice(0,10).reverse();
     return {
       grid:{left:6,right:54,top:10,bottom:6,containLabel:true},
-      tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var o=arr[p[0].dataIndex];return '<b>'+o.name+'</b><br/><span style="color:'+muted+'">'+o.phong+'</span><br/>Số lần đi trễ: <b>'+o.c+'</b><br/>Tổng phút trễ: <b>'+o.m+'</b> phút<br/>Tiền phạt ước tính: <b>'+nsMoney(o.f)+'</b>';}}),
+      tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var o=arr[p[0].dataIndex];return '<b>'+esc(o.name)+'</b><br/><span style="color:'+muted+'">'+esc(o.phong)+'</span><br/>Số lần đi trễ: <b>'+o.c+'</b><br/>Tổng phút trễ: <b>'+o.m+'</b> phút<br/>Tiền phạt ước tính: <b>'+nsMoney(o.f)+'</b>';}}),
       xAxis:Object.assign({type:'value',minInterval:1},axis),
       yAxis:Object.assign({type:'category',data:arr.map(function(x){return x.name;})},axis,{axisLabel:{color:navy,fontFamily:FONT,fontSize:11.5}}),
       series:[{type:'bar',barWidth:'60%',data:arr.map(function(x){return x.c;}),itemStyle:{color:rust,borderRadius:[0,4,4,0]},label:{show:true,position:'right',color:muted,fontFamily:FONT,fontSize:11.5,formatter:function(o){return arr[o.dataIndex].c+' lần';}},animationDuration:700,animationDelay:function(i){return i*45;}}],
@@ -1859,7 +1859,7 @@ function bcInitChart(c){
   ch.setOption({
     grid:{left:6,right:10,top:22,bottom:22,containLabel:true},
     tooltip:{trigger:'axis',axisPointer:{type:'shadow'},textStyle:{fontFamily:FONT,fontSize:12},
-      formatter:function(p){return p[0].name+': <b>'+p[0].value+'</b> CV';}},
+      formatter:function(p){return esc(p[0].name)+': <b>'+p[0].value+'</b> CV';}},
     xAxis:{type:'category',data:c.labels,axisLine:{lineStyle:{color:line}},axisTick:{show:false},axisLabel:{color:muted,fontFamily:FONT,fontSize:11,interval:(c.labels.length>15?2:0)}},
     yAxis:{type:'value',splitLine:{lineStyle:{color:'#f0ebe0'}},axisLabel:{color:muted,fontFamily:FONT,fontSize:11},minInterval:1},
     series:[{type:'bar',data:c.data,barWidth:'56%',
@@ -1994,7 +1994,7 @@ window.renderSoDo = function(){
   function box(d, cls){
     var n=(byP[d.phong]||[]).length;
     var on=sel===d.phong;
-    return '<div class="sd-box'+(cls?' '+cls:'')+(on?' on':'')+(n===0?' empty':'')+'" onclick="sdSelect(\''+d.phong.replace(/'/g,"\\'")+'\')">'
+    return '<div class="sd-box'+(cls?' '+cls:'')+(on?' on':'')+(n===0?' empty':'')+'" onclick="sdSelect('+esc(JSON.stringify(String(d.phong)))+')">' /* [C3] truyền tên phòng an toàn */
       +'<div class="sd-b-l">'+esc(d.label)+'</div>'
       +'<div class="sd-b-m">'+n+' người'+(d.note?' · '+esc(d.note):'')+'</div></div>';
   }
