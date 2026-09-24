@@ -1235,7 +1235,7 @@ body.guest-mode .admin-only{display:none!important}
       </div>
       <div class="form-group">
         <label class="form-label">GHI CHÚ</label>
-        <input class="form-input" id="day-note" type="text" placeholder="Ví dụ: về sớm 2 tiếng, off từ 16h..."><div class="form-group"><label class="form-label" style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="day-face-issue" style="width:15px;height:15px;accent-color:var(--red)"> THIẾU GÓC MẶT LÚC CHECK-IN</label></div>
+        <input class="form-input" id="day-note" type="text" placeholder="Ví dụ: về sớm 2 tiếng, off từ 16h..."><div class="form-group"><label class="form-label" style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="day-face-issue" style="width:15px;height:15px;accent-color:var(--red)"> THIẾU GÓC MẶT LÚC CHECK-IN</label><div style="display:flex;gap:14px;margin:4px 0 0 21px;font-size:12px;color:#21303B"><label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="day-face-s" onchange="if(this.checked)document.getElementById('day-face-issue').checked=true" style="accent-color:#e65100"> Sáng</label><label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" id="day-face-c" onchange="if(this.checked)document.getElementById('day-face-issue').checked=true" style="accent-color:#1f5f8b"> Chiều</label></div></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1615,7 +1615,9 @@ function syncAttToCC(dateStr){
   function mergeSessions(recs){
     if(recs.length === 1) {
       const r = recs[0];
-      return { status: toCC(r), lateMin: r.lateMin||0, note: r.note||'', faceIssue: !!r.faceIssue };
+      const _one = { status: toCC(r), lateMin: r.lateMin||0, note: r.note||'', faceIssue: !!r.faceIssue };
+      if(r.faceIssue){ if(r.session==='chieu') _one.faceC=true; else _one.faceS=true; } // [faceSess] ghi rõ ca thiếu mặt
+      return _one;
     }
     // Sort: sang first, chieu second
     const sang = recs.find(r=>(r.session||'sang')==='sang');
@@ -1634,7 +1636,9 @@ function syncAttToCC(dateStr){
     }
     const lateMin = (sang&&sang.lateMin||0) + (chieu&&chieu.lateMin||0);
     const notes = [sang&&sang.note, chieu&&chieu.note].filter(Boolean).join(' | ');
-    return { status, lateMin, note: notes, faceIssue: !!(sang&&sang.faceIssue) || !!(chieu&&chieu.faceIssue) };
+    const _two = { status, lateMin, note: notes, faceIssue: !!(sang&&sang.faceIssue) || !!(chieu&&chieu.faceIssue) };
+    if(sang&&sang.faceIssue) _two.faceS=true; if(chieu&&chieu.faceIssue) _two.faceC=true; // [faceSess]
+    return _two;
   }
   Object.keys(byId).forEach(id => {
     const key = id + '_' + cycleYear + '_' + cycleMonth;
@@ -2583,7 +2587,7 @@ function renderCalGrid(empId, year, month, empCC){
         statusHtml+=`<div class="day-note">${cc.note}</div>`;
       }
     }
-    if(cc&&cc.faceIssue){statusHtml+=`<div style="margin-top:2px;font-size:9px;font-weight:700;color:var(--red)" title="Thiếu góc mặt lúc điểm danh">● thiếu mặt</div>`;}html+=`<div class="day-cell ${isWeekend?'wknd-cell':''} ${isToday?'today-cell':''}"
+    if(cc&&cc.faceIssue){const _fs=faceSessOf(cc);const _fm={S:['#e65100','thiếu mặt sáng'],C:['#1f5f8b','thiếu mặt chiều'],SC:['#9b1c1c','thiếu mặt cả 2']}[_fs]||['var(--red)','thiếu mặt'];statusHtml+=`<div style="margin-top:2px;font-size:9px;font-weight:700;color:${_fm[0]}" title="Thiếu góc mặt lúc điểm danh">● ${_fm[1]}</div>`;}html+=`<div class="day-cell ${isWeekend?'wknd-cell':''} ${isToday?'today-cell':''}"
       onclick="${isWeekend?'':'openDayModal(\''+empId+'\',\''+d+'\')'}">
       <div class="day-num ${isWeekend?'wknd-num':''}">${displayDate}</div>
       ${statusHtml}
@@ -2619,7 +2623,7 @@ function openDayModal(empId, dateStr){
   const isLate=cur.status&&['T-S','T-C','T-S-P','T-C-P'].includes(cur.status);
   document.getElementById('day-late-group').style.display=isLate?'block':'none';
   document.getElementById('day-late-min').value=cur.lateMin||'';
-  document.getElementById('day-note').value=cur.note||'';document.getElementById('day-face-issue').checked=!!cur.faceIssue;
+  document.getElementById('day-note').value=cur.note||'';document.getElementById('day-face-issue').checked=!!cur.faceIssue;document.getElementById('day-face-s').checked=!!cur.faceS;document.getElementById('day-face-c').checked=!!cur.faceC;
   document.getElementById('modal-day').classList.add('show');
 }
 function selectDayStatus(code){
@@ -2635,9 +2639,9 @@ function saveDayStatus(){
   if(!selected){ alert('Vui lòng chọn trạng thái'); return; }
   const code=selected.querySelector('.status-opt-badge').textContent;
   const lateMin=parseInt(document.getElementById('day-late-min').value)||0;
-  const noteVal=document.getElementById('day-note').value.trim();const faceIssue=document.getElementById('day-face-issue').checked;
+  const noteVal=document.getElementById('day-note').value.trim();const faceS=document.getElementById('day-face-s').checked, faceC=document.getElementById('day-face-c').checked;const faceIssue=document.getElementById('day-face-issue').checked||faceS||faceC;
   const entry={status:code, lateMin, manualOverride:true};
-  if(noteVal) entry.note=noteVal;if(faceIssue) entry.faceIssue=true;
+  if(noteVal) entry.note=noteVal;if(faceIssue) entry.faceIssue=true;if(faceS) entry.faceS=true;if(faceC) entry.faceC=true;
   const all=getCCData();
   const key=`${empId}_${state.calViewYear||state.currentYear}_${state.calViewMonth||state.currentMonth}`;
   if(!all[key]) all[key]={};
@@ -2683,6 +2687,8 @@ function importBackup(e){
   reader.readAsText(file);
   e.target.value = '';
 }
+// [faceSess] Ca thiếu góc mặt: 'S' sáng, 'C' chiều, 'SC' cả 2, '?' có cờ cũ không rõ ca, '' không thiếu
+function faceSessOf(v){ if(!v||!v.faceIssue) return ''; const s=v.faceS?'S':'', c=v.faceC?'C':''; return (s+c)||'?'; }
 function bxSheetPayload(){
   const now=new Date(); let m=now.getMonth()+1, y=now.getFullYear();
   if(now.getDate()>=25){m++; if(m>12){m=1;y++;}}
@@ -2721,7 +2727,7 @@ function bxSheetPayload(){
       var st=_s||'';
       if((st==='T-S-P'||st==='T-C-P')&&v.lateMin){var c=tinhCongNgay(v);return parseFloat(c.toFixed(4));}
       if((st==='T-S'||st==='T-C'||st==='T-C2')&&v.lateMin){return st+' '+v.lateMin+"'";}
-      return st;});const faceFlags=dates.map(dt=>{const v=cd[dt]; return !!(v&&v.faceIssue);});
+      return st;});const faceFlags=dates.map(dt=>{const v=cd[dt]; return !!(v&&v.faceIssue);});const faceSess=dates.map(dt=>faceSessOf(cd[dt]));
     var phepConLai, phepCap;
     var off=empOfficialFrom(e.id);
     var preOfficial=off&&(y<off.y||(y===off.y&&m<off.m));
@@ -2736,7 +2742,7 @@ function bxSheetPayload(){
       // gây thổi phồng (bỏ qua phép đã dùng các tháng trước). Nay dùng đúng công thức chung.
     }
     var ngayLuong=+Math.min(wd,cong+nghiPhep+nghiLe).toFixed(3);
-    return {id:e.id,name:e.name,dept:e.dept||'',statuses,faceFlags,cong:+cong.toFixed(3),nghiPhep:+(+nghiPhep).toFixed(3),nghiKL:nghiKL,nghiLe:nghiLe,phep2025:0,phepCap:phepCap,ngayLuong:ngayLuong,phep:phepConLai,phut:phut,phat:phat,nghi:nghi,noLeave:isNoLeave(e.id),thuViec:(empType(e.id)==='probation')};
+    return {id:e.id,name:e.name,dept:e.dept||'',statuses,faceFlags,faceSess,cong:+cong.toFixed(3),nghiPhep:+(+nghiPhep).toFixed(3),nghiKL:nghiKL,nghiLe:nghiLe,phep2025:0,phepCap:phepCap,ngayLuong:ngayLuong,phep:phepConLai,phut:phut,phat:phat,nghi:nghi,noLeave:isNoLeave(e.id),thuViec:(empType(e.id)==='probation')};
   });
   const p2=n=>String(n).padStart(2,'0');
   ;(function(){try{
