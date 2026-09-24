@@ -671,7 +671,7 @@ async function loadFromCloud() {
     if (data.cc_summary) {
       // Mốc phép: hợp nhất — giữ mốc của máy này, chỉ THÊM mốc từ cloud (không xoá của ai)
       let locSum={}; try{locSum=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}');}catch(e){}
-      localStorage.setItem('bigx_cc_summary', JSON.stringify(Object.assign({}, data.cc_summary, locSum)));
+      localStorage.setItem('bigx_cc_summary', JSON.stringify(window.__bxDirtyAt ? Object.assign({}, data.cc_summary, locSum) : data.cc_summary)); // [B1] cloud là chuẩn
     }
     // Cloud vừa ghi đè bigx_employees (không có field phân loại) → backfill lại ngay
     try{ if(typeof migrateEmpMeta==='function') migrateEmpMeta(); }catch(e){}
@@ -722,7 +722,7 @@ setInterval(async () => {
 const STATUS_CODES = {
   '1':    { label:'Đủ công',     bg:'var(--green-bg)',  color:'var(--green)' },
   'T-S':  { label:'Trễ sáng',   bg:'var(--amber-bg)',  color:'var(--amber)' },
-  'T-C':  { label:'Trễ chiều',  bg:'var(--amber-bg)',  color:'var(--amber)' },
+  'T-C':  { label:'Về sớm chiều',  bg:'var(--amber-bg)',  color:'var(--amber)' },
   'T-C2': { label:'Đi trễ chiều', bg:'var(--amber-bg)',  color:'var(--amber)' },
   'N-S':  { label:'Nửa ngày',   bg:'#e7ecea',          color:'#35655B' },
   'N-C':  { label:'Nửa ngày',   bg:'#e7ecea',          color:'#35655B' },
@@ -736,7 +736,7 @@ const STATUS_CODES = {
   'N-C-K':{ label:'Nửa+Vắng',  bg:'var(--red-bg)',    color:'var(--red)' },
   'N-S-K':{ label:'Nửa+Vắng',  bg:'var(--red-bg)',    color:'var(--red)' },
 };
-const SIMPLE_STATUSES = ['1','T-S','T-S-P','T-C-P','N-S','P','P-KL','K','NL'];
+const SIMPLE_STATUSES = ['1','T-S','T-C2','T-C','T-S-P','T-C-P','N-S','N-C','P','P-KL','K','NL']; // [B1] thêm T-C2/T-C/N-C
 const RESIGNED_IDS = new Set(['NV027','NV037','NV040','NV031']); // NV031 = Brian (admin)
 const RESIGNED_FROM = {'NV028':'2026-07-04','NV047':'2026-07-04','NV053':'2026-09-07'}; // ẩn khỏi 'Chưa điểm danh' từ ngày này
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
@@ -1128,7 +1128,7 @@ function renderAttList(session, records){
       </span>
       <div class="att-actions">
         <button class="att-action" onclick="editAttendance('${r.id}','${r.session||'sang'}')" title="Sửa">✏</button>
-        <button class="att-action del" onclick="deleteAttendance('${r.id}')" title="Xoá">🗑</button>
+        <button class="att-action del" onclick="deleteAttendance('${r.id}','${r.session||'sang'}')" title="Xoá">🗑</button>
       </div>
     </div>
   `).join('');
@@ -1329,7 +1329,8 @@ function openAddModal(editId=null, session='sang'){
   if(editId){
     title.textContent = 'Sửa điểm danh';
     const all = getAttendance(); const today=todayStr();
-    const rec = (all[today]||[]).find(r=>r.id===editId);
+    const _recs = all[today]||[];
+    const rec = _recs.find(r=>r.id===editId && (r.session||'sang')===state.editingSession) || _recs.find(r=>r.id===editId); // [B1] đúng ca
     if(rec){
       // Select the matching employee by id or by name
       const matchOpt = Array.from(nameEl.options).find(o => o.value === rec.id || o.dataset.name === rec.name);
@@ -1351,10 +1352,11 @@ function openAddModal(editId=null, session='sang'){
   nameEl.focus();
 }
 function editAttendance(id, session){ openAddModal(id, session||'sang'); }
-function deleteAttendance(id){
+function deleteAttendance(id, session){
   if(!confirm('Xác nhận xoá?')) return;
   const all=getAttendance(); const today=todayStr();
-  all[today]=(all[today]||[]).filter(r=>r.id!==id);
+  // [B1] chỉ xoá đúng ca được chọn (không có ca → xoá hết như cũ)
+  all[today]=(all[today]||[]).filter(r=>!(r.id===id && (!session || (r.session||'sang')===session)));
   // Dọn "công ma": xoá entry chấm công của NV này cho hôm nay (trừ khi đã chỉnh tay)
   try{
     const p=today.split('-').map(Number); const ty=p[0],tm=p[1],td=p[2];
@@ -1384,8 +1386,11 @@ function saveAttendance(){
   const all=getAttendance(); const today=todayStr();
   if(!all[today]) all[today]=[];
   if(state.editingId){
-    const idx=all[today].findIndex(r=>r.id===state.editingId);
-    if(idx>=0) all[today][idx]={...all[today][idx],name,time,status,lateMin,note,manual:true,session:state.editingSession||'sang'};
+    const _ses=state.editingSession||'sang';
+    let idx=all[today].findIndex(r=>r.id===state.editingId && (r.session||'sang')===_ses); // [B1] đúng ca
+    if(idx<0) idx=all[today].findIndex(r=>r.id===state.editingId);
+    if(empId!==state.editingId && all[today].some((r,i)=>i!==idx && r.id===empId && (r.session||'sang')===_ses)){ alert('Nhân viên này đã có điểm danh ca này.'); return; }
+    if(idx>=0) all[today][idx]={...all[today][idx],id:empId,name,time,status,lateMin,note,manual:true,session:_ses}; // [B1] đổi NV thì đổi luôn mã
   } else {
     // Use real NV ID from dropdown — guaranteed correct
     const existIdx = all[today].findIndex(r => r.id === empId && (r.session||'sang') === (state.editingSession||'sang'));
@@ -1487,7 +1492,7 @@ function viewHistoryDay(dateStr){
   const recs=all[dateStr]||[];
   const [y,m,d]=dateStr.split('-');
   if(!recs.length){ alert(`Ngày ${d}/${m}/${y}: Không có dữ liệu`); return; }
-  alert(`Ngày ${d}/${m}/${y} — ${recs.length} người:\n`+recs.map(r=>`• ${r.name} (${r.time}) — ${r.status==='ok'?'Đúng giờ':r.status==='late'?`Trễ ${r.lateMin} phút`:'Vắng'}`).join('\n'));
+  alert(`Ngày ${d}/${m}/${y} — ${recs.length} người:\n`+recs.map(r=>{ const st=r.status==='ok'?'1':r.status==='late'?'T-S':r.status; const lb=(STATUS_CODES[st]||{label:st||'?'}).label; const ses=r.session==='chieu'?' · chiều':''; return `• ${r.name} (${r.time||'--:--'}${ses}) — ${lb}${r.lateMin&&['T-S','T-C','T-C2','T-S-P','T-C-P'].includes(st)?` ${r.lateMin} phút`:''}`; }).join('\n'));
 }
 
 // ============================
@@ -1853,7 +1858,7 @@ function renderCalendarExpand(emp, year, month){
       ${calHtml}
       <div class="cal-legend">
         ${Object.entries({
-          '1':'Đủ công','T-S':'Trễ sáng','T-C':'Trễ chiều',
+          '1':'Đủ công','T-S':'Trễ sáng','T-C2':'Đi trễ chiều','T-C':'Về sớm chiều',
           'N-S':'Nửa ngày','N-C':'Nửa ngày','P':'Phép (trừ phép năm)','P-KL':'Nghỉ ko trừ phép (ko tính công)','K':'Vắng','NL':'Nghỉ lễ'
         }).map(([code,lbl])=>`
           <div class="leg-item">
@@ -1911,12 +1916,14 @@ function renderCalGrid(empId, year, month, empCC){
 // ============================
 // DAY STATUS MODAL
 // ============================
+// [B1] Khoá bảng công theo kỳ lương của chính ngày (ngày >=25 thuộc kỳ tháng sau)
+function ccCycleKey(empId, dateStr){ const p=dateStr.split('-').map(Number); let y=p[0], m=p[1]; if(p[2]>=25){ m=m===12?1:m+1; if(m===1) y++; } return empId+'_'+y+'_'+m; }
 function openDayModal(empId, dateStr){
   state.editingDayKey={empId, dateStr};
   const [y,m,d]=dateStr.split('-');
   document.getElementById('modal-day-title').textContent=`Chấm công ${d}/${m}/${y}`;
   const all=getCCData();
-  const key=`${empId}_${state.calViewYear||state.currentYear}_${state.calViewMonth||state.currentMonth}`;
+  const key=ccCycleKey(empId, dateStr);
   const cur=(all[key]||{})[dateStr]||{};
   // Build status grid
   const grid=document.getElementById('status-grid');
@@ -1927,7 +1934,7 @@ function openDayModal(empId, dateStr){
       <span class="status-opt-lbl">${sc.label}</span>
     </div>`;
   }).join('');
-  const isLate=cur.status&&['T-S','T-C','T-S-P','T-C-P'].includes(cur.status);
+  const isLate=cur.status&&['T-S','T-C','T-C2','T-S-P','T-C-P'].includes(cur.status);
   document.getElementById('day-late-group').style.display=isLate?'block':'none';
   document.getElementById('day-late-min').value=cur.lateMin||'';
   document.getElementById('day-note').value=cur.note||'';document.getElementById('day-face-issue').checked=!!cur.faceIssue;document.getElementById('day-face-s').checked=!!cur.faceS;document.getElementById('day-face-c').checked=!!cur.faceC;
@@ -1936,7 +1943,7 @@ function openDayModal(empId, dateStr){
 function selectDayStatus(code){
   document.querySelectorAll('.status-opt').forEach(o=>o.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
-  const isLate=['T-S','T-C','T-S-P','T-C-P'].includes(code);
+  const isLate=['T-S','T-C','T-C2','T-S-P','T-C-P'].includes(code);
   document.getElementById('day-late-group').style.display=isLate?'block':'none';
 }
 function saveDayStatus(){
@@ -1950,7 +1957,7 @@ function saveDayStatus(){
   const entry={status:code, lateMin, manualOverride:true};
   if(noteVal) entry.note=noteVal;if(faceIssue) entry.faceIssue=true;if(faceS) entry.faceS=true;if(faceC) entry.faceC=true;
   const all=getCCData();
-  const key=`${empId}_${state.calViewYear||state.currentYear}_${state.calViewMonth||state.currentMonth}`;
+  const key=ccCycleKey(empId, dateStr);
   if(!all[key]) all[key]={};
   all[key][dateStr]=entry;
   setCCData(all);
@@ -2376,6 +2383,7 @@ div:has(> .card > div > #file-input-chieu){grid-template-columns:1fr!important;}
     try{ if(typeof updateStats==='function') updateStats(); }catch(e){}
     try{ if(typeof renderTodayAttendance==='function') renderTodayAttendance(); }catch(e){}
 
+    go.disabled=false; go.textContent='Thêm người đã chọn'; // [B1] dùng lại được lần sau
     hsSyncClose();
     alert('✅ Đã thêm '+added+' người vào danh sách chấm công (mã BIGX). 26 người cũ giữ nguyên. Đừng quên set phép cho người chính thức mới.');
   };

@@ -148,6 +148,45 @@ function statusPill(tt){
   return '<span class="pill '+cls+'">'+esc(tt||'—')+'</span>';
 }
 function parseDMY(s){ var p=String(s||'').split('/'); return p.length===3? new Date(+p[2],+p[1]-1,+p[0]) : null; }
+/* [B1] Lấp tháng trống (k='MM/YYYY') từ tháng đầu tới tháng hiện tại → trục tháng liên tục, "so với tháng trước" đúng tháng liền kề */
+function fillMonths(arr, mk){
+  if(!arr.length) return arr;
+  var by={}; arr.forEach(function(x){by[x.k]=x;});
+  var F=arr[0].k.split('/'), L=arr[arr.length-1].k.split('/');
+  var now=new Date(), end=Math.max(now.getFullYear()*12+now.getMonth()+1, (+L[1])*12+(+L[0]));
+  var cur=Math.max((+F[1])*12+(+F[0]), end-239); // tối đa 240 tháng (chặn dữ liệu gõ sai năm)
+  var out=[];
+  for(;cur<=end;cur++){ var y=Math.floor((cur-1)/12), m=cur-y*12, k=String(m).padStart(2,'0')+'/'+y; out.push(by[k]||mk(k)); }
+  return out;
+}
+/* [B1] Tỷ lệ nghỉ theo kỳ = số nghỉ trong kỳ ÷ nhân sự bình quân.
+   NS bình quân: kỳ 1 tháng = (đầu kỳ + cuối kỳ)/2; kỳ 12 tháng = trung bình NS cuối mỗi tháng (chuẩn SHRM, đúng hơn khi công ty tăng nhanh).
+   Người đã nghỉ nhưng CHƯA có ngày nghỉ: không xác định được kỳ → không tính. */
+function bdTurnover(start, end, list, snaps){
+  list=list||HR.nhansu||[];
+  function st(e){ var d=parseDMY(e.ngayVao); return (d&&!isNaN(d))?d:null; }
+  function en(e){ if((e.tinhTrang||'').trim()!=='Nghỉ việc') return null; var d=parseDMY(e.ngayNghi); return (d&&!isNaN(d))?d:'x'; }
+  function on(e,t){ var a=st(e), b=en(e); if(!a||a>t||b==='x') return false; return !b||b>t; }
+  var h0=0,h1=0,left=0,stay=0;
+  list.forEach(function(e){
+    var a0=on(e,start), a1=on(e,end), b=en(e);
+    if(a0) h0++; if(a1) h1++; if(a0&&a1) stay++;
+    if(b&&b!=='x'&&b>start&&b<=end) left++;
+  });
+  var avg=(h0+h1)/2;
+  if(snaps&&snaps.length) avg=snaps.reduce(function(sum,t){ return sum+list.filter(function(e){return on(e,t);}).length; },0)/snaps.length;
+  return {left:left, h0:h0, h1:h1, avg:avg, rate:avg?Math.round(left/avg*1000)/10:0, retention:h0?Math.round(stay/h0*1000)/10:0};
+}
+function bdTurn12(){
+  var end=new Date(); end.setHours(23,59,59,0);
+  var start=new Date(end.getFullYear()-1, end.getMonth(), end.getDate(), 23,59,59);
+  var snaps=[]; for(var i=12;i>=0;i--){ var d=new Date(end.getFullYear(), end.getMonth()-i+1, 0, 23,59,59); snaps.push(d>end?end:d); } // cuối 13 tháng (tháng này = hôm nay)
+  var ns=HR.nhansu||[], all=bdTurnover(start,end,ns,snaps), g={};
+  ns.forEach(function(e){ var v=(String(e.phong||'').trim())||'(trống)'; (g[v]=g[v]||[]).push(e); });
+  all.depts=Object.keys(g).map(function(k){ var t=bdTurnover(start,end,g[k],snaps); t.phong=k; return t; });
+  return all;
+}
+function bdMonthRate(k){ var p=k.split('/'), y=+p[1], m=+p[0]; var s=new Date(y,m-1,0,23,59,59), e=new Date(y,m,0,23,59,59); var now=new Date(); if(e>now) e=now; return bdTurnover(s,e).rate; }
 function hoSoBadge(s){
   if(!s) return '<span class="pill gray">—</span>';
   if(/thiếu/i.test(s)) return '<span class="pill clay">Thiếu</span>';
@@ -482,10 +521,10 @@ function tdMonths(list){
     var p=String(c.ngayNop||'').split('/');
     if(p.length===3){ var k=p[1].padStart(2,'0')+'/'+p[2]; m[k]=(m[k]||0)+1; }
   });
-  return Object.keys(m).map(function(k){return {k:k,n:m[k]};}).sort(function(a,b){
+  return fillMonths(Object.keys(m).map(function(k){return {k:k,n:m[k]};}).sort(function(a,b){
     var A=a.k.split('/'), B=b.k.split('/');
     return (A[1]-B[1])||(A[0]-B[0]);
-  });
+  }), function(k){return {k:k,n:0};}); // [B1] lấp tháng trống
 }
 
 /* theo vị trí */
@@ -572,7 +611,7 @@ function ptMonthsHire(list){
     if(!m[k]) m[k]={k:k,cv:0,hire:0};
     m[k].cv++; if((c.final||'').trim()===TDPASS.fin) m[k].hire++;
   });
-  return Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){var A=a.k.split('/'),B=b.k.split('/');return (A[1]-B[1])||(A[0]-B[0]);});
+  return fillMonths(Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){var A=a.k.split('/'),B=b.k.split('/');return (A[1]-B[1])||(A[0]-B[0]);}), function(k){return {k:k,cv:0,hire:0};}); // [B1]
 }
 function ptFirstDrop(c){
   if((c.hrReview||'').trim()==='SCAN CV FAIL') return 'HR loại CV';
@@ -684,7 +723,7 @@ function renderPhanTichTuyenDung(){
 
   var vt=tdByViTri(all);
   var vtOpts=vt.map(function(r){return '<option value="'+esc(r.viTri)+'"'+(ptFilter.vitri===r.viTri?' selected':'')+'>'+esc(r.viTri)+'</option>';}).join('');
-  var moAll=tdMonths(all);
+  var moAll=tdMonths(all).filter(function(x){return x.n>0;}); // [B1] bộ lọc chỉ hiện tháng có CV
   var moOpts=moAll.map(function(x){var lbl=x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');return '<option value="'+x.k+'"'+(ptFilter.month===x.k?' selected':'')+'>'+lbl+'</option>';}).join('');
 
   var vtStats=vt.map(function(r){return {viTri:r.viTri, cv:r.total, hire:r.trung, rate:pct(r.trung,r.total), perHire:(r.trung?Math.round(r.total/r.trung*10)/10:null)};});
@@ -761,7 +800,7 @@ function csMonthlyFlow(ns){
   var m={};
   function bump(d,key){var p=String(d||'').split('/');if(p.length!==3)return;var k=p[1].padStart(2,'0')+'/'+p[2];if(!m[k])m[k]={k:k,inn:0,out:0};m[k][key]++;}
   ns.forEach(function(e){ bump(e.ngayVao,'inn'); if((e.tinhTrang||'').trim()==='Nghỉ việc') bump(e.ngayNghi,'out'); });
-  var arr=Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){var A=a.k.split('/'),B=b.k.split('/');return (A[1]-B[1])||(A[0]-B[0]);});
+  var arr=fillMonths(Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){var A=a.k.split('/'),B=b.k.split('/');return (A[1]-B[1])||(A[0]-B[0]);}), function(k){return {k:k,inn:0,out:0};}); // [B1]
   arr.forEach(function(x){x.net=x.inn-x.out;});
   return arr;
 }
@@ -894,7 +933,7 @@ function bdTenureAtLeave(e){
 function bdByMonth(){
   var m={};
   bdDated().forEach(function(e){var p=String(e.ngayNghi).split('/');if(p.length!==3)return;var k=p[1].padStart(2,'0')+'/'+p[2];m[k]=(m[k]||0)+1;});
-  return Object.keys(m).map(function(k){return {k:k,n:m[k]};}).sort(function(a,b){var A=a.k.split('/'),B=b.k.split('/');return (A[1]-B[1])||(A[0]-B[0]);});
+  return fillMonths(Object.keys(m).map(function(k){return {k:k,n:m[k]};}).sort(function(a,b){var A=a.k.split('/'),B=b.k.split('/');return (A[1]-B[1])||(A[0]-B[0]);}), function(k){return {k:k,n:0};}); // [B1]
 }
 /* biến động theo phòng ban: đang làm · đã nghỉ · tỷ lệ nghỉ · thâm niên TB khi nghỉ */
 function bdByDept(){
@@ -912,12 +951,15 @@ function bdByDept(){
 function bdInit(){
   /* nghỉ việc theo tháng — bar rust */
   var mo=bdByMonth();
+  var moRate=mo.map(function(x){return bdMonthRate(x.k);}); // [B1] tỷ lệ nghỉ từng tháng
   ptMk('bd-month',{
-    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>Tháng '+a[0].axisValue+'</b><br/>'+a[0].value+' người nghỉ';}}),
+    tooltip:ptTip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(a){return '<b>Tháng '+a[0].axisValue+'</b><br/>'+a[0].value+' người nghỉ'+(a[1]?' · tỷ lệ nghỉ tháng <b>'+a[1].value+'%</b>':'');}}),
     grid:{left:8,right:8,top:12,bottom:4,containLabel:true},
     xAxis:{type:'category',data:mo.map(function(x){return x.k.replace(/\/(\d{2})(\d{2})$/,'/$2');}),axisTick:{show:false},axisLine:{lineStyle:{color:PTC.line}},axisLabel:{color:PTC.muted,fontFamily:PTFONT,fontSize:11}},
-    yAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
-    series:[{type:'bar',data:mo.map(function(x){return x.n;}),barWidth:'46%',itemStyle:{color:PTC.rust,borderRadius:[4,4,0,0]},label:{show:true,position:'top',color:PTC.muted,fontFamily:PTFONT,fontSize:11}}]
+    yAxis:[{type:'value',minInterval:1,splitLine:{lineStyle:{color:PTC.line,type:'dashed'}},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11}},
+      {type:'value',splitLine:{show:false},axisLabel:{color:PTC.faint,fontFamily:PTFONT,fontSize:11,formatter:'{value}%'}}],
+    series:[{type:'bar',data:mo.map(function(x){return x.n;}),barWidth:'46%',itemStyle:{color:PTC.rust,borderRadius:[4,4,0,0]},label:{show:true,position:'top',color:PTC.muted,fontFamily:PTFONT,fontSize:11,formatter:function(p){return p.value||'';}}},
+      {type:'line',yAxisIndex:1,data:moRate,smooth:.3,symbol:'circle',symbolSize:5,lineStyle:{width:1.8,color:PTC.clay},itemStyle:{color:PTC.clay}}]
   });
 
   /* thâm niên khi nghỉ — phân bố (dated) */
@@ -949,8 +991,9 @@ function renderBienDong(){
   var leav=bdLeavers(), nghi=leav.length;
   var active=tong-nghi;
   var dated=bdDated();
-  var rateNghi=tong?Math.round(nghi/tong*1000)/10:0;
-  var retention=tong?Math.round(active/tong*1000)/10:0;
+  var T12=bdTurn12(); // [B1] tỷ lệ nghỉ theo kỳ 12 tháng gần nhất
+  var rateNghi=T12.rate;
+  var retention=T12.retention;
   var tenArr=dated.map(bdTenureAtLeave).filter(function(x){return x!=null;});
   var tenAvg=tenArr.length?tenArr.reduce(function(a,b){return a+b;},0)/tenArr.length:0;
   var tenTxt=tenArr.length?(tenAvg>=12?(tenAvg/12).toFixed(1)+' năm':Math.round(tenAvg)+' tháng'):'—';
@@ -959,8 +1002,8 @@ function renderBienDong(){
 
   var kpis=[
     ['Đã nghỉ việc', nghi, 'ti-user-off'],
-    ['Tỷ lệ nghỉ', rateNghi+'%', 'ti-trending-down'],
-    ['Tỷ lệ giữ chân', retention+'%', 'ti-user-check'],
+    ['Tỷ lệ nghỉ (12 tháng)', rateNghi+'%', 'ti-trending-down'],
+    ['Giữ chân (12 tháng)', retention+'%', 'ti-user-check'],
     ['Thâm niên TB khi nghỉ', tenTxt, 'ti-hourglass-low'],
     ['Nghỉ sớm (< 6 tháng)', tenArr.length?(som+'/'+tenArr.length):'—', 'ti-alert-triangle']
   ].map(function(k){return '<div class="stat"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[2]+'"></i></div><div class="stat-val">'+k[1]+'</div></div>';}).join('');
@@ -983,14 +1026,14 @@ function renderBienDong(){
   var worstRate=dept.filter(function(r){return r.tong>=3;}).slice().sort(function(a,b){return b.rate-a.rate;})[0];
   var undated=nghi-dated.length;
   var insights=[
-    'Đã nghỉ <b>'+nghi+'</b>/'+tong+' người (<b>'+rateNghi+'%</b>) — giữ chân được <b>'+retention+'%</b> lực lượng.',
+    '12 tháng gần nhất: nghỉ <b>'+T12.left+'</b> người trên nhân sự bình quân <b>'+(Math.round(T12.avg*10)/10)+'</b> → tỷ lệ nghỉ <b>'+rateNghi+'%</b>; giữ chân <b>'+retention+'%</b> người có mặt đầu kỳ. Lũy kế từ trước tới nay: đã nghỉ '+nghi+'/'+tong+' người.',
     topDept?('Nghỉ nhiều nhất ở <b>'+esc(topDept.phong)+'</b>: <b>'+topDept.left+'</b> người ('+Math.round(topDept.left/nghi*100)+'% tổng số nghỉ).'):null,
     worstRate?('Tỷ lệ nghỉ cao nhất: <b>'+esc(worstRate.phong)+'</b> — <b style="color:var(--rust)">'+worstRate.rate+'%</b> ('+worstRate.left+'/'+worstRate.tong+').'):null,
     tenArr.length?('Thâm niên TB khi nghỉ chỉ <b>'+tenTxt+'</b> · <b>'+som+'/'+tenArr.length+'</b> ('+pctSom+'%) nghỉ trong <b>6 tháng đầu</b> → dấu hiệu rủi ro giai đoạn thử việc / hội nhập.'):null
   ].filter(Boolean).map(function(t){return '<div class="empty-li"><i class="ti ti-point"></i><span>'+t+'</span></div>';}).join('');
 
   var notes=[];
-  if(undated>0) notes.push(undated+'/'+nghi+' người nghỉ chưa có <b>ngày nghỉ</b> → không nằm trong biểu đồ "theo tháng" & "thâm niên khi nghỉ" (vẫn tính ở tổng nghỉ & theo phòng ban).');
+  if(undated>0) notes.push(undated+'/'+nghi+' người nghỉ chưa có <b>ngày nghỉ</b> → không nằm trong biểu đồ "theo tháng", "thâm niên khi nghỉ" và tỷ lệ nghỉ 12 tháng (vẫn tính ở tổng nghỉ & theo phòng ban).');
   var lyEmpty=nghi-leav.filter(function(e){return String(e.lyDoNghi||'').trim()!=='';}).length;
   if(lyEmpty>0) notes.push('Lý do nghỉ mới ghi '+(nghi-lyEmpty)+'/'+nghi+' → chưa đủ để phân tích nguyên nhân. Ghi thêm cột "Lý do nghỉ" sẽ mở được biểu đồ nguyên nhân.');
   var noteHtml=notes.map(function(n){return '<div class="pt-note"><i class="ti ti-info-circle"></i><span>'+n+'</span></div>';}).join('');
@@ -1003,14 +1046,14 @@ function renderBienDong(){
     '<div class="stat-row">'+kpis+'</div>'+
 
     '<div class="grid-2">'+
-      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Nghỉ việc theo tháng</span><span class="sec-sub">theo ngày nghỉ</span></div>'+
+      '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Nghỉ việc theo tháng</span><span class="sec-sub">số người nghỉ · tỷ lệ nghỉ tháng</span></div>'+
         '<div class="card"><div id="bd-month" class="ec"></div></div></div>'+
       '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Thâm niên khi nghỉ</span><span class="sec-sub">gắn bó bao lâu trước khi nghỉ</span></div>'+
         '<div class="card"><div id="bd-tenure" class="ec"></div></div></div>'+
     '</div>'+
 
     '<div class="sec"><div class="sec-head"><span class="sec-title">Biến động theo phòng ban</span><span class="sec-sub">đang làm · đã nghỉ · tỷ lệ nghỉ · thâm niên TB khi nghỉ</span></div>'+
-      '<div class="table-wrap"><table class="dt"><thead><tr><th>Phòng ban</th><th style="text-align:center">Đang làm</th><th>Đã nghỉ</th><th>Tỷ lệ nghỉ</th><th style="text-align:center">TN TB khi nghỉ</th></tr></thead><tbody>'+deptRows+'</tbody></table></div></div>'+
+      '<div class="table-wrap"><table class="dt"><thead><tr><th>Phòng ban</th><th style="text-align:center">Đang làm</th><th>Đã nghỉ</th><th>Tỷ lệ nghỉ (lũy kế)</th><th style="text-align:center">TN TB khi nghỉ</th></tr></thead><tbody>'+deptRows+'</tbody></table></div></div>'+
 
     '<div class="grid-2">'+
       '<div class="sec" style="margin:0"><div class="sec-head"><span class="sec-title">Nghỉ theo phòng ban</span><span class="sec-sub">tổng số đã nghỉ</span></div>'+
@@ -1124,7 +1167,7 @@ function renderOverview(){
   var ns=HR.nhansu||[]; var act=ovActive(); var allCV=HR.tuyendung||[];
   var tong=ns.length, dangLam=act.length;
   var nghi=ns.filter(function(e){return (e.tinhTrang||'').trim()==='Nghỉ việc';}).length;
-  var rateNghi=tong?Math.round(nghi/tong*1000)/10:0;
+  var T12=bdTurn12(); var rateNghi=T12.rate; // [B1] tỷ lệ nghỉ 12 tháng gần nhất
   var totalCV=allCV.length;
 
   /* ---- chuỗi tháng thật cho sparkline KPI — cùng nguồn dữ liệu với tab Chỉ số & xu hướng / Hiệu quả tuyển dụng, không tự bịa số ---- */
@@ -1141,7 +1184,7 @@ function renderOverview(){
   }
 
   /* ---- so sánh tỷ lệ nghỉ: toàn công ty vs phòng ban cao nhất (≥3 người — cùng ngưỡng tab Biến động nhân sự) ---- */
-  var deptRates=bdByDept().filter(function(r){return r.tong>=3;});
+  var deptRates=T12.depts.filter(function(r){return r.avg>=3;}).map(function(r){return {phong:r.phong,rate:r.rate,left:r.left,tong:Math.round(r.avg*10)/10};}); // [B1] cùng kỳ 12 tháng, NS bình quân ≥3
   var worstDept=deptRates.slice().sort(function(a,b){return b.rate-a.rate;})[0];
 
   function statSpark(label,icon,chartId,value,deltaHtml){
@@ -1155,7 +1198,7 @@ function renderOverview(){
   var kpis=''+
     statSpark('Tổng nhân sự','ti-users','ov-s-tong',tong,trend(tongSpark))+
     statSpark('Đang làm','ti-user-check','ov-s-dang',dangLam,trend(dangSpark))+
-    '<div class="stat"><div class="stat-top"><span class="stat-lbl">Tỷ lệ nghỉ</span><i class="ti ti-gauge"></i></div>'+
+    '<div class="stat"><div class="stat-top"><span class="stat-lbl">Tỷ lệ nghỉ · 12 tháng</span><i class="ti ti-gauge"></i></div>'+
       '<div class="stat-val ov-num" data-to="'+rateNghi+'" data-dec="1" data-suf="%">0%</div>'+
       '<div class="stat-cmp">'+
         '<div class="stat-cmp-row"><span class="cl">Toàn cty</span><span class="cbg"><span class="cbar" style="width:'+Math.min(100,rateNghi)+'%;background:var(--muted)"></span></span><span class="cv">'+rateNghi+'%</span></div>'+
@@ -1174,7 +1217,7 @@ function renderOverview(){
 
   var chips=[];
   if(worstDept) chips.push({sev:worstDept.rate>=50?'critical':'warning',
-    html:'<b>'+esc(worstDept.phong)+'</b>: tỷ lệ nghỉ '+worstDept.rate+'% ('+worstDept.left+'/'+worstDept.tong+')'+(rateNghi?(' — cao gấp '+(Math.round(worstDept.rate/rateNghi*10)/10)+' lần trung bình công ty'):'')+'.', src:'Biến động nhân sự'});
+    html:'<b>'+esc(worstDept.phong)+'</b>: tỷ lệ nghỉ 12 tháng '+worstDept.rate+'% ('+worstDept.left+' người nghỉ / NS bình quân '+worstDept.tong+')'+(rateNghi?(' — cao gấp '+(Math.round(worstDept.rate/rateNghi*10)/10)+' lần trung bình công ty'):'')+'.', src:'Biến động nhân sự'});
   if(tenArr.length) chips.push({sev:pctSom>=50?'warning':'neutral',
     html:pctSom+'% người nghỉ ('+som+'/'+tenArr.length+' có ngày) rời trong <b>6 tháng đầu</b> — rủi ro giai đoạn thử việc/hội nhập.', src:'Biến động nhân sự'});
   if(minIA>0) chips.push({sev:minCA<30?'warning':'neutral',
@@ -1228,7 +1271,7 @@ function renderOverview(){
   var deptCount=csCount(act,'phong');
   var deptEval='<div class="ov-eval"><div class="callout-k"><i class="ti ti-bulb"></i>Đánh giá tự động</div><div class="empty-list">'+
     (deptCount.length?'<div class="empty-li"><i class="ti ti-point"></i><span>Phòng đông nhất: <b>'+esc(deptCount[0][0])+'</b> ('+deptCount[0][1]+' người) trên '+deptCount.length+' phòng ban.</span></div>':'')+
-    (worstDept?'<div class="empty-li"><i class="ti ti-point"></i><span><b>'+esc(worstDept.phong)+'</b> có tỷ lệ nghỉ cao nhất công ty — <b style="color:var(--rust)">'+worstDept.rate+'%</b> ('+worstDept.left+'/'+worstDept.tong+').</span></div>':'')+
+    (worstDept?'<div class="empty-li"><i class="ti ti-point"></i><span><b>'+esc(worstDept.phong)+'</b> có tỷ lệ nghỉ 12 tháng cao nhất công ty — <b style="color:var(--rust)">'+worstDept.rate+'%</b> ('+worstDept.left+' người nghỉ / NS bình quân '+worstDept.tong+').</span></div>':'')+
   '</div></div>';
 
   setTimeout(ovInit,30);
@@ -1266,7 +1309,7 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_APP_URL   = 'chamcong.html?cc=12'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
+var CC_APP_URL   = 'chamcong.html?cc=13'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
 
 function renderChamCong(){
@@ -1316,21 +1359,22 @@ window.bxMainBoot = function(){
 /* ---- Cham cong & nang suat (pt-nang-suat) ---- */
 window.__NS_FB="https://bigx-chamcong-hr-default-rtdb.firebaseio.com/public.json";
 window.nsNorm=function(s){return String(s||'').toLowerCase().normalize('NFC').replace(/\s+/g,' ').trim();};
+window.nsMSort=function(a,b){var A=a.slice(1).split('/'),B=b.slice(1).split('/');return ((+A[1])*12+(+A[0]))-((+B[1])*12+(+B[0]));}; // [B1] sắp 'T9/2026' theo năm-tháng
 window.nsEsc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+/* [B1] Chấm công luôn lấy từ Firebase (không dùng bản lưu cũ trong trình duyệt); quá 2 phút thì tải lại ngầm */
 window.nsuatData=function(){
-  if(window.__ccData) return window.__ccData;
-  var emp=[],cc={};
-  try{emp=JSON.parse(localStorage.getItem('bigx_employees'))||[];}catch(e){}
-  try{cc=JSON.parse(localStorage.getItem('bigx_cc'))||{};}catch(e){}
-  if(emp.length && Object.keys(cc).length) return {employees:emp, cc_data:cc};
+  if(window.__ccData){ if(Date.now()-(window.__ccAt||0)>120000) window.nsuatLoadFirebase(); return window.__ccData; }
   return null;
 };
+/* [B1] Bộ nạp DUY NHẤT cho các tab dùng chấm công — xong thì vẽ lại đúng tab đang mở */
 window.nsuatLoadFirebase=function(){
   if(window.__ccLoading) return; window.__ccLoading=true;
-  (window.bxAuthedFetch ? window.bxAuthedFetch(window.__NS_FB) : fetch(window.__NS_FB)).then(function(r){return r.json();}).then(function(d){
-    window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}};
+  (window.bxAuthedFetch ? window.bxAuthedFetch(window.__NS_FB) : fetch(window.__NS_FB)).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }).then(function(d){
+    d=d||{};
+    var fresh=!window.__ccData;
+    window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}}; window.__ccAt=Date.now();
     window.__ccLoading=false;
-    if(document.querySelector('#nsuat')) window.go && window.go('pt-nang-suat');
+    if(fresh && ['pt-nang-suat','bao-cao','nguon'].indexOf(window.currentTab)>=0) window.go && window.go(window.currentTab);
   }).catch(function(e){ window.__ccLoading=false; var el=document.querySelector('#nsuat-status'); if(el) el.textContent='Không tải được dữ liệu chấm công (Firebase).'; });
 };
 window.renderNangSuat=function(){
@@ -1381,7 +1425,7 @@ window.renderNangSuat=function(){
     ccKeys.forEach(function(k){
       if(k.indexOf(e.id+'_')!==0) return;
       var mm=k.split('_'); if(mm.length<3) return;
-      var ml='T'+mm[2]; months[ml]=1;
+      var ml='T'+mm[2]+'/'+mm[1]; months[ml]=1; // [B1] kèm năm
       byMonth[ml]=byMonth[ml]||{full:0,late:0,rec:0,emp:{}};
       var rec=cc[k]||{};
       Object.keys(rec).forEach(function(d){
@@ -1404,11 +1448,11 @@ window.renderNangSuat=function(){
     byDept[dept]=byDept[dept]||{n:0,full:0,late:0,rec:0};
     byDept[dept].n++; byDept[dept].full+=fullDays; byDept[dept].late+=lateCnt; byDept[dept].rec+=totalRec;
     return {nv:e.id, bigx:n?n.maNV:'—', name:e.name, phong:dept,
-      months:Object.keys(months).sort(function(a,b){return (+a.slice(1))-(+b.slice(1));}),
+      months:Object.keys(months).sort(window.nsMSort),
       totalRec:totalRec, fullDays:fullDays, lateCnt:lateCnt};
   });
   rows.sort(function(a,b){return (a.phong+'|'+a.name).localeCompare(b.phong+'|'+b.name,'vi');});
-  var months=Object.keys(byMonth).sort(function(a,b){return (+a.slice(1))-(+b.slice(1));});
+  var months=Object.keys(byMonth).sort(window.nsMSort);
   var mArr=months.map(function(m,i){return {m:m, full:byMonth[m].full, late:byMonth[m].late, rec:byMonth[m].rec, emp:Object.keys(byMonth[m].emp).length, partial:(i===months.length-1)};});
   var dArr=Object.keys(byDept).map(function(d){return {d:d, n:byDept[d].n, full:byDept[d].full, late:byDept[d].late, rec:byDept[d].rec, rate:byDept[d].rec?+(byDept[d].late/byDept[d].rec*100).toFixed(1):0};});
   window.__nsChartData={months:months, byMonth:mArr, byDept:dArr, late:lateEmp};
@@ -1473,7 +1517,7 @@ window.nsInit=function(){
     var isLate=metric==='late';
     return {
       grid:{left:6,right:16,top:34,bottom:22,containLabel:true},
-      tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var d=M[p[0].dataIndex];return '<b>'+d.m+'/2026</b>'+(d.partial?' <span style="color:'+clay+'">(đang trong kỳ)</span>':'')+'<br/>Ngày công đủ: <b>'+d.full+'</b><br/>Lượt đi trễ: <b>'+d.late+'</b><br/>NV chấm công: '+d.emp;}}),
+      tooltip:tip({trigger:'axis',axisPointer:{type:'shadow'},formatter:function(p){var d=M[p[0].dataIndex];return '<b>'+d.m+'</b>'+(d.partial?' <span style="color:'+clay+'">(đang trong kỳ)</span>':'')+'<br/>Ngày công đủ: <b>'+d.full+'</b><br/>Lượt đi trễ: <b>'+d.late+'</b><br/>NV chấm công: '+d.emp;}}),
       xAxis:Object.assign({type:'category',data:M.map(function(x){return x.m;})},axis),
       yAxis:Object.assign({type:'value'},axis),
       series:[{type:'bar',barWidth:'46%',
@@ -1794,13 +1838,7 @@ function bcKpi(t, v, d){ return '<div class="bc-kpi"><div class="k-t">'+t+'</div
 function bcStat(l, v, d, sub){ return '<div class="bc-stat"><div class="s-l">'+l+(sub?('<div class="sub">'+sub+'</div>'):'')+'</div><div class="s-r"><span class="s-v">'+v+'</span>'+(d||'')+'</div></div>'; }
 function bcDeltaBare(cur,prev,unit){ var d=Math.round((cur-prev)*10)/10; if(d===0) return '—'; return (d>0?'▲':'▼')+' '+Math.abs(d)+(unit||''); }
 
-function bcLoadCham(){
-  if(window.__ccLoading) return; window.__ccLoading=true;
-  (window.bxAuthedFetch ? window.bxAuthedFetch(window.__NS_FB) : fetch(window.__NS_FB)).then(function(r){return r.json();}).then(function(d){
-    window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}}; window.__ccLoading=false;
-    if(window.currentTab==='bao-cao') window.go('bao-cao');
-  }).catch(function(e){ window.__ccLoading=false; });
-}
+function bcLoadCham(){ window.nsuatLoadFirebase(); } // [B1] dùng bộ nạp chung
 
 function bcInitChart(c){
   if(typeof echarts==='undefined') return;
@@ -2185,13 +2223,7 @@ window.renderNguon = function(){
 
   /* chấm công (Firebase) — nạp nếu chưa có, không chặn trang */
   var cc=window.__ccData;
-  if(!cc && !window.__ccLoading && window.__NS_FB){
-    window.__ccLoading=true;
-    (window.bxAuthedFetch ? window.bxAuthedFetch(window.__NS_FB) : fetch(window.__NS_FB)).then(function(r){return r.json();}).then(function(d){
-      window.__ccData={employees:d.employees||[], cc_data:d.cc_data||{}}; window.__ccLoading=false;
-      if(window.currentTab==='nguon') window.go('nguon');
-    }).catch(function(){ window.__ccLoading=false; });
-  }
+  if(!cc && window.__NS_FB) window.nsuatLoadFirebase(); // [B1] dùng bộ nạp chung
 
   /* ---- kiểm tra tính toàn vẹn ---- */
   // Mã NV
