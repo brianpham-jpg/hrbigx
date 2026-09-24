@@ -442,6 +442,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#FBFAF6;color:#21303B;mi
         <div class="export-group">
           <span style="font-size:11px;color:var(--gray)">Xuất tổng nhân sự:</span>
           <button class="exp-btn exp-sheet" onclick="openGSheet()">⊞ Mở Google Sheet</button>
+          <button class="exp-btn admin-only" id="bx-push-prev" style="background:#EDE8DC;color:#414B54;border:1px solid #D4CBB6" title="Chỉ dùng khi đã sửa công tháng cũ (đã chốt)" onclick="bxPushPrevSheet()">↺ Đẩy lại tháng trước</button>
           <div class="div-v"></div>
           <button class="exp-btn" style="background:#EDE8DC;color:#414B54;border:1px solid #D4CBB6" onclick="exportBackup()">↓ Backup</button>
           <button class="exp-btn" style="background:#EDE8DC;color:#414B54;border:1px solid #D4CBB6" onclick="document.getElementById(&#39;import-file-input&#39;).click()">↑ Restore</button>
@@ -2102,9 +2103,10 @@ function importBackup(e){
 }
 // [faceSess] Ca thiếu góc mặt: 'S' sáng, 'C' chiều, 'SC' cả 2, '?' có cờ cũ không rõ ca, '' không thiếu
 function faceSessOf(v){ if(!v||!v.faceIssue) return ''; const s=v.faceS?'S':'', c=v.faceC?'C':''; return (s+c)||'?'; }
-function bxSheetPayload(){
+function bxSheetPayload(ty, tm){
   const now=new Date(); let m=now.getMonth()+1, y=now.getFullYear();
   if(now.getDate()>=25){m++; if(m>12){m=1;y++;}}
+  if(ty&&tm){ y=+ty; m=+tm; } // [F] đẩy lại 1 kỳ cụ thể (VD tháng trước)
   const pm=m===1?12:m-1, py=m===1?y-1:y;
   const dates=[]; const dp=new Date(py,pm,0).getDate();
   for(let d=25;d<=dp;d++) dates.push(py+'-'+String(pm).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
@@ -2126,7 +2128,7 @@ function bxSheetPayload(){
     return Math.round((best.aq+months)*1000)/1000;
   }
   const wd=getWorkdays(y,m);
-  const rows=getEmployees().map(e=>{
+  const rows=bxEmpsForCycle(y,m).map(e=>{
     const cd=cc[e.id+'_'+y+'_'+m]||{};
     let cong=0,nghi=0,phut=0,phat=0,nghiPhep=0,nghiKL=0,nghiLe=0;
     const statuses=dates.map(dt=>{const v=cd[dt]; if(!v||bxIsWknd(dt)) return ''; // [B2] T7/CN để trống
@@ -2220,6 +2222,28 @@ function bxSheetPayload(){
  });
 }catch(e){console.warn('BIGX formula inject error',e);}})();
   return {y,m,workdays:wd,dates,dows,rows,updatedAt:p2(now.getDate())+'/'+p2(now.getMonth()+1)+'/'+now.getFullYear()+' '+p2(now.getHours())+':'+p2(now.getMinutes())};
+}
+// [F] Danh sách NV của đúng kỳ đang đẩy (không phụ thuộc tháng đang xem trên màn hình)
+function bxEmpsForCycle(y,m){
+  const _sy=state.currentYear, _sm=state.currentMonth;
+  try{ state.currentYear=y; state.currentMonth=m; return getEmployees(); }
+  finally{ state.currentYear=_sy; state.currentMonth=_sm; }
+}
+// [F] Nút "Đẩy lại tháng trước": chỉ ghi lại tab kỳ trước khi anh bấm (tháng đã chốt không tự đổi)
+async function bxPushPrevSheet(){
+  if(!window.__bxCloudReady){ alert('Chưa tải xong dữ liệu từ cloud — đợi vài giây rồi bấm lại.'); return; }
+  const now=new Date(); let m=now.getMonth()+1, y=now.getFullYear();
+  if(now.getDate()>=25){m++; if(m>12){m=1;y++;}}
+  const pm=m===1?12:m-1, py=m===1?y-1:y;
+  const pvm=pm===1?12:pm-1, pvy=pm===1?py-1:py;
+  if(!confirm('Đẩy lại tab T'+pm+'-'+py+' (chu kỳ 25/'+pvm+' – 24/'+pm+'/'+py+') lên Google Sheet theo dữ liệu hiện tại trên web?\n\nChỉ dùng khi đã sửa công tháng cũ. Tab tháng hiện tại không bị ảnh hưởng.')) return;
+  const btn=document.getElementById('bx-push-prev'); const old=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Đang đẩy…'; }
+  try{
+    await bxAuthedFetch('https://script.google.com/macros/s/AKfycbwUP4tkTbtyKEjMb8hsb-D9XklP-2YBpS3-qhoD3jR6dbNDJRIAP0XznACuywlMOKjS/exec',{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'silent=1&data='+encodeURIComponent(JSON.stringify(bxSheetPayload(py,pm)))});
+    if(btn) btn.textContent='✅ Đã đẩy T'+pm+'-'+py;
+  }catch(e){ console.warn('push prev',e); if(btn) btn.textContent='⚠️ Lỗi mạng'; }
+  setTimeout(function(){ if(btn){ btn.disabled=false; btn.textContent=old||'↺ Đẩy lại tháng trước'; } }, 3000);
 }
 function bxPushSheet(){
     var __now=Date.now(); if(window.__sheetPushInFlight && (__now-window.__sheetPushInFlight)<15000){ if(!window.__sheetPushQueued){ window.__sheetPushQueued=true; setTimeout(function(){ window.__sheetPushQueued=false; bxPushSheet(); }, 15000-(__now-window.__sheetPushInFlight)+200); } return; } window.__sheetPushInFlight=__now; // [E] đẩy bù sau, không bỏ
