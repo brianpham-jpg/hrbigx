@@ -17,7 +17,6 @@
 body{font-family:'Be Vietnam Pro',sans-serif;background:#FBFAF6;color:#21303B;min-height:100vh}
 
 /* ===== LOGIN ===== */
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--cream)}
 .login-card{background:#fff;border-radius:20px;width:360px;overflow:hidden;border:1px solid var(--gray-bd);box-shadow:0 4px 24px rgba(0,0,0,.07)}
 .login-head{background:var(--yellow);padding:28px 32px 24px;text-align:center}
 .login-logo{font-size:32px;font-weight:700;color:#21303B;letter-spacing:-1px}
@@ -25,11 +24,6 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#FBFAF6;color:#21303B;mi
 .login-body{padding:24px 28px 28px}
 .login-title{font-size:17px;font-weight:700;color:#21303B;margin-bottom:4px}
 .login-sub{font-size:12px;color:var(--gray);margin-bottom:20px}
-.login-label{font-size:11px;font-weight:600;color:var(--gray);letter-spacing:.5px;display:block;margin-bottom:5px}
-.login-input-wrap{display:flex;align-items:center;gap:8px;border:1.5px solid var(--gray-bd);border-radius:10px;padding:10px 12px;background:#FBFAF6;transition:border-color .2s}
-.login-input-wrap:focus-within{border-color:var(--purple);background:#fff}
-.login-input{border:none;background:transparent;font-family:inherit;font-size:14px;color:#21303B;outline:none;width:100%}
-.login-input::placeholder{color:#8B897E}
 .login-error{color:var(--red);font-size:12px;margin-top:5px;display:none}
 .login-btn{width:100%;margin-top:14px;padding:12px;background:#21303B;color:var(--yellow);border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s}
 .login-btn:hover{opacity:.85}
@@ -246,7 +240,6 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#FBFAF6;color:#21303B;mi
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ===== GUEST MODE ===== */
-body.guest-mode .admin-only{display:none!important}
 .publish-btn{background:var(--yellow);color:#21303B;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;cursor:pointer;border:none;font-family:inherit}
 .publish-btn:hover{opacity:.85}
 /* ===== RESPONSIVE ===== */
@@ -258,28 +251,6 @@ body.guest-mode .admin-only{display:none!important}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<!-- ===== LOGIN ===== -->
-<div id="login-screen" style="display:none">
-  <div class="login-card">
-    <div class="login-head">
-      <div class="login-logo">BigX</div>
-      <div class="login-logo-sub">QUẢN LÝ CHẤM CÔNG</div>
-    </div>
-    <div class="login-body">
-      <div class="login-title">Đăng nhập</div>
-      <div class="login-sub">Dành cho nhân sự BigX Agency</div>
-      <label class="login-label">EMAIL CÔNG TY</label>
-      <div class="login-input-wrap">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#8B897E;flex-shrink:0"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
-        <input class="login-input" id="login-email" type="email" placeholder="ten@bigx.vn" autocomplete="email">
-      </div>
-      <div class="login-error" id="login-error">Email phải thuộc domain @bigx.vn</div>
-      <button class="login-btn" onclick="doLogin()">Đăng nhập →</button>
-      <div class="login-note">🔒 Chỉ dành cho quản trị nhân sự</div>
-    </div>
-  </div>
-</div>
 
 <!-- ===== GOOGLE AUTH GATE (bao mat - chi brian.pham@bigx.vn) ===== -->
 <div id="google-gate" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:var(--cream,#f7f5f0)">
@@ -312,7 +283,6 @@ body.guest-mode .admin-only{display:none!important}
     </div>
     <div class="topbar-right">
       <span class="topbar-user" id="topbar-user-email">brian.pham@bigx.vn</span>
-      <button class="cc-login-guest" onclick="ccShowLogin()">🔑 Đăng nhập</button>
       <button class="publish-btn admin-only" onclick="doPublish()">💾 Lưu Sheet ngay</button>
       <button class="topbar-logout admin-only" id="topbar-logout-btn" onclick="doLogout()">Đăng xuất</button>
     </div>
@@ -605,7 +575,6 @@ async function bxAuthedFetch(url, opts){
 }
 
 function bxBootApp(){
-  var ls = document.getElementById('login-screen'); if (ls) ls.style.display = 'none';
   var ap = document.getElementById('app'); if (ap) ap.style.display = 'flex';
   try{ state.currentUser = BX_ALLOWED_EMAIL; }catch(e){}
   try{ localStorage.setItem(LS_USER, BX_ALLOWED_EMAIL); }catch(e){}
@@ -681,26 +650,28 @@ async function loadFromCloud() {
   } catch(e) { console.warn('Cloud load error:', e); }
 }
 
+/* [C] Gói TOÀN BỘ dữ liệu để ghi Firebase — dùng chung cho tự lưu, nút "Lưu Sheet ngay" và Đồng bộ Hồ sơ */
+function bxCloudPayload(){
+  const dismissed = {};
+  Object.keys(localStorage).filter(k=>k.startsWith('bigx_dismissed_')).forEach(k => {
+    dismissed[k.replace('bigx_dismissed_','')] = JSON.parse(localStorage.getItem(k)||'[]');
+  });
+  return {
+    attendance: JSON.parse(localStorage.getItem('bigx_attendance')||'{}'),
+    employees:  JSON.parse(localStorage.getItem('bigx_employees')||'[]'),
+    cc_data:    JSON.parse(localStorage.getItem('bigx_cc')||'{}'),
+    cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
+    dismissed
+  };
+}
 function syncToCloud() {
-  if (window._guestMode) return;
   // [A3] Chưa tải xong bản cloud thì KHÔNG ghi (tránh máy có dữ liệu cũ đè lên cloud)
   if (!window.__bxCloudReady) { console.warn('syncToCloud: chờ tải cloud xong mới ghi'); return; }
   window.__bxDirtyAt = Date.now(); // có thay đổi chưa lên cloud
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(async () => {
     try {
-      const dismissed = {};
-      Object.keys(localStorage).filter(k=>k.startsWith('bigx_dismissed_')).forEach(k => {
-        const date = k.replace('bigx_dismissed_','');
-        dismissed[date] = JSON.parse(localStorage.getItem(k)||'[]');
-      });
-      const payload = {
-        attendance: JSON.parse(localStorage.getItem('bigx_attendance')||'{}'),
-        employees: JSON.parse(localStorage.getItem('bigx_employees')||'[]'),
-        cc_data: JSON.parse(localStorage.getItem('bigx_cc')||'{}'),
-        cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
-        dismissed
-      };
+      const payload = bxCloudPayload();
       const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       if (!_r.ok) throw new Error('HTTP ' + _r.status);
       window.__bxDirtyAt = 0;
@@ -749,8 +720,6 @@ let state = {
   currentYear: (()=>{ const d=new Date(); return (d.getDate()>=25&&d.getMonth()===11)?d.getFullYear()+1:d.getFullYear(); })(),
   currentMonth: (()=>{ const d=new Date(); const m=d.getMonth()+1; return d.getDate()>=25?(m===12?1:m+1):m; })(), // cycle month: 25th → next
   expandedEmpId: null,
-  calViewMonth: null, // month shown in expanded calendar
-  calViewYear: null,
   editingId: null,    // for today modal
   editingSession: 'sang', // 'sang'|'chieu'
   editingDayKey: null // for day modal
@@ -1042,21 +1011,6 @@ function syncAllAttToCC(){
 // ============================
 // AUTH
 // ============================
-function doLogin(){
-  const email = document.getElementById('login-email').value.trim().toLowerCase();
-  const err = document.getElementById('login-error');
-  if(!email.endsWith('@bigx.vn')){
-    err.style.display='block'; return;
-  }
-  err.style.display='none';
-  localStorage.setItem(LS_USER, email);
-  state.currentUser = email;
-  document.getElementById('topbar-user-email').textContent = email;
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
-  initApp();
-}
-document.getElementById('login-email').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 function doLogout(){
   localStorage.removeItem(LS_USER);
   state.currentUser = null;
@@ -1068,7 +1022,6 @@ function doLogout(){
 // ============================
 // INIT
 // ============================
-// [A1] ĐÃ GỠ fixOrphanRecords(): bản dọn 1 lần cũ, nếu chạy lại trên máy mới sẽ xoá hết ngày sửa tay (manualOverride) rồi đẩy đè Firebase.
 // (da go repair20260905 — ban va 1 lan ngay 5/9 da xong viec; go de khong tu chay lai/ghi de. Guard chong hong cc van giu o initApp + loadFromCloud)
 function initApp(){
   initNameSearch();
@@ -1806,10 +1759,6 @@ function countActualDays(empCC){
 }
 function toggleCalendar(empId){
   state.expandedEmpId = state.expandedEmpId===empId ? null : empId;
-  if(state.expandedEmpId){
-    state.calViewYear=state.currentYear;
-    state.calViewMonth=state.currentMonth;
-  }
   renderBangCC();
 }
 
@@ -2269,7 +2218,7 @@ function bxPushSheet(){
     var __now=Date.now(); if(window.__sheetPushInFlight && (__now-window.__sheetPushInFlight)<15000) return; window.__sheetPushInFlight=__now;
   try{ bxAuthedFetch('https://script.google.com/macros/s/AKfycbwUP4tkTbtyKEjMb8hsb-D9XklP-2YBpS3-qhoD3jR6dbNDJRIAP0XznACuywlMOKjS/exec',{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'silent=1&data='+encodeURIComponent(JSON.stringify(bxSheetPayload()))}).catch(function(e){console.warn('sheet push',e);}); }catch(e){console.warn('sheet push',e);}
 }
-async function autoPushSheet(force){try{if(window._guestMode)return;var cc=localStorage.getItem('bigx_cc')||'',at=localStorage.getItem('bigx_attendance')||'';var sig=cc.length+'|'+at.length+'|'+cc.slice(-60)+'|'+at.slice(-60);var now=Date.now();if(!force){if(sig===window.__sheetSig)return;if(now-(window.__sheetPushAt||0)<120000)return;}window.__sheetPushAt=now;window.__sheetSig=sig;bxPushSheet();}catch(e){}}
+async function autoPushSheet(force){try{var cc=localStorage.getItem('bigx_cc')||'',at=localStorage.getItem('bigx_attendance')||'';var sig=cc.length+'|'+at.length+'|'+cc.slice(-60)+'|'+at.slice(-60);var now=Date.now();if(!force){if(sig===window.__sheetSig)return;if(now-(window.__sheetPushAt||0)<120000)return;}window.__sheetPushAt=now;window.__sheetSig=sig;bxPushSheet();}catch(e){}}
 try{setTimeout(function(){autoPushSheet(true);},8000);setInterval(function(){autoPushSheet(false);},120000);}catch(e){}
 function openGSheet(){
   bxPushSheet();
@@ -2281,7 +2230,6 @@ function openGSheet(){
 
 // Auto-init on load - DA CHUYEN sang bxBootApp(), chi chay sau khi dang nhap Google thanh cong (xem onAuthStateChanged o tren)
 (function(){
-  document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
 })();
 
@@ -2291,24 +2239,12 @@ function openGSheet(){
 async function doPublish() {
   // Lưu tay: ghi Firebase ngay + đẩy Google Sheet ngay (bỏ cơ chế vercel cũ).
   // Dữ liệu vẫn tự lưu qua syncToCloud/autoPushSheet; nút này chỉ ép sync tức thì.
-  if (window._guestMode) { alert('Chế độ chỉ xem — không lưu.'); return; }
   if (!window.__bxCloudReady) { alert('Chưa tải xong dữ liệu từ cloud — đợi vài giây rồi bấm lại.'); return; } // [A3]
   var btn = document.querySelector('.publish-btn');
   var old = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu…'; }
   try {
-    const dismissed = {};
-    Object.keys(localStorage).filter(k=>k.startsWith('bigx_dismissed_')).forEach(k => {
-      const date = k.replace('bigx_dismissed_','');
-      dismissed[date] = JSON.parse(localStorage.getItem(k)||'[]');
-    });
-    const payload = {
-      attendance: JSON.parse(localStorage.getItem('bigx_attendance')||'{}'),
-      employees:  JSON.parse(localStorage.getItem('bigx_employees')||'[]'),
-      cc_data:    JSON.parse(localStorage.getItem('bigx_cc')||'{}'),
-      cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
-      dismissed
-    };
+    const payload = bxCloudPayload();
     const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     if (!_r.ok) throw new Error('HTTP ' + _r.status); // [A3] không báo "Đã lưu" khi cloud từ chối
     window.__bxDirtyAt = 0;
@@ -2329,13 +2265,7 @@ async function doPublish() {
      - Tinh phep: 1 ham calcPhepConLai duy nhat (da bo lop va phepPatchV2)
      - Day Google Sheet: qua syncToCloud + autoPushSheet(120s) - da bo override localStorage.setItem -->
 
-<style>
-.cc-login-guest{display:none;align-items:center;gap:6px;padding:7px 15px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:#fff;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
-body.guest-mode .cc-login-guest{display:inline-flex}
-.cc-login-guest:hover{background:rgba(255,255,255,.28)}
-</style>
 <script>
-function ccShowLogin(){var a=document.getElementById('app'),l=document.getElementById('login-screen');if(a)a.style.display='none';if(l)l.style.display='flex';var e=document.getElementById('login-email');if(e){try{e.focus();}catch(_){}}}
 /* Trạng thái bảng chấm công của NV hôm nay (để loại người ĐÃ NGHỈ khỏi ô Chưa điểm danh) */
 function ccStatusToday(id){
   try{
@@ -2375,9 +2305,6 @@ document.addEventListener('paste',function(e){
     }
   }catch(_){}
 });
-/* Đổi nhãn cột khi đã bỏ buổi chiều */
-function ccRelabelSang(){ try{ var sp=Array.prototype.slice.call(document.querySelectorAll('span')).find(function(x){return /BU\u1ed4I S\u00c1NG/.test(x.textContent);}); if(sp) sp.textContent='\ud83d\udccb \u0110I\u1ec2M DANH H\u00d4M NAY'; }catch(_){} }
-/* [2S] không đổi nhãn nữa (đã có lại buổi chiều) */
 </script>
 <style id="cc-sync">
 /* Font đồng bộ dashboard */
@@ -2389,7 +2316,6 @@ button,input,select,textarea{font-family:inherit!important;}
 .main-tabs{top:46px!important;}
 .topbar-user{color:var(--gray)!important;}
 .topbar-logout{background:#fff!important;color:var(--red)!important;border:1px solid var(--gray-bd)!important;}
-.cc-login-guest{background:#fff!important;color:var(--green)!important;border:1px solid var(--gray-bd)!important;}
 .publish-btn{border:1px solid #e7c200!important;}
 /* [2S] Từ 25/9: check-in 2 buổi (sáng + chiều) — hiện lại cột Buổi chiều */
 </style>
@@ -2495,17 +2421,7 @@ button,input,select,textarea{font-family:inherit!important;}
   async function hsPushNow(){
     if(!window.__bxCloudReady){ console.warn('hsPushNow: chờ tải cloud xong mới ghi'); return; } // [A3]
     try{
-      var dismissed={};
-      Object.keys(localStorage).filter(function(k){return k.indexOf('bigx_dismissed_')===0;}).forEach(function(k){
-        dismissed[k.replace('bigx_dismissed_','')]=JSON.parse(localStorage.getItem(k)||'[]');
-      });
-      var payload={
-        attendance: JSON.parse(localStorage.getItem('bigx_attendance')||'{}'),
-        employees:  JSON.parse(localStorage.getItem('bigx_employees')||'[]'),
-        cc_data:    JSON.parse(localStorage.getItem('bigx_cc')||'{}'),
-        cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
-        dismissed: dismissed
-      };
+      var payload=bxCloudPayload();
       await bxAuthedFetch(FIREBASE_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     }catch(e){ console.warn('hsPushNow error:', e); }
   }

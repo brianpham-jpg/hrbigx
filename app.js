@@ -203,14 +203,6 @@ function byNgayVaoDesc(a,b){
   return db.getTime()-da.getTime();
 }
 
-/* ---- Skeleton (khung gợi ý) ---- */
-function skeleton(kind){
-  if(kind==='kpi') return '<div class="skeleton-grid">'+Array.from({length:4}).map(function(){return '<div class="sk-card"><div class="sk-tag">Chỉ số</div><div class="sk-num"></div><div class="sk-line w60"></div></div>';}).join('')+'</div>';
-  if(kind==='charts') return '<div class="skeleton-grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));">'+Array.from({length:2}).map(function(){return '<div class="sk-card" style="min-height:200px;"><div class="sk-tag">Biểu đồ</div><div class="sk-line w40"></div><div style="flex:1;border-radius:8px;background:var(--line-soft);margin-top:6px;"></div></div>';}).join('')+'</div>';
-  if(kind==='source') return '<div class="skeleton-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">'+['NhanSu','TuyenDung','ChamCong','HopDong'].map(function(s){return '<div class="sk-card" style="min-height:88px;"><div class="sk-tag" style="color:var(--teal);">'+s+'</div><div class="sk-line w80"></div><div class="sk-line w60"></div></div>';}).join('')+'</div>';
-  return '';
-}
-
 /* ---- Empty state (tab chưa gắn data) ---- */
 function emptyState(item, group){
   var points=(item.points||[]).map(function(p){return '<div class="empty-li"><i class="ti ti-point"></i>'+esc(p)+'</div>';}).join('');
@@ -220,7 +212,7 @@ function emptyState(item, group){
     '<div class="empty-text">Nội dung sẽ hiển thị ở đây sau khi nạp dữ liệu từ <b>Nguồn dữ liệu</b>. Bố cục dự kiến:</div>'+
     '<div class="empty-list">'+points+'</div>'+
     '<div class="empty-foot"><i class="ti ti-plug-connected"></i>Bước tiếp theo: gắn dữ liệu cho tab này.</div>'+
-    '</div></div>'+(item.skeleton?skeleton(item.skeleton):'');
+    '</div></div>';
 }
 
 /* ---- Trạng thái tải ---- */
@@ -1309,8 +1301,7 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_APP_URL   = 'chamcong.html?cc=15'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
-var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
+var CC_APP_URL   = 'chamcong.html?cc=16'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 
 function renderChamCong(){
   return '<div class="cc-frame-wrap"><iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe></div>';
@@ -1586,7 +1577,6 @@ window.__bc = window.__bc || { mode:'week', off:0 };
 
 window.bcSetMode = function(m){ window.__bc.mode=m; window.__bc.off=0; window.go('bao-cao'); };
 window.bcStep    = function(d){ window.__bc.off += d; if(window.__bc.off>0) window.__bc.off=0; window.go('bao-cao'); };
-window.bcPrint   = function(){ window.print(); };
 
 /* Xuất PDF tải về (không qua hộp thoại in). Thư viện html2pdf chỉ nạp khi bấm. */
 window.bcExportPDF = function(){
@@ -2029,7 +2019,6 @@ window.renderSoDo = function(){
     panel='<div class="sd-panel empty"><div class="sd-hint">Bấm một phòng bên trái để xem danh sách nhân sự (tên · chức danh) và nhiệm vụ chính.</div></div>';
   }
 
-  if(typeof setTimeout==='function') setTimeout(function(){ var e=document.getElementById('sd-updated'); }, 10);
 
   return '<div class="page-head"><div class="page-h1">Sơ đồ tổ chức</div>'
     +'<div class="page-lead">Cơ cấu vận hành BigX — Ban giám đốc, 3 khối và các phòng ban. Số người và danh sách nhân sự cập nhật trực tiếp từ hồ sơ; bấm một phòng để xem chi tiết.</div></div>'

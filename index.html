@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
-<link rel="stylesheet" href="styles.css?v=31">
+<link rel="stylesheet" href="styles.css?v=32">
 </head>
 <body>
 
@@ -108,7 +108,15 @@
       if (errEl) errEl.style.display = 'none';
       if (sb) sb.style.display = 'flex';
       if (mn) mn.style.display = 'flex';
-      if (!window.__bxAppBooted) { window.__bxAppBooted = true; if (typeof window.bxMainBoot === 'function') window.bxMainBoot(); }
+      // [C] app.js có thể chưa tải xong (VD vừa đổi phiên bản) → đợi tới khi có bxMainBoot rồi mới khởi động, tránh kẹt "Đang tải…"
+      if (!window.__bxAppBooted && !window.__bxBootWait) {
+        window.__bxBootWait = true;
+        (function tryBoot(n){
+          if (typeof window.bxMainBoot === 'function') { window.__bxBootWait = false; window.__bxAppBooted = true; window.bxMainBoot(); }
+          else if (n < 600) setTimeout(function(){ tryBoot(n+1); }, 50);
+          else window.__bxBootWait = false;
+        })(0);
+      }
     } else {
       if (user) {
         if (errEl) { errEl.textContent = 'Tài khoản ' + user.email + ' không có quyền truy cập trang này.'; errEl.style.display = 'block'; }
@@ -133,6 +141,6 @@
   });
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
-  <script src="app.js?v=52"></script>
+  <script src="app.js?v=53"></script>
 </body>
 </html>
