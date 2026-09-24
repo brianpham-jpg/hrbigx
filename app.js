@@ -2614,6 +2614,7 @@ function ngStyle(){ return '<style id="ng-style">'
     if(st==='review' && t.status!=='review') log.push({d:d, t:'submit'});
     if(st==='fix') log.push({d:d, t:'fix', note:String(note||'').trim()});
     if(st==='done' && t.status!=='done' && log.length) log.push({d:d, t:'ok'});
+    if((st==='doing'||st==='todo') && t.status!==st) log.push({d:d, t:'st', to:st}); // ghi ngày chuyển trạng thái để báo cáo đúng ngày thao tác
     var nt=Object.assign({}, t, {status:st, log:log, doneAt: st==='done'?(t.status==='done'?(t.doneAt||d):d):''});
     if(st!=='done') delete nt.result;
     S.fixDraft=null; return putTask(id, nt);
@@ -2679,6 +2680,7 @@ function ngStyle(){ return '<style id="ng-style">'
       if(x.t==='submit'){ sub++; return '<li><b>'+dmy(x.d)+'</b> · Gửi duyệt lần '+sub+'</li>'; }
       if(x.t==='fix'){ fx++; return '<li class="cv-h-fix"><b>'+dmy(x.d)+'</b> · Cần sửa (lần '+fx+')'+(x.note?': '+e_(x.note):'')+'</li>'; }
       if(x.t==='result') return '<li class="cv-h-ok"><b>'+dmy(x.d)+'</b> · '+e_(x.note||'')+'</li>';
+      if(x.t==='st') return '<li><b>'+dmy(x.d)+'</b> · Chuyển "'+(ST[x.to]||x.to)+'"</li>';
       return '<li class="cv-h-ok"><b>'+dmy(x.d)+'</b> · Sếp duyệt đạt'+(fx?' (sau '+fx+' lần sửa)':' ngay lần đầu')+'</li>';
     }).join('');
     var q='\''+t.id+'\'';
@@ -2742,36 +2744,69 @@ function ngStyle(){ return '<style id="ng-style">'
   var LAUNCH='2026-09-24'; // ngày bắt đầu theo dõi trên web
   function pct(a,b){ return b? Math.round(a/b*1000)/10 : null; }
   function grade(sc){ if(sc==null) return '—'; return sc>=90?'Xuất sắc':(sc>=75?'Tốt':(sc>=60?'Đạt':'Cần cải thiện')); }
+  function inR(d,s,e){ return !!d && d>=s && d<=e; }
+  function scored(t){ return t.group==='manual' || (t.due && t.due>=LAUNCH); } // việc tự sinh có hạn trước ngày theo dõi: không chấm đúng hạn / quá hạn
+  /* Mọi việc CÓ THAO TÁC trong kỳ (theo đúng ngày anh bấm trên tab Công việc) + việc tới hạn trong kỳ */
+  function touched(s,e){
+    var seen={}, out=[];
+    rangeItems(s,e).forEach(function(t){ seen[t.id]=1; out.push(t); });
+    Object.keys(S.tasks).forEach(function(id){
+      if(seen[id]) return; var t=S.tasks[id]||{};
+      var hit=inR(t.doneAt,s,e) || inR(t.createdAt,s,e) || (t.log||[]).some(function(x){ return inR(x.d,s,e); });
+      if(hit){ seen[id]=1; out.push(Object.assign({id:id, group:t.group||'manual'}, t)); }
+    });
+    return out;
+  }
   function perf(s,e){
     var today=todayISO(), cut=e<today?e:today;
-    var its=rangeItems(s,e).filter(function(t){ return t.group==='manual' || t.due>=LAUNCH; }); // việc tự sinh có hạn trước ngày ra mắt tính năng không tính hiệu suất
-    var base=its.filter(function(t){ return t.status==='done' || t.due<=cut; });
-    var done=base.filter(function(t){ return t.status==='done'; });
-    var onTime=done.filter(function(t){ return t.doneAt && t.doneAt<=t.due; });
+    var all=touched(s,e);
+    // Việc tính: việc XONG trong kỳ (theo ngày tick xong) + việc chưa xong đã tới hạn trong kỳ
+    var doneIn=all.filter(function(t){ return t.status==='done' && inR(t.doneAt,s,e); });
+    var openDue=all.filter(function(t){ return t.status!=='done' && scored(t) && inR(t.due,s,cut); });
+    var base=doneIn.concat(openDue), done=doneIn;
+    var otBase=done.filter(function(t){ return scored(t); });
+    var onTime=otBase.filter(function(t){ return t.doneAt<=t.due; });
     var graded=done.filter(function(t){ return t.kind!=='tv'; });
     var firstOk=graded.filter(function(t){ return !fixes(t); });
-    var fb=[]; Object.keys(S.tasks).forEach(function(id){ var t=S.tasks[id]||{}; (t.log||[]).forEach(function(x){ if(x.t==='fix' && x.d>=s && x.d<=e) fb.push({d:x.d, title:t.title, note:x.note||''}); }); });
+    var fb=[]; Object.keys(S.tasks).forEach(function(id){ var t=S.tasks[id]||{}; (t.log||[]).forEach(function(x){ if(x.t==='fix' && inR(x.d,s,e)) fb.push({d:x.d, title:t.title, note:x.note||''}); }); });
     fb.sort(function(a,b){ return a.d<b.d?-1:1; });
-    var r={ s:s, e:e, items:its, base:base, done:done, onTime:onTime, graded:graded, firstOk:firstOk, fb:fb,
-      overdue: its.filter(function(t){ return t.status!=='done' && t.due<today; }),
-      late: done.filter(function(t){ return t.doneAt && t.doneAt>t.due; }),
-      pending: its.filter(function(t){ return t.status!=='done' && t.due>=today; }),
-      pDone:pct(done.length,base.length), pOnTime:pct(onTime.length,done.length), pFirst:pct(firstOk.length,graded.length) };
+    var r={ s:s, e:e, items:all, base:base, done:done, otBase:otBase, onTime:onTime, graded:graded, firstOk:firstOk, fb:fb,
+      overdue: openDue.filter(function(t){ return t.due<today; }),
+      late: otBase.filter(function(t){ return t.doneAt>t.due; }),
+      pending: all.filter(function(t){ return t.status!=='done' && inR(t.due,s,e) && t.due>=today; }),
+      pDone:pct(done.length,base.length), pOnTime:pct(onTime.length,otBase.length), pFirst:pct(firstOk.length,graded.length) };
     var arr=[r.pDone,r.pOnTime,r.pFirst].filter(function(x){return x!=null;});
     r.score = arr.length ? Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length) : null;
     r.grade = grade(r.score);
     return r;
   }
+  /* Các thao tác trong kỳ của 1 việc — để báo cáo ghi đúng ngày anh bấm */
+  function actions(t,s,e){
+    var out=[], sub=0, fx=0;
+    if(inR(t.createdAt,s,e)) out.push([t.createdAt, t.group==='manual'?'Tạo việc':'Bắt đầu theo dõi']);
+    (t.log||[]).forEach(function(x){
+      if(x.t==='submit') sub++; if(x.t==='fix') fx++;
+      if(!inR(x.d,s,e)) return;
+      if(x.t==='submit') out.push([x.d,'Gửi duyệt lần '+sub]);
+      else if(x.t==='fix') out.push([x.d,'Cần sửa lần '+fx]);
+      else if(x.t==='ok') out.push([x.d,'Sếp duyệt đạt']);
+      else if(x.t==='result') out.push([x.d, x.note||'Kết quả']);
+      else if(x.t==='st') out.push([x.d, 'Chuyển "'+(ST[x.to]||x.to)+'"']);
+    });
+    if(t.status==='done' && inR(t.doneAt,s,e) && !out.some(function(o){ return /duyệt đạt|pass/i.test(o[1]); })) out.push([t.doneAt,'Hoàn thành']);
+    out.sort(function(a,b){ return a[0]<b[0]?-1:(a[0]>b[0]?1:0); });
+    return out;
+  }
   function weekRange(off, ref){ var d=ref?new Date(+ref.slice(0,4),+ref.slice(5,7)-1,+ref.slice(8,10)):new Date(); d.setHours(0,0,0,0); var day=(d.getDay()+6)%7; var mon=new Date(d); mon.setDate(d.getDate()-day+off*7); var sun=new Date(mon); sun.setDate(mon.getDate()+6); return [iso(mon), iso(sun)]; }
   function fmtP(v){ return v==null?'—':(Math.round(v)+'%'); }
   /* Đánh giá tự động, viết từ việc cụ thể trong kỳ */
   function evalHtml(r, prev, label){
-    if(!r.base.length && !r.done.length) return '<div class="cv-eval"><div class="cv-eval-h">Đánh giá '+e_(label)+'</div><div class="dt-muted">Chưa có việc tới hạn trong kỳ để đánh giá.</div></div>';
+    if(!r.base.length && !r.done.length) return '<div class="cv-eval"><div class="cv-eval-h">Đánh giá '+e_(label)+'</div><div class="dt-muted">Chưa có việc hoàn thành hoặc tới hạn trong kỳ để đánh giá.</div></div>';
     var li=[];
-    li.push('<b>Kết quả:</b> hoàn thành '+r.done.length+'/'+r.base.length+' việc tới hạn ('+fmtP(r.pDone)+'), đúng hạn '+r.onTime.length+'/'+r.done.length+' ('+fmtP(r.pOnTime)+'), đạt ngay lần đầu '+r.firstOk.length+'/'+r.graded.length+' ('+fmtP(r.pFirst)+').');
+    li.push('<b>Kết quả:</b> hoàn thành '+r.done.length+' việc'+(r.overdue.length?', còn '+r.overdue.length+' việc tới hạn chưa xong':'')+' ('+fmtP(r.pDone)+'); đúng hạn '+r.onTime.length+'/'+r.otBase.length+' ('+fmtP(r.pOnTime)+'); đạt ngay lần đầu '+r.firstOk.length+'/'+r.graded.length+' ('+fmtP(r.pFirst)+').');
     if(prev && prev.score!=null && r.score!=null){ var d=r.score-prev.score; li.push('<b>So với kỳ trước:</b> '+(d===0?'giữ nguyên':(d>0?'tăng ':'giảm ')+Math.abs(d)+' điểm')+' ('+prev.score+' → '+r.score+').'); }
-    var good=r.firstOk.filter(function(t){ return t.doneAt && t.doneAt<=t.due; }).sort(function(a,b){ return (PRI_W[a.pri]||1)-(PRI_W[b.pri]||1); });
-    if(good.length) li.push('<b>Làm tốt:</b> '+good.slice(0,4).map(function(t){ return e_(t.title); }).join('; ')+(good.length>4?' và '+(good.length-4)+' việc khác':'')+' — xong đúng hạn, không phải sửa.');
+    var good=r.firstOk.filter(function(t){ return t.kind!=='tv' && (!scored(t) || t.doneAt<=t.due); }).sort(function(a,b){ return (PRI_W[a.pri]||1)-(PRI_W[b.pri]||1); });
+    if(good.length) li.push('<b>Làm tốt:</b> '+good.slice(0,4).map(function(t){ return e_(t.title); }).join('; ')+(good.length>4?' và '+(good.length-4)+' việc khác':'')+' — hoàn thành, không phải sửa.');
     var bad=[], reason={}, order=[];
     function why(t,msg){ if(!reason[t.id]){ reason[t.id]={t:t, m:[]}; order.push(t.id); } reason[t.id].m.push(msg); }
     r.overdue.forEach(function(t){ why(t,'<span class="cv-e-red">quá hạn '+(-daysTo(t.due))+' ngày, chưa xong</span>'); });
@@ -2793,12 +2828,12 @@ function ngStyle(){ return '<style id="ng-style">'
     var gcls=r.score==null?'':(r.score>=75?'good':(r.score>=60?'ok':'bad'));
     var cards='<div class="cv-pcs">'
       +card('Điểm hiệu suất', r.score==null?'—':r.score+'<small>/100</small>', r.grade, delta(r.score,rp.score,'đ'), 'main '+gcls)
-      +card('% Hoàn thành', fmtP(r.pDone), r.done.length+'/'+r.base.length+' việc tới hạn', delta(r.pDone,rp.pDone,'đ'))
-      +card('% Đúng hạn', fmtP(r.pOnTime), r.onTime.length+'/'+r.done.length+' việc xong', delta(r.pOnTime,rp.pOnTime,'đ'))
+      +card('% Hoàn thành', fmtP(r.pDone), r.done.length+' xong / '+r.base.length+' việc', delta(r.pDone,rp.pDone,'đ'))
+      +card('% Đúng hạn', fmtP(r.pOnTime), r.onTime.length+'/'+r.otBase.length+' việc xong', delta(r.pOnTime,rp.pOnTime,'đ'))
       +card('% Đạt ngay lần đầu', fmtP(r.pFirst), r.firstOk.length+'/'+r.graded.length+' việc xong', delta(r.pFirst,rp.pFirst,'đ'))
       +card('Số lần sửa', r.fb.length, 'feedback trong tháng', deltaInv(r.fb.length,rp.fb.length), r.fb.length?'warn':'')
       +'</div>';
-    return '<div class="cv-perf"><div class="cv-perf-h"><i class="ti ti-chart-line"></i>Hiệu suất '+monthLabel(ym).toLowerCase()+'<span class="cv-perf-note">Chỉ tính việc có deadline (theo dõi từ 24/09/2026) · kỳ đang chạy chỉ tính việc đã tới hạn · Điểm = trung bình 3 tỷ lệ · ≥90 Xuất sắc · ≥75 Tốt · ≥60 Đạt</span></div>'
+    return '<div class="cv-perf"><div class="cv-perf-h"><i class="ti ti-chart-line"></i>Hiệu suất '+monthLabel(ym).toLowerCase()+'<span class="cv-perf-note">Tính theo ngày anh thao tác: việc xong trong kỳ + việc tới hạn chưa xong · Đúng hạn chỉ chấm việc có hạn từ 24/09/2026 · Điểm = trung bình 3 tỷ lệ · ≥90 Xuất sắc · ≥75 Tốt · ≥60 Đạt</span></div>'
       +cards
       +'<div class="cv-prow"><div class="cv-pbox"><div class="cv-pbox-t">Xu hướng 8 tuần (nhãn = ngày thứ 2 của tuần)</div><div id="cv-ch-trend" class="cv-ch"></div></div>'
       +'<div class="cv-pbox"><div class="cv-pbox-t">Trạng thái việc trong tháng</div><div id="cv-ch-status" class="cv-ch"></div></div></div>'
@@ -2853,17 +2888,17 @@ function ngStyle(){ return '<style id="ng-style">'
     var lbl=(mode==='week'?'tuần ':'')+(typeof bcLabel==='function'?bcLabel(mode,p):s+' – '+e);
     var stat=function(l,v,d,sub){ return '<div class="bc-stat"><div class="s-l">'+l+(sub?'<div class="sub">'+sub+'</div>':'')+'</div><div class="s-r"><span class="s-v">'+v+'</span>'+(d||'')+'</div></div>'; };
     var dl=function(a,b){ return (a==null||b==null)?'':(typeof bcDeltaPct==='function'?bcDeltaPct(a,b):''); };
-    var rowT=function(t){ var n=fixes(t); return '<tr><td>'+e_(t.title)+'</td><td class="nw">'+dmy(t.due)+'</td><td class="nw">'+(t.doneAt?dmy(t.doneAt):'—')+'</td><td class="nw">'+(t.kind==='tv'&&t.result?(t.result==='pass'?'Pass':'Không pass'):(t.status==='done'?('Đạt lần '+(n+1)):(t.due<todayISO()?'<span class="pill red">Quá hạn</span>':ST[t.status])))+'</td></tr>'; };
+    var rowT=function(t){ var n=fixes(t), ac=actions(t,s,e); return '<tr><td>'+e_(t.title)+'</td><td class="nw">'+(t.due?dmy(t.due):'—')+'</td><td>'+(ac.length?ac.map(function(x){ return '<span class="nw">'+dmy(x[0]).slice(0,5)+' '+e_(x[1])+'</span>'; }).join('<br>'):'<span class="muted">—</span>')+'</td><td class="nw">'+(t.doneAt?dmy(t.doneAt):'—')+'</td><td class="nw">'+(t.kind==='tv'&&t.result?(t.result==='pass'?'Pass':'Không pass'):(t.status==='done'?('Đạt lần '+(n+1)):(t.due&&t.due<todayISO()&&scored(t)?'<span class="pill red">Quá hạn</span>':ST[t.status])))+'</td></tr>'; };
     var list=r.items.slice().sort(sortItems);
-    var tbl=list.length?'<table class="bc-tbl"><thead><tr><th>Việc</th><th>Deadline</th><th>Xong ngày</th><th>Kết quả</th></tr></thead><tbody>'+list.map(rowT).join('')+'</tbody></table>':'<div class="muted">Không có việc có deadline trong kỳ.</div>';
+    var tbl=list.length?'<table class="bc-tbl"><thead><tr><th>Việc</th><th>Deadline</th><th>Thao tác trong kỳ</th><th>Xong ngày</th><th>Kết quả</th></tr></thead><tbody>'+list.map(rowT).join('')+'</tbody></table>':'<div class="muted">Không có việc nào trong kỳ.</div>';
     var fbT=r.fb.length?'<table class="bc-tbl"><thead><tr><th>Ngày</th><th>Việc</th><th>Feedback</th></tr></thead><tbody>'+r.fb.map(function(x){ return '<tr><td class="nw">'+dmy(x.d)+'</td><td>'+e_(x.title)+'</td><td>'+e_(x.note||'—')+'</td></tr>'; }).join('')+'</tbody></table>':'<div class="muted" style="padding:6px 0">Không có feedback cần sửa trong kỳ.</div>';
     return '<div class="bc-sec full"><div class="bc-sh"><span class="dot"></span><h3>Hiệu suất công việc HR</h3>'
       +(r.score!=null?'<span class="sh-d '+(r.score>=75?'up':(r.score>=60?'':'down'))+'">'+r.score+'/100 · '+r.grade+'</span>':'')+'</div>'
-      +'<div class="bc-cap">Việc có deadline trong kỳ (kỳ đang chạy: chỉ tính việc đã tới hạn). Điểm = trung bình % hoàn thành, % đúng hạn, % đạt ngay lần đầu.</div>'
+      +'<div class="bc-cap">Lấy đúng theo thao tác trên tab Công việc HR: việc anh tạo / gửi duyệt / tick xong trong kỳ + việc tới hạn trong kỳ. Điểm = trung bình % hoàn thành, % đúng hạn, % đạt ngay lần đầu.</div>'
       +'<div class="bc-row2"><div>'
       +stat('Điểm hiệu suất', r.score==null?'—':r.score+'/100', (r.score!=null&&rp.score!=null&&typeof bcDelta==='function')?bcDelta(r.score,rp.score,true):'', r.grade)
-      +stat('% Hoàn thành', fmtP(r.pDone), dl(r.pDone,rp.pDone), r.done.length+'/'+r.base.length+' việc tới hạn')
-      +stat('% Đúng hạn', fmtP(r.pOnTime), dl(r.pOnTime,rp.pOnTime), r.onTime.length+'/'+r.done.length+' việc xong')
+      +stat('% Hoàn thành', fmtP(r.pDone), dl(r.pDone,rp.pDone), r.done.length+' xong / '+r.base.length+' việc (xong trong kỳ + tới hạn chưa xong)')
+      +stat('% Đúng hạn', fmtP(r.pOnTime), dl(r.pOnTime,rp.pOnTime), r.onTime.length+'/'+r.otBase.length+' việc xong có hạn')
       +stat('% Đạt ngay lần đầu', fmtP(r.pFirst), dl(r.pFirst,rp.pFirst), r.firstOk.length+'/'+r.graded.length+' việc xong')
       +stat('Số lần sửa (feedback)', r.fb.length, typeof bcDelta==='function'?bcDelta(r.fb.length,rp.fb.length,false):'', '')
       +'</div><div>'+evalHtml(r, rp, lbl)+'</div></div>'
