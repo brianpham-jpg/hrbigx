@@ -1791,6 +1791,7 @@ window.renderBaoCao = function(){
     +bcKpi('Nhân sự vào mới', B.vao.length, bcDelta(B.vao.length,Bp.vao.length,true))
     +bcKpi('Nghỉ việc', B.nghi.length, bcDelta(B.nghi.length,Bp.nghi.length,false))
     +bcKpi('Tỷ lệ có mặt', chamReady?(cham.rate+'%'):'—', cmpCham?bcDeltaPct(cham.rate,champ.rate):'')
+    +(function(){ var sc=window.cvPerfScore?window.cvPerfScore(p):null, sp=window.cvPerfScore?window.cvPerfScore(pv):null; return bcKpi('Điểm hiệu suất HR', sc==null?'—':sc+'/100', (sc!=null&&sp!=null)?bcDelta(sc,sp,true):''); })() // [K]
     +'</div>';
 
   /* Section A: Tuyển dụng */
@@ -1843,10 +1844,11 @@ window.renderBaoCao = function(){
     +(H.expire.length?'<div class="bc-warn">⚠ '+H.expire.length+' hợp đồng đến hạn trong kỳ — kiểm tra để gia hạn/ký lại.</div>':'')
     +'</div></div></div>';
 
-  var foot='<div class="bc-foot">Số liệu lấy trực tiếp từ dữ liệu web (Tuyển dụng · Hồ sơ · Chấm công). Kỳ: '+bcLabel(mode,p)+'.</div>';
+  var secE=window.cvReportSection?window.cvReportSection(p,pv,mode):''; // [K] hiệu suất công việc HR
+  var foot='<div class="bc-foot">Số liệu lấy trực tiếp từ dữ liệu web (Tuyển dụng · Hồ sơ · Chấm công · Công việc HR). Kỳ: '+bcLabel(mode,p)+'.</div>';
 
   if(typeof setTimeout==='function') setTimeout(function(){ bcInitChart(T.chart); }, 30);
-  return head+style+'<div id="baocao">'+controls+kpis+secA+'<div class="bc-grid2">'+secB+secC+'</div>'+secD+foot+'</div>';
+  return head+style+'<div id="baocao">'+controls+kpis+secA+'<div class="bc-grid2">'+secB+secC+'</div>'+secD+secE+foot+'</div>';
 };
 
 function bcKpi(t, v, d){ return '<div class="bc-kpi"><div class="k-t">'+t+'</div><div class="k-v">'+v+'</div><div class="k-dw">'+(d||'')+'</div></div>'; }
@@ -1891,7 +1893,7 @@ function bcStyle(){ return '<style id="bc-style">'
   +'#baocao .bc-pdf{margin-left:auto;display:inline-flex;align-items:center;background:#21303B;color:#fff;border:0;font-family:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:9px;cursor:pointer}'
   +'#baocao .bc-cad{margin:12px 0 4px;font-size:12.5px;color:#414B54;background:#eef4f2;border:1px solid #d6e6e2;border-radius:9px;padding:8px 13px;display:inline-block}'
   +'#baocao .bc-cad b{color:#35655B;font-weight:600}'
-  +'#baocao .bc-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin:16px 0 18px}'
+  +'#baocao .bc-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:13px;margin:16px 0 18px}'
   +'#baocao .bc-kpi{background:#fff;border:1px solid #E4DECF;border-radius:12px;padding:15px 16px 13px}'
   +'#baocao .bc-kpi .k-t{font-size:12px;color:#8B897E}'
   +'#baocao .bc-kpi .k-v{font-family:Fraunces,Georgia,serif;font-size:28px;font-weight:600;color:#21303B;line-height:1;margin-top:7px}'
@@ -2403,7 +2405,7 @@ function ngStyle(){ return '<style id="ng-style">'
       S.emptyCloud = !d && bak && bak.tasks && Object.keys(bak.tasks).length>0;
       if(!S.emptyCloud) saveBak();
     }).catch(function(e){ S.err=e.message||String(e); S.loaded=true; })
-      .then(function(){ S.loading=false; rerender(); });
+      .then(function(){ S.loading=false; rerender(); if(window.currentTab==='bao-cao' && window.go) window.go('bao-cao'); });
   }
   window.cvReload=function(){ S.loaded=false; load(); rerender(); };
   window.cvRestore=function(){
@@ -2519,6 +2521,21 @@ function ngStyle(){ return '<style id="ng-style">'
      +'.cv-h-list{margin:0;padding-left:18px;font-size:12.5px;line-height:1.7}.cv-h-fix{color:var(--rust)}.cv-h-ok{color:var(--teal)}'
      +'.cv-fb{margin-top:8px}.cv-fb textarea{width:100%;min-height:60px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:#fff;resize:vertical;box-sizing:border-box}'
      +'table.cv-t td:first-child{width:38%}'
+     +'.cv-perf{max-width:1180px;margin-bottom:18px}.cv-perf-h{font-weight:600;color:var(--ink);font-size:15px;display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}.cv-perf-h i{color:var(--teal)}'
+     +'.cv-perf-note{font-weight:400;font-size:11px;color:var(--muted);margin-left:auto}'
+     +'.cv-pcs{display:grid;grid-template-columns:1.3fr repeat(4,1fr);gap:12px;margin-bottom:12px}'
+     +'.cv-pc{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px}'
+     +'.cv-pc-l{font-size:11.5px;color:var(--muted)}.cv-pc-v{font-family:var(--serif);font-size:28px;font-weight:600;color:var(--ink);line-height:1.15;margin-top:6px}.cv-pc-v small{font-size:14px;color:var(--muted)}'
+     +'.cv-pc-s{font-size:11.5px;color:var(--muted);margin-top:2px}.cv-pc-d{margin-top:6px;min-height:16px}'
+     +'.cv-pc.main .cv-pc-v{font-size:34px}.cv-pc.main.good{border-color:#B9D3C8;background:linear-gradient(0deg,rgba(53,101,91,.05),rgba(53,101,91,.05)),var(--paper)}.cv-pc.main.good .cv-pc-v,.cv-pc.main.good .cv-pc-s{color:var(--teal)}'
+     +'.cv-pc.main.ok .cv-pc-v,.cv-pc.main.ok .cv-pc-s{color:var(--clay)}.cv-pc.main.bad{border-color:#D9A99E}.cv-pc.main.bad .cv-pc-v,.cv-pc.main.bad .cv-pc-s{color:var(--rust)}.cv-pc.warn .cv-pc-v{color:var(--clay)}'
+     +'.cv-d{font-size:11.5px;font-weight:600}.cv-d.up{color:var(--teal)}.cv-d.down{color:var(--rust)}.cv-d.flat{color:var(--muted);font-weight:400}'
+     +'.cv-prow{display:grid;grid-template-columns:1.5fr 1fr;gap:12px;margin-bottom:12px}'
+     +'.cv-pbox{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;min-width:0}'
+     +'.cv-pbox-t{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px}.cv-ch{height:250px}.cv-ch.sm{height:170px}'
+     +'.cv-eval-h{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px}.cv-eval-b{font-size:12.5px;line-height:1.6;color:var(--text)}.cv-eval-b p{margin:0 0 6px}.cv-eval-b ul{margin:2px 0 0;padding-left:18px}'
+     +'.cv-grade{font-weight:600}.cv-g-good{color:var(--teal)}.cv-g-ok{color:var(--clay)}.cv-g-bad{color:var(--rust)}.cv-e-red{color:var(--rust)}.cv-e-amb{color:var(--clay)}'
+     +'@media(max-width:900px){.cv-pcs{grid-template-columns:repeat(2,1fr)}.cv-prow{grid-template-columns:1fr}}'
      +'@media(max-width:760px){.cv-grid{grid-template-columns:1fr}}';
     document.head.appendChild(s);
   }
@@ -2712,6 +2729,150 @@ function ngStyle(){ return '<style id="ng-style">'
     var cnt=document.getElementById('cv-count'); if(cnt) cnt.textContent=total+' việc';
   }
 
+  /* ================= [K] HIỆU SUẤT (tuần / tháng) =================
+     Chỉ tính việc CÓ DEADLINE trong kỳ. Kỳ đang chạy: chỉ tính việc đã tới hạn (≤ hôm nay) hoặc đã xong.
+     % Hoàn thành = xong / việc tính;  % Đúng hạn = xong ≤ deadline / xong;  % Đạt lần đầu = xong không bị sửa / xong (bỏ Pass/Không pass thử việc)
+     Điểm hiệu suất = trung bình các chỉ số có dữ liệu (thang 100). Xếp loại: ≥90 Xuất sắc · ≥75 Tốt · ≥60 Đạt · <60 Cần cải thiện */
+  function monthsBetween(s,e){ var out=[], ym=s.slice(0,7), end=e.slice(0,7), guard=0; while(ym<=end && guard++<40){ out.push(ym); ym=shiftMonth(ym,1); } return out; }
+  function rangeItems(s,e){
+    var seen={}, out=[];
+    monthsBetween(s,e).forEach(function(ym){ itemsFor(ym).forEach(function(t){ if(seen[t.id]) return; seen[t.id]=1; if(t.due && t.due>=s && t.due<=e) out.push(t); }); });
+    return out;
+  }
+  var LAUNCH='2026-09-24'; // ngày bắt đầu theo dõi trên web
+  function pct(a,b){ return b? Math.round(a/b*1000)/10 : null; }
+  function grade(sc){ if(sc==null) return '—'; return sc>=90?'Xuất sắc':(sc>=75?'Tốt':(sc>=60?'Đạt':'Cần cải thiện')); }
+  function perf(s,e){
+    var today=todayISO(), cut=e<today?e:today;
+    var its=rangeItems(s,e).filter(function(t){ return t.group==='manual' || t.due>=LAUNCH; }); // việc tự sinh có hạn trước ngày ra mắt tính năng không tính hiệu suất
+    var base=its.filter(function(t){ return t.status==='done' || t.due<=cut; });
+    var done=base.filter(function(t){ return t.status==='done'; });
+    var onTime=done.filter(function(t){ return t.doneAt && t.doneAt<=t.due; });
+    var graded=done.filter(function(t){ return t.kind!=='tv'; });
+    var firstOk=graded.filter(function(t){ return !fixes(t); });
+    var fb=[]; Object.keys(S.tasks).forEach(function(id){ var t=S.tasks[id]||{}; (t.log||[]).forEach(function(x){ if(x.t==='fix' && x.d>=s && x.d<=e) fb.push({d:x.d, title:t.title, note:x.note||''}); }); });
+    fb.sort(function(a,b){ return a.d<b.d?-1:1; });
+    var r={ s:s, e:e, items:its, base:base, done:done, onTime:onTime, graded:graded, firstOk:firstOk, fb:fb,
+      overdue: its.filter(function(t){ return t.status!=='done' && t.due<today; }),
+      late: done.filter(function(t){ return t.doneAt && t.doneAt>t.due; }),
+      pending: its.filter(function(t){ return t.status!=='done' && t.due>=today; }),
+      pDone:pct(done.length,base.length), pOnTime:pct(onTime.length,done.length), pFirst:pct(firstOk.length,graded.length) };
+    var arr=[r.pDone,r.pOnTime,r.pFirst].filter(function(x){return x!=null;});
+    r.score = arr.length ? Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length) : null;
+    r.grade = grade(r.score);
+    return r;
+  }
+  function weekRange(off, ref){ var d=ref?new Date(+ref.slice(0,4),+ref.slice(5,7)-1,+ref.slice(8,10)):new Date(); d.setHours(0,0,0,0); var day=(d.getDay()+6)%7; var mon=new Date(d); mon.setDate(d.getDate()-day+off*7); var sun=new Date(mon); sun.setDate(mon.getDate()+6); return [iso(mon), iso(sun)]; }
+  function fmtP(v){ return v==null?'—':(Math.round(v)+'%'); }
+  /* Đánh giá tự động, viết từ việc cụ thể trong kỳ */
+  function evalHtml(r, prev, label){
+    if(!r.base.length && !r.done.length) return '<div class="cv-eval"><div class="cv-eval-h">Đánh giá '+e_(label)+'</div><div class="dt-muted">Chưa có việc tới hạn trong kỳ để đánh giá.</div></div>';
+    var li=[];
+    li.push('<b>Kết quả:</b> hoàn thành '+r.done.length+'/'+r.base.length+' việc tới hạn ('+fmtP(r.pDone)+'), đúng hạn '+r.onTime.length+'/'+r.done.length+' ('+fmtP(r.pOnTime)+'), đạt ngay lần đầu '+r.firstOk.length+'/'+r.graded.length+' ('+fmtP(r.pFirst)+').');
+    if(prev && prev.score!=null && r.score!=null){ var d=r.score-prev.score; li.push('<b>So với kỳ trước:</b> '+(d===0?'giữ nguyên':(d>0?'tăng ':'giảm ')+Math.abs(d)+' điểm')+' ('+prev.score+' → '+r.score+').'); }
+    var good=r.firstOk.filter(function(t){ return t.doneAt && t.doneAt<=t.due; }).sort(function(a,b){ return (PRI_W[a.pri]||1)-(PRI_W[b.pri]||1); });
+    if(good.length) li.push('<b>Làm tốt:</b> '+good.slice(0,4).map(function(t){ return e_(t.title); }).join('; ')+(good.length>4?' và '+(good.length-4)+' việc khác':'')+' — xong đúng hạn, không phải sửa.');
+    var bad=[], reason={}, order=[];
+    function why(t,msg){ if(!reason[t.id]){ reason[t.id]={t:t, m:[]}; order.push(t.id); } reason[t.id].m.push(msg); }
+    r.overdue.forEach(function(t){ why(t,'<span class="cv-e-red">quá hạn '+(-daysTo(t.due))+' ngày, chưa xong</span>'); });
+    r.late.forEach(function(t){ var d=Math.round((new Date(t.doneAt)-new Date(t.due))/86400000); why(t,'<span class="cv-e-amb">xong trễ '+d+' ngày</span>'); });
+    r.done.concat(r.overdue).forEach(function(t){ var n=fixes(t); if(n){ var last=(t.log||[]).filter(function(x){return x.t==='fix';}).pop(); why(t,'<span class="cv-e-red">sửa '+n+' lần'+(last&&last.note?': "'+e_(last.note)+'"':'')+'</span>'); } });
+    order.forEach(function(id){ var o=reason[id]; bad.push(e_(o.t.title)+' — '+o.m.join(' · ')); });
+    if(bad.length) li.push('<b>Cần cải thiện:</b><ul>'+bad.slice(0,8).map(function(x){return '<li>'+x+'</li>';}).join('')+(bad.length>8?'<li>… và '+(bad.length-8)+' mục khác</li>':'')+'</ul>');
+    else li.push('<b>Cần cải thiện:</b> không có — không việc nào quá hạn, trễ hạn hay phải sửa.');
+    if(r.pending.length) li.push('<b>Còn lại trong kỳ:</b> '+r.pending.length+' việc chưa tới hạn.');
+    return '<div class="cv-eval"><div class="cv-eval-h">Đánh giá '+e_(label)+' · <span class="cv-grade cv-g-'+(r.score==null?'na':(r.score>=75?'good':(r.score>=60?'ok':'bad')))+'">'+(r.score==null?'—':r.score+'/100')+' · '+r.grade+'</span></div><div class="cv-eval-b">'+li.map(function(x){return '<p>'+x+'</p>';}).join('')+'</div></div>';
+  }
+  function delta(cur, prev, unit){ if(cur==null||prev==null) return ''; var d=Math.round((cur-prev)*10)/10; if(d===0) return '<span class="cv-d flat">= kỳ trước</span>'; return '<span class="cv-d '+(d>0?'up':'down')+'">'+(d>0?'▲':'▼')+' '+Math.abs(d)+(unit||'')+'</span>'; }
+  function deltaInv(cur, prev){ if(cur==null||prev==null) return ''; var d=cur-prev; if(d===0) return '<span class="cv-d flat">= kỳ trước</span>'; return '<span class="cv-d '+(d<0?'up':'down')+'">'+(d>0?'▲':'▼')+' '+Math.abs(d)+'</span>'; }
+
+  function perfSection(ym){
+    var s=ym+'-01', e=ym+'-'+p2(lastDay(ym)), pv=shiftMonth(ym,-1);
+    var r=perf(s,e), rp=perf(pv+'-01', pv+'-'+p2(lastDay(pv)));
+    var card=function(lbl,val,sub,d,cls){ return '<div class="cv-pc'+(cls?' '+cls:'')+'"><div class="cv-pc-l">'+lbl+'</div><div class="cv-pc-v">'+val+'</div><div class="cv-pc-s">'+(sub||'')+'</div><div class="cv-pc-d">'+(d||'')+'</div></div>'; };
+    var gcls=r.score==null?'':(r.score>=75?'good':(r.score>=60?'ok':'bad'));
+    var cards='<div class="cv-pcs">'
+      +card('Điểm hiệu suất', r.score==null?'—':r.score+'<small>/100</small>', r.grade, delta(r.score,rp.score,'đ'), 'main '+gcls)
+      +card('% Hoàn thành', fmtP(r.pDone), r.done.length+'/'+r.base.length+' việc tới hạn', delta(r.pDone,rp.pDone,'đ'))
+      +card('% Đúng hạn', fmtP(r.pOnTime), r.onTime.length+'/'+r.done.length+' việc xong', delta(r.pOnTime,rp.pOnTime,'đ'))
+      +card('% Đạt ngay lần đầu', fmtP(r.pFirst), r.firstOk.length+'/'+r.graded.length+' việc xong', delta(r.pFirst,rp.pFirst,'đ'))
+      +card('Số lần sửa', r.fb.length, 'feedback trong tháng', deltaInv(r.fb.length,rp.fb.length), r.fb.length?'warn':'')
+      +'</div>';
+    return '<div class="cv-perf"><div class="cv-perf-h"><i class="ti ti-chart-line"></i>Hiệu suất '+monthLabel(ym).toLowerCase()+'<span class="cv-perf-note">Chỉ tính việc có deadline (theo dõi từ 24/09/2026) · kỳ đang chạy chỉ tính việc đã tới hạn · Điểm = trung bình 3 tỷ lệ · ≥90 Xuất sắc · ≥75 Tốt · ≥60 Đạt</span></div>'
+      +cards
+      +'<div class="cv-prow"><div class="cv-pbox"><div class="cv-pbox-t">Xu hướng 8 tuần (nhãn = ngày thứ 2 của tuần)</div><div id="cv-ch-trend" class="cv-ch"></div></div>'
+      +'<div class="cv-pbox"><div class="cv-pbox-t">Trạng thái việc trong tháng</div><div id="cv-ch-status" class="cv-ch"></div></div></div>'
+      +'<div class="cv-prow"><div class="cv-pbox"><div class="cv-pbox-t">Hoàn thành theo nhóm (việc tới hạn)</div><div id="cv-ch-group" class="cv-ch sm"></div></div>'
+      +'<div class="cv-pbox">'+evalHtml(r, rp, monthLabel(ym).toLowerCase())+'</div></div>'
+      +'</div>';
+  }
+  var CH=window.__cvCharts=window.__cvCharts||{};
+  function mkChart(id){ if(typeof echarts==='undefined') return null; var el=document.getElementById(id); if(!el) return null; if(CH[id]){ try{CH[id].dispose();}catch(e){} } CH[id]=echarts.init(el); return CH[id]; }
+  function drawCharts(ym){
+    var FONT="'Be Vietnam Pro',sans-serif", teal='#35655B', teal2='#8FB3AC', clay='#B07A43', rust='#A65A4B', muted='#8B897E', grid='#f0ebe0';
+    var ref=ym===curMonth()?todayISO():(ym+'-'+p2(lastDay(ym)));
+    var lab=[], sD=[], sO=[], sF=[], sFix=[], sSc=[];
+    for(var k=-7;k<=0;k++){ var w=weekRange(k, ref), r=perf(w[0],w[1]); lab.push(dmy(w[0]).slice(0,5)); sD.push(r.pDone); sO.push(r.pOnTime); sF.push(r.pFirst); sFix.push(r.fb.length); sSc.push(r.score); }
+    var c1=mkChart('cv-ch-trend');
+    if(c1) c1.setOption({ textStyle:{fontFamily:FONT}, grid:{left:8,right:8,top:34,bottom:4,containLabel:true},
+      legend:{top:0,left:0,itemWidth:14,itemHeight:8,textStyle:{color:muted,fontSize:11},data:['Điểm','% Hoàn thành','% Đúng hạn','% Đạt lần đầu','Lần sửa']},
+      tooltip:{trigger:'axis',textStyle:{fontSize:12},valueFormatter:function(v){return v==null?'—':v;}},
+      xAxis:{type:'category',data:lab,axisTick:{show:false},axisLine:{lineStyle:{color:'#E4DECF'}},axisLabel:{color:muted,fontSize:11}},
+      yAxis:[{type:'value',min:0,max:100,splitLine:{lineStyle:{color:grid}},axisLabel:{color:muted,fontSize:11,formatter:'{value}%'}},{type:'value',minInterval:1,splitLine:{show:false},axisLabel:{color:muted,fontSize:11}}],
+      series:[{name:'Lần sửa',type:'bar',yAxisIndex:1,data:sFix,barWidth:'38%',itemStyle:{color:'rgba(166,90,75,.28)',borderRadius:[3,3,0,0]}},
+        {name:'Điểm',type:'line',data:sSc,connectNulls:true,symbolSize:7,lineStyle:{width:3,color:'#21303B'},itemStyle:{color:'#21303B'}},
+        {name:'% Hoàn thành',type:'line',data:sD,connectNulls:true,symbolSize:5,lineStyle:{width:2,color:teal},itemStyle:{color:teal}},
+        {name:'% Đúng hạn',type:'line',data:sO,connectNulls:true,symbolSize:5,lineStyle:{width:2,color:clay},itemStyle:{color:clay}},
+        {name:'% Đạt lần đầu',type:'line',data:sF,connectNulls:true,symbolSize:5,lineStyle:{width:2,color:teal2,type:'dashed'},itemStyle:{color:teal2}}] });
+    var its=itemsFor(ym), today=todayISO();
+    var cnt={done:0,doing:0,review:0,fix:0,over:0,todo:0};
+    its.forEach(function(t){ if(t.status==='done') cnt.done++; else if(t.status==='fix') cnt.fix++; else if(t.status==='review') cnt.review++; else if(t.due && t.due<today) cnt.over++; else if(t.status==='doing') cnt.doing++; else cnt.todo++; });
+    var c2=mkChart('cv-ch-status');
+    if(c2) c2.setOption({ textStyle:{fontFamily:FONT}, tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},
+      legend:{orient:'vertical',right:0,top:'middle',itemWidth:10,itemHeight:10,textStyle:{color:muted,fontSize:11}},
+      series:[{type:'pie',radius:['52%','78%'],center:['36%','50%'],avoidLabelOverlap:true,label:{show:true,position:'center',formatter:function(){ return its.length?Math.round(cnt.done/its.length*100)+'%\nxong':''; },fontSize:16,fontWeight:600,color:'#21303B',lineHeight:20},labelLine:{show:false},
+        data:[{name:'Xong',value:cnt.done,itemStyle:{color:teal}},{name:'Đang làm',value:cnt.doing,itemStyle:{color:teal2}},{name:'Chờ duyệt',value:cnt.review,itemStyle:{color:clay}},
+              {name:'Cần sửa',value:cnt.fix,itemStyle:{color:rust}},{name:'Quá hạn',value:cnt.over,itemStyle:{color:'#D9A99E'}},{name:'Chưa làm (còn hạn)',value:cnt.todo,itemStyle:{color:'#E4DECF'}}].filter(function(x){return x.value>0;})}] });
+    var r=perf(ym+'-01', ym+'-'+p2(lastDay(ym)));
+    var gN=['Cố định','Tự động','Tự thêm'];
+    var gd=GROUPS.map(function(g){ return r.base.filter(function(t){return t.group===g[0] && t.status==='done';}).length; });
+    var gr=GROUPS.map(function(g){ return r.base.filter(function(t){return t.group===g[0] && t.status!=='done';}).length; });
+    var c3=mkChart('cv-ch-group');
+    if(c3) c3.setOption({ textStyle:{fontFamily:FONT}, grid:{left:8,right:40,top:6,bottom:4,containLabel:true}, tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+      xAxis:{type:'value',minInterval:1,splitLine:{lineStyle:{color:grid}},axisLabel:{color:muted,fontSize:11}},
+      yAxis:{type:'category',data:gN,axisTick:{show:false},axisLine:{show:false},axisLabel:{color:'#414B54',fontSize:12}},
+      series:[{name:'Xong',type:'bar',stack:'a',data:gd,barWidth:16,itemStyle:{color:teal}},
+        {name:'Chưa xong',type:'bar',stack:'a',data:gr,itemStyle:{color:'#E4DECF'},label:{show:true,position:'right',color:muted,fontSize:11,formatter:function(p){ var t=gd[p.dataIndex]+gr[p.dataIndex]; return t?Math.round(gd[p.dataIndex]/t*100)+'%':''; }}}] });
+    if(!window.__cvRz){ window.__cvRz=1; window.addEventListener('resize',function(){ Object.keys(CH).forEach(function(k){ try{CH[k].resize();}catch(e){} }); }); }
+  }
+
+  /* ---- Cho tab Báo cáo dùng chung ---- */
+  window.cvReportSection=function(p, pv, mode){
+    if(!S.loaded){ load(); return '<div class="bc-sec full"><div class="bc-sh"><span class="dot"></span><h3>Hiệu suất công việc HR</h3></div><div class="muted">Đang tải danh sách công việc…</div></div>'; }
+    var s=iso(p.start), e=iso(p.end), r=perf(s,e), rp=perf(iso(pv.start), iso(pv.end));
+    var lbl=(mode==='week'?'tuần ':'')+(typeof bcLabel==='function'?bcLabel(mode,p):s+' – '+e);
+    var stat=function(l,v,d,sub){ return '<div class="bc-stat"><div class="s-l">'+l+(sub?'<div class="sub">'+sub+'</div>':'')+'</div><div class="s-r"><span class="s-v">'+v+'</span>'+(d||'')+'</div></div>'; };
+    var dl=function(a,b){ return (a==null||b==null)?'':(typeof bcDeltaPct==='function'?bcDeltaPct(a,b):''); };
+    var rowT=function(t){ var n=fixes(t); return '<tr><td>'+e_(t.title)+'</td><td class="nw">'+dmy(t.due)+'</td><td class="nw">'+(t.doneAt?dmy(t.doneAt):'—')+'</td><td class="nw">'+(t.kind==='tv'&&t.result?(t.result==='pass'?'Pass':'Không pass'):(t.status==='done'?('Đạt lần '+(n+1)):(t.due<todayISO()?'<span class="pill red">Quá hạn</span>':ST[t.status])))+'</td></tr>'; };
+    var list=r.items.slice().sort(sortItems);
+    var tbl=list.length?'<table class="bc-tbl"><thead><tr><th>Việc</th><th>Deadline</th><th>Xong ngày</th><th>Kết quả</th></tr></thead><tbody>'+list.map(rowT).join('')+'</tbody></table>':'<div class="muted">Không có việc có deadline trong kỳ.</div>';
+    var fbT=r.fb.length?'<table class="bc-tbl"><thead><tr><th>Ngày</th><th>Việc</th><th>Feedback</th></tr></thead><tbody>'+r.fb.map(function(x){ return '<tr><td class="nw">'+dmy(x.d)+'</td><td>'+e_(x.title)+'</td><td>'+e_(x.note||'—')+'</td></tr>'; }).join('')+'</tbody></table>':'<div class="muted" style="padding:6px 0">Không có feedback cần sửa trong kỳ.</div>';
+    return '<div class="bc-sec full"><div class="bc-sh"><span class="dot"></span><h3>Hiệu suất công việc HR</h3>'
+      +(r.score!=null?'<span class="sh-d '+(r.score>=75?'up':(r.score>=60?'':'down'))+'">'+r.score+'/100 · '+r.grade+'</span>':'')+'</div>'
+      +'<div class="bc-cap">Việc có deadline trong kỳ (kỳ đang chạy: chỉ tính việc đã tới hạn). Điểm = trung bình % hoàn thành, % đúng hạn, % đạt ngay lần đầu.</div>'
+      +'<div class="bc-row2"><div>'
+      +stat('Điểm hiệu suất', r.score==null?'—':r.score+'/100', (r.score!=null&&rp.score!=null&&typeof bcDelta==='function')?bcDelta(r.score,rp.score,true):'', r.grade)
+      +stat('% Hoàn thành', fmtP(r.pDone), dl(r.pDone,rp.pDone), r.done.length+'/'+r.base.length+' việc tới hạn')
+      +stat('% Đúng hạn', fmtP(r.pOnTime), dl(r.pOnTime,rp.pOnTime), r.onTime.length+'/'+r.done.length+' việc xong')
+      +stat('% Đạt ngay lần đầu', fmtP(r.pFirst), dl(r.pFirst,rp.pFirst), r.firstOk.length+'/'+r.graded.length+' việc xong')
+      +stat('Số lần sửa (feedback)', r.fb.length, typeof bcDelta==='function'?bcDelta(r.fb.length,rp.fb.length,false):'', '')
+      +'</div><div>'+evalHtml(r, rp, lbl)+'</div></div>'
+      +'<div class="bc-minih">Danh sách việc trong kỳ</div>'+tbl
+      +'<div class="bc-minih">Feedback của sếp trong kỳ</div>'+fbT
+      +'</div>';
+  };
+  window.cvPerfScore=function(p){ if(!S.loaded) return null; return perf(iso(p.start), iso(p.end)).score; };
+
   window.renderCongViec=function(){
     css();
     if(S.form && document.getElementById('cvf-title')) readForm(); // giữ chữ đang gõ khi trang tự vẽ lại
@@ -2743,7 +2904,7 @@ function ngStyle(){ return '<style id="ng-style">'
       if(bl.length) html+='<div class="cv-banner"><i class="ti ti-history"></i>Các tháng trước còn việc chưa xong (HĐ / thử việc / việc tự thêm):'
         +bl.map(function(b){ return '<button class="cv-chip" onclick="cvGoMonth(\''+b[0]+'\')">'+monthLabel(b[0]).replace('Tháng ','T')+': '+b[1]+'</button>'; }).join('')+'</div>';
     }
-    html+='<div class="stat-row">'+kpis+'</div>'
+    html+=perfSection(ym)
       +formHtml()
       +'<div class="toolbar">'
       +'<div class="tb-search"><i class="ti ti-search"></i><input id="cv-q" placeholder="Tìm việc, người, phòng…" value="'+e_(S.f.q)+'" oninput="cvOn()"></div>'
@@ -2753,7 +2914,7 @@ function ngStyle(){ return '<style id="ng-style">'
       +'<span class="tb-count" id="cv-count"></span>'
       +'</div>'
       +'<div id="cv-groups"></div>';
-    setTimeout(renderBody,0);
+    setTimeout(function(){ renderBody(); drawCharts(ym); },0);
     return html;
   };
 })();
