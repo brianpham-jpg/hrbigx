@@ -1182,7 +1182,8 @@ function updateStats(){
   const presentIds=new Set(records.filter(r=>r.status!=='K').map(r=>r.id));
   document.getElementById('stat-present').textContent = presentIds.size;
   document.getElementById('stat-late').textContent    = records.filter(r=>(r.status==='T-S'||r.status==='T-C'||r.status==='T-C2')&&(r.lateMin||0)>=3).length; /* [2S] tính cả trễ chiều */
-  document.getElementById('stat-absent').textContent  = Math.max(0, emps.filter(e=>!presentIds.has(e.id)).length);
+  const _act=emps.filter(e=>!RESIGNED_IDS.has(e.id)&&!(RESIGNED_FROM[e.id]&&today>=RESIGNED_FROM[e.id])&&(typeof ccStatusToday!=='function'||ccStatusToday(e.id)!=='ĐÃ NGHỈ')); // [D] bỏ người đã nghỉ, khớp ô "Chưa điểm danh"
+  document.getElementById('stat-absent').textContent  = Math.max(0, _act.filter(e=>!presentIds.has(e.id)).length);
   document.getElementById('stat-total').textContent   = emps.length || records.length;
 }
 
