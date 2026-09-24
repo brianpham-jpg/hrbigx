@@ -2,7 +2,6 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BigX – Quản lý Chấm Công</title>
-<link href="./BigX – Quản lý Chấm Công_files/css2" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -626,6 +625,7 @@ async function loadFromCloud() {
     const resp = await bxAuthedFetch(FIREBASE_URL);
     if (!resp.ok) return;
     const data = await resp.json();
+    if (window.__bxCloudReady && window.__bxDirtyAt) return; // [E] vừa có chỉnh sửa trong lúc đang tải → giữ bản máy, không ghi đè
     window.__bxCloudReady = true; // [A3] đã đọc được cloud → từ giờ mới cho phép ghi lên
     if (!data) return;
     if (data.attendance && Object.keys(data.attendance).length)
@@ -671,10 +671,11 @@ function syncToCloud() {
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(async () => {
     try {
+      const _t = window.__bxDirtyAt;
       const payload = bxCloudPayload();
       const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       if (!_r.ok) throw new Error('HTTP ' + _r.status);
-      window.__bxDirtyAt = 0;
+      if (window.__bxDirtyAt === _t) window.__bxDirtyAt = 0; // [E] có sửa mới trong lúc gửi thì giữ cờ
       _lastSync = Date.now(); bxPushSheet();
     } catch(e) { console.warn('Cloud sync error:', e); setTimeout(syncToCloud, 15000); /* [A3] lỗi → thử lại, giữ cờ chưa lưu */ }
   }, 1500);
@@ -709,7 +710,7 @@ const STATUS_CODES = {
   'CS':   { label:'Chỉ có sáng', bg:'#F6EBD3',          color:'#8a5a12' },   // [2S] 0,5 công — buổi chiều chờ xử lý
   'CC':   { label:'Chỉ có chiều', bg:'#F6EBD3',         color:'#8a5a12' },   // [2S] 0,5 công — buổi sáng chờ xử lý
 };
-const SIMPLE_STATUSES = ['1','T-S','T-C2','T-C','T-S-P','T-C-P','N-S','N-C','P','P-KL','K','NL']; // [B1] thêm T-C2/T-C/N-C
+const SIMPLE_STATUSES = ['1','T-S','T-C2','T-C','T-S-P','T-C-P','N-S','N-C','N-S-K','N-C-K','P','P-KL','K','NL']; // [B1] thêm T-C2/T-C/N-C · [E] thêm N-S-K/N-C-K
 const RESIGNED_IDS = new Set(['NV027','NV037','NV040','NV031']); // NV031 = Brian (admin)
 const RESIGNED_FROM = {'NV028':'2026-07-04','NV047':'2026-07-04','NV053':'2026-09-07'}; // ẩn khỏi 'Chưa điểm danh' từ ngày này
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6',
@@ -732,7 +733,7 @@ const LS_CC_DATA    = 'bigx_cc';           // { 'empId_YYYY_M': { 'YYYY-MM-DD': 
 const LS_USER       = 'bigx_user';
 
 function getAttendance(){ try{return JSON.parse(localStorage.getItem(LS_ATTENDANCE))||{}}catch(e){return{}} }
-function setAttendance(d){ localStorage.setItem(LS_ATTENDANCE, JSON.stringify(d)); syncToCloud(); syncAllAttToCC(); }
+function setAttendance(d){ if(!window.__bxCloudReady){ alert('Đang tải dữ liệu từ cloud — đợi vài giây rồi thao tác lại (thay đổi này CHƯA được lưu).'); try{ renderTodayAttendance(); renderAbsentList(); }catch(e){} return false; } localStorage.setItem(LS_ATTENDANCE, JSON.stringify(d)); syncToCloud(); syncAllAttToCC(); return true; } // [E]
 const DEFAULT_EMPLOYEES = [{"dept": "Phòng MKT", "id": "NV008", "leaveBalance": {"remaining": -2}, "name": "Nguyễn Thị Thu Uyên", "position": ""}, {"dept": "Phòng MKT", "id": "NV022", "leaveBalance": {"remaining": -4.5}, "name": "Nguyễn Hoài Nam", "position": ""}, {"dept": "Phòng MKT", "id": "NV016", "leaveBalance": {"remaining": 0.78}, "name": "Trần Nguyễn Ngọc Việt", "position": ""}, {"dept": "Phòng MKT", "id": "NV023", "leaveBalance": {"remaining": 2.5}, "name": "Lê Doãn Khánh", "position": ""}, {"dept": "Phòng MKT", "id": "NV030", "leaveBalance": {"remaining": 3.75}, "name": "Lê Văn Nguyên", "position": ""}, {"dept": "Phòng MKT", "id": "NV033", "leaveBalance": {"remaining": 3.5}, "name": "Hồ Bảo Trung", "position": ""}, {"dept": "Phòng MKT", "id": "NV034", "leaveBalance": {"remaining": 2}, "name": "Nguyễn Hoàng Huy", "position": ""}, {"dept": "Phòng MKT", "id": "NV035", "leaveBalance": {"remaining": 3.3}, "name": "Ngô Huy", "position": ""}, {"dept": "Phòng MKT", "id": "NV036", "leaveBalance": {"remaining": -11}, "name": "Trần Quang Minh", "position": ""}, {"dept": "Booking KOC/KOL", "id": "NV039", "leaveBalance": {"remaining": 1}, "name": "Phan Thụy Trúc Đào", "position": ""}, {"dept": "Booking KOC/KOL", "id": "NV042", "leaveBalance": {"remaining": 0}, "name": "Trịnh Thị Ngọc Phụng", "position": ""}, {"dept": "Booking KOC/KOL", "id": "NV043", "leaveBalance": {"remaining": 0}, "name": "Phạm Thị Thu Thủy", "position": ""}, {"dept": "Account", "id": "NV038", "leaveBalance": {"remaining": 1}, "name": "Nguyễn Thị Thu Hương", "position": "Account"}, {"dept": "Creative", "id": "NV041", "leaveBalance": {"remaining": 0}, "name": "Huỳnh Công Nghĩa", "position": "Senior Edit Capcat"}, {"dept": "Creative", "id": "NV044", "leaveBalance": {"remaining": 1.75}, "name": "Trần Diễm Chi", "position": "Creative Video Content Exec"}, {"dept": "Phòng BD", "id": "NV019", "leaveBalance": {"remaining": 1}, "name": "Trần Thị Tâm", "position": ""}, {"dept": "Phòng Kế toán", "id": "NV020", "leaveBalance": {"remaining": -6.5}, "name": "Tống Thị Kim Dung", "position": ""}, {"dept": "Phòng Kế toán", "id": "NV037", "leaveBalance": {"remaining": 0}, "name": "Nguyễn Thị Thiết", "position": ""}, {"dept": "Phòng Kế toán", "id": "NV045", "leaveBalance": {"remaining": -1}, "name": "Nguyễn Thị Bé", "position": ""}, {"dept": "Phòng Sales", "id": "NV025", "leaveBalance": {"remaining": -2}, "name": "Võ Thị Na Na", "position": ""}, {"dept": "Phòng Sales", "id": "NV027", "leaveBalance": {"remaining": 0}, "name": "Trần Nhật Vi", "position": ""}, {"dept": "Phòng Sales", "id": "NV028", "leaveBalance": {"remaining": 3}, "name": "Lê Thị Hồng Cúc", "position": ""}, {"dept": "Phòng Sales", "id": "NV040", "leaveBalance": {"remaining": 0}, "name": "Nguyễn Kim Hưng", "position": ""}, {"dept": "Phòng Sales", "id": "NV046", "leaveBalance": {"remaining": 1}, "name": "Nguyễn Ngọc Thảo Vy", "position": ""}, {"dept": "Phòng Sales", "id": "NV047", "leaveBalance": {"remaining": -1}, "name": "Lê Minh Thiện", "position": ""}, {"dept": "Phòng Sales", "id": "NV048", "leaveBalance": {"remaining": -5}, "name": "Trần Quang", "position": ""}, {"dept": "Phòng tuyển dụng", "id": "NV031", "leaveBalance": {"remaining": 3.5}, "name": "Phạm Nguyễn Quế An", "position": ""}];
 function getEmployees(){
   try{
@@ -1322,7 +1323,7 @@ function applyOcrMatches(session='sang'){
   const checks=document.querySelectorAll('#ocr-result-box-'+session+' input[type=checkbox][data-id]:not(:disabled):checked');
   const today=todayStr(); const all=getAttendance();
   if(!all[today]) all[today]=[];
-  const existIds=new Set(all[today].map(r=>r.id));
+  const existIds=new Set(all[today].filter(r=>(r.session||'sang')===session).map(r=>r.id)); // [E] trùng theo buổi
   const time = session === 'chieu' ? '13:00' : '09:00';
   let added=0;
   checks.forEach(cb=>{
@@ -1430,7 +1431,9 @@ function saveAttendance(){
     let idx=all[today].findIndex(r=>r.id===state.editingId && (r.session||'sang')===_ses); // [B1] đúng ca
     if(idx<0) idx=all[today].findIndex(r=>r.id===state.editingId);
     if(empId!==state.editingId && all[today].some((r,i)=>i!==idx && r.id===empId && (r.session||'sang')===_ses)){ alert('Nhân viên này đã có điểm danh ca này.'); return; }
+    const _oldId=idx>=0?all[today][idx].id:null;
     if(idx>=0) all[today][idx]={...all[today][idx],id:empId,name,time,status,lateMin,note,manual:true,session:_ses}; // [B1] đổi NV thì đổi luôn mã
+    if(window.__bxCloudReady && _oldId && _oldId!==empId && !all[today].some(r=>r.id===_oldId)){ try{ const cc=getCCData(), k=ccCycleKey(_oldId,today); if(cc[k]&&cc[k][today]&&!cc[k][today].manualOverride){ delete cc[k][today]; localStorage.setItem(LS_CC_DATA, JSON.stringify(cc)); } }catch(e){} } // [E] bỏ ngày công ma của người cũ
   } else {
     // Use real NV ID from dropdown — guaranteed correct
     const existIdx = all[today].findIndex(r => r.id === empId && (r.session||'sang') === (state.editingSession||'sang'));
@@ -1440,7 +1443,7 @@ function saveAttendance(){
       all[today].push({id:empId, name, time, status, lateMin, note, manual:true, session:state.editingSession||'sang'});
     }
   }
-  setAttendance(all);
+  if(!setAttendance(all)) return; // [E] chưa tải xong cloud → giữ form
   closeModal('modal-add');
   renderTodayAttendance(); renderAbsentList(); updateStats(); renderHistory();
 }
@@ -1456,7 +1459,7 @@ function getDismissed(){
   return JSON.parse(localStorage.getItem('bigx_dismissed_'+todayStr())||'[]');
 }
 function setDismissed(ids){
-  localStorage.setItem('bigx_dismissed_'+todayStr(),JSON.stringify(ids));
+  localStorage.setItem('bigx_dismissed_'+todayStr(),JSON.stringify(ids)); try{ syncToCloud(); }catch(e){} // [E]
 }
 function dismissAbsent(id, session){
   const ids=getDismissed(); if(session==='chieu') id=id+'|chieu'; // [2S] bỏ qua theo buổi
@@ -1507,7 +1510,7 @@ function renderAbsentList2S(){
   const miss={sang:base.filter(e=>!has(e.id,'sang')&&!dis.has(e.id)), chieu:showChieu?base.filter(e=>!has(e.id,'chieu')&&!dis.has(e.id+'|chieu')):[]};
   const el=document.getElementById('absent-list'), cnt=document.getElementById('absent-count'); if(!el) return;
   cnt.textContent=miss.sang.length+miss.chieu.length;
-  const row=(emp,ses)=>{ const ini=emp.name.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase(); const nm=null; // [C3] dùng jsAttr
+  const row=(emp,ses)=>{ const ini=emp.name.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase(); 
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
       <div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${ini}</div><span style="font-size:13px;color:#21303B">${hx(emp.name)}</span></div>
       <div style="display:flex;gap:5px">
@@ -1820,7 +1823,7 @@ function bxPhepAvail(empId, year, month){
   if(isNoLeave(empId)||isResigned(empId)) return 0;
   var off=empOfficialFrom(empId); if(off&&(year<off.y||(year===off.y&&month<off.m))) return 0;
   var con=calcPhepConLai(empId, year, month, true); if(con==null) return null;
-  return Math.round((con+leaveUsedFromBang(empId, year, month))*1000)/1000;
+  return Math.max(0, Math.round((con+leaveUsedFromBang(empId, year, month))*1000)/1000); // [E] không âm
 }
 function renderCalendarExpand(emp, year, month){
   const empCC=getEmpCCForCycle(emp.id,year,month);
@@ -2050,6 +2053,7 @@ function saveDayStatus(){
   const lateMin=parseInt(document.getElementById('day-late-min').value)||0;
   const noteVal=document.getElementById('day-note').value.trim();const faceS=document.getElementById('day-face-s').checked, faceC=document.getElementById('day-face-c').checked;const faceIssue=document.getElementById('day-face-issue').checked||faceS||faceC;
   const entry={status:code, lateMin, manualOverride:true};
+  { const _old=(getCCData()[ccCycleKey(empId, dateStr)]||{})[dateStr]; if(_old && _old.status===code && Array.isArray(_old.lates) && _old.lates.length && lateMin===(+_old.lateMin||0)) entry.lates=_old.lates; } // [E] không làm mất lượt trễ khi chỉ sửa ghi chú
   if(noteVal) entry.note=noteVal;if(faceIssue) entry.faceIssue=true;if(faceS) entry.faceS=true;if(faceC) entry.faceC=true;
   const all=getCCData();
   const key=ccCycleKey(empId, dateStr);
@@ -2171,15 +2175,15 @@ function bxSheetPayload(){
  var LH='ARRAYFORMULA(LET(r,'+DR+',t,ARRAYFORMULA(TO_TEXT(r)),'
    +'m_a,ARRAYFORMULA(IFERROR(VALUE(REGEXEXTRACT(t,"(\\d+)\'")),0)),'
    +'m_b,ARRAYFORMULA(IFERROR(VALUE(REGEXEXTRACT(t,"\\d+\'.*?(\\d+)\'")),0)),'
-   +'isT,ARRAYFORMULA(N(REGEXMATCH(t,"^T-(S|C|C2) "))),'
-   +'isP,ARRAYFORMULA(N(REGEXMATCH(t,"^T-[SC]-P "))),'
+   +'isT,ARRAYFORMULA(N(REGEXMATCH(t,"^T-(S|C|C2)( |$)"))),'
+   +'isP,ARRAYFORMULA(N(REGEXMATCH(t,"^T-[SC]-P( |$)"))),'
    +'isN,ARRAYFORMULA(N(REGEXMATCH(t,"^N-[SC]"))),'
    +'isNK,ARRAYFORMULA(N(REGEXMATCH(t,"^N-[SC]-K"))),'
    +'isH,ARRAYFORMULA(N(REGEXMATCH(t,"^C[SC]( |$)"))),'
    +'u_a,(isT+isN+isH)*m_a,u_b,m_b,ov,(u_a>45)+(u_b>45),'
    +'cong,SUM(r)+SUMPRODUCT(ARRAYFORMULA(IF(isT*(1-0.5*ov)<0,0,isT*(1-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isN*(0.5-0.5*ov)<0,0,isN*(0.5-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isP*(1-m_a/480-0.5*ov)<0,0,isP*(1-m_a/480-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isH*(0.5-0.5*ov)<0,0,isH*(0.5-0.5*ov)))),'
    +'req,COUNTIF(r,"P")+0.5*SUMPRODUCT(isN-isNK)+SUMPRODUCT(ARRAYFORMULA(IF(ISNUMBER(r),IF(r<1,1-r,0),0)))+SUMPRODUCT(isP*m_a/480)+0.5*SUMPRODUCT((isT+isN+isP+isH)*ov),'
-   +'cap,'+CAPNUM+',';
+   +'cap,MAX(0,'+CAPNUM+'),';
  var F={};
  F.cong='='+LH+'cong))';
  F.nghiPhep='='+LH+'MIN(req,cap)))';
@@ -2218,10 +2222,10 @@ function bxSheetPayload(){
   return {y,m,workdays:wd,dates,dows,rows,updatedAt:p2(now.getDate())+'/'+p2(now.getMonth()+1)+'/'+now.getFullYear()+' '+p2(now.getHours())+':'+p2(now.getMinutes())};
 }
 function bxPushSheet(){
-    var __now=Date.now(); if(window.__sheetPushInFlight && (__now-window.__sheetPushInFlight)<15000) return; window.__sheetPushInFlight=__now;
+    var __now=Date.now(); if(window.__sheetPushInFlight && (__now-window.__sheetPushInFlight)<15000){ if(!window.__sheetPushQueued){ window.__sheetPushQueued=true; setTimeout(function(){ window.__sheetPushQueued=false; bxPushSheet(); }, 15000-(__now-window.__sheetPushInFlight)+200); } return; } window.__sheetPushInFlight=__now; // [E] đẩy bù sau, không bỏ
   try{ bxAuthedFetch('https://script.google.com/macros/s/AKfycbwUP4tkTbtyKEjMb8hsb-D9XklP-2YBpS3-qhoD3jR6dbNDJRIAP0XznACuywlMOKjS/exec',{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'silent=1&data='+encodeURIComponent(JSON.stringify(bxSheetPayload()))}).catch(function(e){console.warn('sheet push',e);}); }catch(e){console.warn('sheet push',e);}
 }
-async function autoPushSheet(force){try{var cc=localStorage.getItem('bigx_cc')||'',at=localStorage.getItem('bigx_attendance')||'';var sig=cc.length+'|'+at.length+'|'+cc.slice(-60)+'|'+at.slice(-60);var now=Date.now();if(!force){if(sig===window.__sheetSig)return;if(now-(window.__sheetPushAt||0)<120000)return;}window.__sheetPushAt=now;window.__sheetSig=sig;bxPushSheet();}catch(e){}}
+async function autoPushSheet(force){try{var cc=localStorage.getItem('bigx_cc')||'',at=localStorage.getItem('bigx_attendance')||'';var __h=function(x){var h=5381;for(var i=0;i<x.length;i++){h=((h<<5)+h+x.charCodeAt(i))|0;}return h;};var sig=cc.length+'|'+at.length+'|'+__h(cc)+'|'+__h(at); /* [E] chữ ký toàn bộ nội dung */var now=Date.now();if(!force){if(sig===window.__sheetSig)return;if(now-(window.__sheetPushAt||0)<120000)return;}window.__sheetPushAt=now;window.__sheetSig=sig;bxPushSheet();}catch(e){}}
 try{setTimeout(function(){autoPushSheet(true);},8000);setInterval(function(){autoPushSheet(false);},120000);}catch(e){}
 function openGSheet(){
   bxPushSheet();
@@ -2438,6 +2442,9 @@ button,input,select,textarea{font-family:inherit!important;}
     var emps=hsRawEmployees().slice();
     var have={}; emps.forEach(function(e){ have[hsNorm(e.name)]=1; have[hsNorm(e.id)]=1; }); // chốt chặn trùng lần cuối
     var added=0;
+    var noCode=picks.filter(function(p){ return !String(p.maNV||'').trim(); }).map(function(p){ return p.hoTen; });
+    picks=picks.filter(function(p){ return String(p.maNV||'').trim(); }); // [E] thiếu mã NV → không thêm (mã rỗng sẽ trùng nhau, không tính được công)
+    if(noCode.length) alert('Bỏ qua '+noCode.length+' người chưa có Mã NV trong Hồ sơ: '+noCode.join(', ')+'. Hãy điền Mã NV trong Hồ sơ rồi đồng bộ lại.');
     picks.forEach(function(p){
       if(have[hsNorm(p.hoTen)]||(p.maNV&&have[hsNorm(p.maNV)])) return; // bỏ nếu bằng cách nào đó đã có
       var type=hsMapType(p.loaiHD);
