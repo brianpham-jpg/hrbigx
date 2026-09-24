@@ -394,7 +394,7 @@ body.guest-mode .admin-only{display:none!important}
             </div>
 
           </div>
-          <div class="card" style="margin-top:14px"><div style="font-weight:700;font-size:14px;margin-bottom:10px">💸 Bảng trừ lương — đi trễ (chu kỳ này)</div><div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start"><div id="fine-table" style="flex:2;min-width:300px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tbody><tr style="color:var(--gray);text-align:left"><th style="padding:4px">Nhân viên</th><th>Số lần</th><th>Tổng phút</th><th>Trừ 0,5 công</th><th style="text-align:right">Tiền phạt</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Nguyễn Thụy Thanh Trinh</td><td>1</td><td>23'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">50.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Vũ Đào Trang Nhi</td><td>1</td><td>5'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Trần Diễm Chi</td><td>1</td><td>4'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:6px 4px;font-weight:600">Nguyễn Ngọc Thảo Vy</td><td>1</td><td>4'</td><td>—</td><td style="text-align:right;font-weight:700;color:var(--red)">20.000đ</td></tr></tbody></table></div><div style="flex:1;min-width:230px"><div style="font-size:11px;font-weight:700;color:var(--gray);margin-bottom:6px">QUY ĐỊNH PHẠT ĐI TRỄ</div><table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid var(--gray-bd);border-radius:8px;overflow:hidden"><tbody><tr style="background:#F6F3EC;color:var(--gray);text-align:left"><th style="padding:8px 10px;font-size:11px">THỜI GIAN TRỄ</th><th style="padding:8px 10px;font-size:11px">HÌNH THỨC PHẠT</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">03 – 20 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">20.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">21 – 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">50.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">Trên 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">Tính nghỉ 01 buổi sáng</td></tr></tbody></table></div></div></div>
+          <div class="card" style="margin-top:14px"><div style="font-weight:700;font-size:14px;margin-bottom:10px">💸 Bảng trừ lương — đi trễ (chu kỳ này)</div><div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start"><div id="fine-table" style="flex:2;min-width:300px"></div><div style="flex:1;min-width:230px"><div style="font-size:11px;font-weight:700;color:var(--gray);margin-bottom:6px">QUY ĐỊNH PHẠT ĐI TRỄ</div><table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid var(--gray-bd);border-radius:8px;overflow:hidden"><tbody><tr style="background:#F6F3EC;color:var(--gray);text-align:left"><th style="padding:8px 10px;font-size:11px">THỜI GIAN TRỄ</th><th style="padding:8px 10px;font-size:11px">HÌNH THỨC PHẠT</th></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">03 – 20 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">20.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">21 – 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">50.000đ / lần</td></tr><tr style="border-top:1px solid var(--gray-bd)"><td style="padding:8px 10px">Trên 45 phút</td><td style="padding:8px 10px;color:var(--red);font-weight:600;background:#F0DED8">Tính nghỉ 01 buổi sáng</td></tr></tbody></table></div></div></div>
 <!-- legacy ids for backward compat -->
           <div id="att-list" style="display:none"></div>
           
@@ -410,223 +410,7 @@ body.guest-mode .admin-only{display:none!important}
                 <span id="absent-count" style="background:var(--red-bg);color:var(--red);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">24</span>
               </div>
             </div>
-            <div id="absent-list" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto"><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TĐ</div>
-        <span style="font-size:13px;color:#21303B">Phan Thụy Trúc Đào</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV039&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV039&#39;,&#39;Phan Thụy Trúc Đào&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NP</div>
-        <span style="font-size:13px;color:#21303B">Trịnh Thị Ngọc Phụng</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV042&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV042&#39;,&#39;Trịnh Thị Ngọc Phụng&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
-        <span style="font-size:13px;color:#21303B">Phạm Thị Thu Thủy</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV043&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV043&#39;,&#39;Phạm Thị Thu Thủy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
-        <span style="font-size:13px;color:#21303B">Nguyễn Thụy Thanh Trinh</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV050&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV050&#39;,&#39;Nguyễn Thụy Thanh Trinh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TN</div>
-        <span style="font-size:13px;color:#21303B">Vũ Đào Trang Nhi</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV051&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV051&#39;,&#39;Vũ Đào Trang Nhi&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">MH</div>
-        <span style="font-size:13px;color:#21303B">Phạm Mai Hân</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV053&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV053&#39;,&#39;Phạm Mai Hân&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TH</div>
-        <span style="font-size:13px;color:#21303B">Nguyễn Thị Thu Hương</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV038&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV038&#39;,&#39;Nguyễn Thị Thu Hương&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TU</div>
-        <span style="font-size:13px;color:#21303B">Nguyễn Thị Thu Uyên</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV008&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV008&#39;,&#39;Nguyễn Thị Thu Uyên&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">DC</div>
-        <span style="font-size:13px;color:#21303B">Trần Diễm Chi</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV044&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV044&#39;,&#39;Trần Diễm Chi&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TD</div>
-        <span style="font-size:13px;color:#21303B">Nguyễn Tiến Duyệt</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV049&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV049&#39;,&#39;Nguyễn Tiến Duyệt&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TP</div>
-        <span style="font-size:13px;color:#21303B">Phan Thanh Phú</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV052&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV052&#39;,&#39;Phan Thanh Phú&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">KD</div>
-        <span style="font-size:13px;color:#21303B">Tống Thị Kim Dung</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV020&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV020&#39;,&#39;Tống Thị Kim Dung&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TB</div>
-        <span style="font-size:13px;color:#21303B">Nguyễn Thị Bé</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV045&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV045&#39;,&#39;Nguyễn Thị Bé&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NN</div>
-        <span style="font-size:13px;color:#21303B">Võ Thị Na Na</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV025&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV025&#39;,&#39;Võ Thị Na Na&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TV</div>
-        <span style="font-size:13px;color:#21303B">Nguyễn Ngọc Thảo Vy</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV046&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV046&#39;,&#39;Nguyễn Ngọc Thảo Vy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TQ</div>
-        <span style="font-size:13px;color:#21303B">Trần Quang</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV048&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV048&#39;,&#39;Trần Quang&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NV</div>
-        <span style="font-size:13px;color:#21303B">Trần Nguyễn Ngọc Việt</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV016&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV016&#39;,&#39;Trần Nguyễn Ngọc Việt&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">DK</div>
-        <span style="font-size:13px;color:#21303B">Lê Doãn Khánh</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV023&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV023&#39;,&#39;Lê Doãn Khánh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">VN</div>
-        <span style="font-size:13px;color:#21303B">Lê Văn Nguyên</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV030&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV030&#39;,&#39;Lê Văn Nguyên&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">HH</div>
-        <span style="font-size:13px;color:#21303B">Nguyễn Hoàng Huy</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV034&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV034&#39;,&#39;Nguyễn Hoàng Huy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">NH</div>
-        <span style="font-size:13px;color:#21303B">Ngô Huy</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV035&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV035&#39;,&#39;Ngô Huy&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">QM</div>
-        <span style="font-size:13px;color:#21303B">Trần Quang Minh</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV036&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV036&#39;,&#39;Trần Quang Minh&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">HN</div>
-        <span style="font-size:13px;color:#21303B">Nguyễn Hoài Nam</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV054&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV054&#39;,&#39;Nguyễn Hoài Nam&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:8px;background:#FBFAF6;border:1px solid var(--gray-bd)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--red-bg);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">TT</div>
-        <span style="font-size:13px;color:#21303B">Trần Thị Tâm</span>
-      </div>
-      <div style="display:flex;gap:5px">
-        <button onclick="dismissAbsent(&#39;NV019&#39;)" title="Bỏ qua" style="padding:3px 8px;background:#eef4f1;color:#35655B;border:1px solid #c4dcd4;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1">✓</button>
-        <button onclick="quickAddAttendance(&#39;NV019&#39;,&#39;Trần Thị Tâm&#39;)" style="padding:3px 10px;background:var(--purple);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Thêm</button>
-      </div>
-    </div></div>
+            <div id="absent-list" style="display:flex;flex-direction:column;gap:4px;max-height:280px;overflow-y:auto"></div>
           </div>
 
           <div class="card">
@@ -636,35 +420,7 @@ body.guest-mode .admin-only{display:none!important}
               </div>
               <div class="card-head-title">Lịch sử gần đây</div>
             </div>
-            <div id="history-list"><div class="hist-row">
-      <span class="hist-date">26/08</span>
-      <span style="font-size:12px;font-weight:500">26 có mặt</span>
-      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-26&#39;)">Xem</span>
-    </div><div class="hist-row">
-      <span class="hist-date">25/08</span>
-      <span style="font-size:12px;font-weight:500">26 có mặt</span>
-      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-25&#39;)">Xem</span>
-    </div><div class="hist-row">
-      <span class="hist-date">24/08</span>
-      <span style="font-size:12px;font-weight:500">26 có mặt</span>
-      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-24&#39;)">Xem</span>
-    </div><div class="hist-row">
-      <span class="hist-date">21/08</span>
-      <span style="font-size:12px;font-weight:500">26 có mặt</span>
-      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-21&#39;)">Xem</span>
-    </div><div class="hist-row">
-      <span class="hist-date">20/08</span>
-      <span style="font-size:12px;font-weight:500">26 có mặt</span>
-      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-20&#39;)">Xem</span>
-    </div><div class="hist-row">
-      <span class="hist-date">19/08</span>
-      <span style="font-size:12px;font-weight:500">25 có mặt</span>
-      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-19&#39;)">Xem</span>
-    </div><div class="hist-row">
-      <span class="hist-date">18/08</span>
-      <span style="font-size:12px;font-weight:500">26 có mặt</span>
-      <span class="hist-pill" onclick="viewHistoryDay(&#39;2026-08-18&#39;)">Xem</span>
-    </div></div>
+            <div id="history-list"></div>
           </div>
         </div>
       </div>
@@ -724,7 +480,7 @@ body.guest-mode .admin-only{display:none!important}
         </div>
       </div>
 
-      <div style="margin: 0px 0px 10px;"><input id="bx-name-search" type="text" placeholder="🔍 Tìm nhân viên theo tên..." style="width:280px;max-width:100%;padding:8px 12px;border:1px solid #DCD3BE;border-radius:8px;font-size:14px;outline:none"></div><div class="emp-table-wrap">
+      <div class="emp-table-wrap">
         <table class="emp-table">
           <thead>
             <tr>
@@ -736,432 +492,7 @@ body.guest-mode .admin-only{display:none!important}
               <th>Bảng chấm công</th>
             </tr>
           </thead>
-          <tbody id="emp-tbody"><tr><td colspan="6" style="padding:7px 14px;background:#e6f0ec;color:#274b43;font-size:12px;font-weight:600;letter-spacing:.2px">Team TSP · 1 người</td></tr>
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">TT</div>
-          Trần Thị Tâm
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV019</td>
-        
-        <td><select onchange="changeDept(&#39;NV019&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP" selected="">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV019&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    <tr><td colspan="6" style="padding:7px 14px;background:#EDE8DC;color:#274b43;font-size:12px;font-weight:600;letter-spacing:.2px">Team Booking KOC/KOLs · 6 người</td></tr>
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">PĐ</div>
-          Phan Thụy Trúc Đào
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV039</td>
-        
-        <td><select onchange="changeDept(&#39;NV039&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>1.5/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV039&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">TP</div>
-          Trịnh Thị Ngọc Phụng
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV042</td>
-        
-        <td><select onchange="changeDept(&#39;NV042&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV042&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">PT</div>
-          Phạm Thị Thu Thủy
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV043</td>
-        
-        <td><select onchange="changeDept(&#39;NV043&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV043&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">NT</div>
-          Nguyễn Thụy Thanh Trinh<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV050</td>
-        
-        <td><select onchange="changeDept(&#39;NV050&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#A65A4B;font-weight:500">1 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV050&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">VN</div>
-          Vũ Đào Trang Nhi<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV051</td>
-        
-        <td><select onchange="changeDept(&#39;NV051&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#A65A4B;font-weight:500">1 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV051&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">PH</div>
-          Phạm Mai Hân<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV053</td>
-        
-        <td><select onchange="changeDept(&#39;NV053&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs" selected="">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>1.5/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV053&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    <tr><td colspan="6" style="padding:7px 14px;background:#e6efdd;color:#274b43;font-size:12px;font-weight:600;letter-spacing:.2px">Team Performance · 7 người</td></tr>
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">TV</div>
-          Trần Nguyễn Ngọc Việt
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV016</td>
-        
-        <td><select onchange="changeDept(&#39;NV016&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV016&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">LK</div>
-          Lê Doãn Khánh
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV023</td>
-        
-        <td><select onchange="changeDept(&#39;NV023&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV023&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">LN</div>
-          Lê Văn Nguyên
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV030</td>
-        
-        <td><select onchange="changeDept(&#39;NV030&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV030&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">NH</div>
-          Nguyễn Hoàng Huy
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV034</td>
-        
-        <td><select onchange="changeDept(&#39;NV034&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV034&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">NH</div>
-          Ngô Huy
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV035</td>
-        
-        <td><select onchange="changeDept(&#39;NV035&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV035&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">TM</div>
-          Trần Quang Minh<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#35655B;background:#e2efe9">Part-time</span>
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV036</td>
-        
-        <td><select onchange="changeDept(&#39;NV036&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV036&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">NN</div>
-          Nguyễn Hoài Nam
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV054</td>
-        
-        <td><select onchange="changeDept(&#39;NV054&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance" selected="">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV054&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    <tr><td colspan="6" style="padding:7px 14px;background:#EFE3D0;color:#6b4f28;font-size:12px;font-weight:600;letter-spacing:.2px">Team Customer Account Manager · 1 người</td></tr>
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">NH</div>
-          Nguyễn Thị Thu Hương
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV038</td>
-        
-        <td><select onchange="changeDept(&#39;NV038&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager" selected="">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV038&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    <tr><td colspan="6" style="padding:7px 14px;background:#e2efe9;color:#213f39;font-size:12px;font-weight:600;letter-spacing:.2px">Team E - Com · 3 người</td></tr>
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">NU</div>
-          Nguyễn Thị Thu Uyên
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV008</td>
-        
-        <td><select onchange="changeDept(&#39;NV008&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV008&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">TC</div>
-          Trần Diễm Chi
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV044</td>
-        
-        <td><select onchange="changeDept(&#39;NV044&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#A65A4B;font-weight:500">1 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV044&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">ND</div>
-          Nguyễn Tiến Duyệt<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV049</td>
-        
-        <td><select onchange="changeDept(&#39;NV049&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com" selected="">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>1/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV049&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    <tr><td colspan="6" style="padding:7px 14px;background:#F0DED8;color:#7a3b32;font-size:12px;font-weight:600;letter-spacing:.2px">Team Kế toán - Nhân sự · 3 người</td></tr>
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">TD</div>
-          Tống Thị Kim Dung
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV020</td>
-        
-        <td><select onchange="changeDept(&#39;NV020&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV020&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">NB</div>
-          Nguyễn Thị Bé
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV045</td>
-        
-        <td><select onchange="changeDept(&#39;NV045&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV045&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">PA</div>
-          Phạm Nguyễn Quế An
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV031</td>
-        
-        <td><select onchange="changeDept(&#39;NV031&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự" selected="">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV031&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    <tr><td colspan="6" style="padding:7px 14px;background:#F0DED8;color:#7a4a2e;font-size:12px;font-weight:600;letter-spacing:.2px">Team Kinh Doanh · 3 người</td></tr>
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">VN</div>
-          Võ Thị Na Na
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV025</td>
-        
-        <td><select onchange="changeDept(&#39;NV025&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV025&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">NV</div>
-          Nguyễn Ngọc Thảo Vy
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV046</td>
-        
-        <td><select onchange="changeDept(&#39;NV046&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#A65A4B;font-weight:500">1 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV046&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">TQ</div>
-          Trần Quang
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV048</td>
-        
-        <td><select onchange="changeDept(&#39;NV048&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh" selected="">Team Kinh Doanh</option><option value="Team IT">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV048&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    <tr><td colspan="6" style="padding:7px 14px;background:#EDE8DC;color:#414B54;font-size:12px;font-weight:600;letter-spacing:.2px">Team IT · 1 người</td></tr>
-      <tr class="">
-        <td><div class="emp-name-cell">
-          <div class="emp-avatar-sm">PP</div>
-          Phan Thanh Phú<span style="font-size:9px;font-weight:600;padding:1px 6px;border-radius:6px;margin-left:6px;white-space:nowrap;color:#B07A43;background:#EFE3D0">Thử việc</span>
-        </div></td>
-        <td style="color:var(--gray);font-size:12px">NV052</td>
-        
-        <td><select onchange="changeDept(&#39;NV052&#39;,this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff"><option value="">— Chọn phòng —</option><option value="Team TSP">Team TSP</option><option value="Team Booking KOC/KOLs">Team Booking KOC/KOLs</option><option value="Team Performance">Team Performance</option><option value="Team Customer Account Manager">Team Customer Account Manager</option><option value="Team E - Com">Team E - Com</option><option value="Team Kế toán - Nhân sự">Team Kế toán - Nhân sự</option><option value="Team Kinh Doanh">Team Kinh Doanh</option><option value="Team IT" selected="">Team IT</option></select></td>
-        <td>2/23</td><td><span style="color:#8B897E;font-weight:400">0 ngày</span></td>
-        <td>
-          <button class="view-btn " onclick="toggleCalendar(&#39;NV052&#39;)">
-            ▦ Xem bảng
-          </button>
-        </td>
-      </tr>
-      
-    </tbody>
+          <tbody id="emp-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -1326,6 +657,7 @@ async function loadFromCloud() {
     const resp = await bxAuthedFetch(FIREBASE_URL);
     if (!resp.ok) return;
     const data = await resp.json();
+    window.__bxCloudReady = true; // [A3] đã đọc được cloud → từ giờ mới cho phép ghi lên
     if (!data) return;
     if (data.attendance && Object.keys(data.attendance).length)
       localStorage.setItem('bigx_attendance', JSON.stringify(data.attendance));
@@ -1351,6 +683,9 @@ async function loadFromCloud() {
 
 function syncToCloud() {
   if (window._guestMode) return;
+  // [A3] Chưa tải xong bản cloud thì KHÔNG ghi (tránh máy có dữ liệu cũ đè lên cloud)
+  if (!window.__bxCloudReady) { console.warn('syncToCloud: chờ tải cloud xong mới ghi'); return; }
+  window.__bxDirtyAt = Date.now(); // có thay đổi chưa lên cloud
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(async () => {
     try {
@@ -1366,14 +701,17 @@ function syncToCloud() {
         cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
         dismissed
       };
-      await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      if (!_r.ok) throw new Error('HTTP ' + _r.status);
+      window.__bxDirtyAt = 0;
       _lastSync = Date.now(); bxPushSheet();
-    } catch(e) { console.warn('Cloud sync error:', e); }
+    } catch(e) { console.warn('Cloud sync error:', e); setTimeout(syncToCloud, 15000); /* [A3] lỗi → thử lại, giữ cờ chưa lưu */ }
   }, 1500);
 }
 
 // Auto-refresh mỗi 30s để kế toán thấy data mới
 setInterval(async () => {
+  if (window.__bxDirtyAt) return; // [A3] đang có thay đổi chưa lên cloud → bỏ lượt làm mới này, tránh ghi đè mất chỉnh sửa
   await loadFromCloud();
   renderTodayAttendance(); renderAbsentList(); updateStats();
 }, 30000);
@@ -1686,42 +1024,11 @@ function doLogout(){
 // ============================
 // INIT
 // ============================
-function fixOrphanRecords(){
-  // One-time cleanup per date: remove incorrect auto-K entries, re-sync from attendance
-  const FIXED_KEY = 'bigx_cc_fixed_v2';
-  const fixed = JSON.parse(localStorage.getItem(FIXED_KEY)||'{}');
-  const att = getAttendance();
-  const cc = getCCData();
-  function toCC(r){ return STATUS_CODES[r.status]?r.status:(r.status==='ok'?'1':r.status==='late'?(((r.lateMin||0)<3)?'1':'T-S'):'K'); }
-  let changed=false;
-  Object.keys(att).forEach(dateStr=>{
-    if(fixed[dateStr]) return; // already fixed this date
-    const records = att[dateStr]||[];
-    if(!records.length) return;
-    // Clear ALL CC entries for this date
-    Object.keys(cc).forEach(key=>{ if(cc[key][dateStr]!==undefined){ delete cc[key][dateStr]; changed=true; } });
-    // Re-sync from attendance only
-    const [y,m,d]=dateStr.split('-');
-    const day=parseInt(d), month=parseInt(m), year=parseInt(y);
-    let cycleMonth=month, cycleYear=year;
-    if(day>=25){ cycleMonth=month===12?1:month+1; cycleYear=month===12?year+1:year; }
-    const byId={};
-    records.forEach(r=>{ if(!r.id) return; if(!byId[r.id]) byId[r.id]=[]; byId[r.id].push(r); });
-    Object.keys(byId).forEach(id=>{
-      const key=id+'_'+cycleYear+'_'+cycleMonth;
-      if(!cc[key]) cc[key]={};
-      const recs=byId[id]; const r=recs[0];
-      cc[key][dateStr]={status:toCC(r),lateMin:r.lateMin||0,note:r.note||''};
-    });
-    fixed[dateStr]=true;
-  });
-  if(changed){ setCCData(cc); localStorage.setItem(FIXED_KEY, JSON.stringify(fixed)); }
-}
+// [A1] ĐÃ GỠ fixOrphanRecords(): bản dọn 1 lần cũ, nếu chạy lại trên máy mới sẽ xoá hết ngày sửa tay (manualOverride) rồi đẩy đè Firebase.
 // (da go repair20260905 — ban va 1 lan ngay 5/9 da xong viec; go de khong tu chay lai/ghi de. Guard chong hong cc van giu o initApp + loadFromCloud)
 function initApp(){
   initNameSearch();
   try{ var _cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}'); if(!_cc||typeof _cc!=='object'||Array.isArray(_cc)) localStorage.setItem('bigx_cc','{}'); }catch(e){ localStorage.setItem('bigx_cc','{}'); }
-  fixOrphanRecords();
   syncAllAttToCC();
   loadFromCloud().then(()=>{ syncAllAttToCC(); renderTodayAttendance(); renderAbsentList(); updateStats(); renderBangCC(); });
   renderTodayDate();
@@ -2814,6 +2121,7 @@ async function doPublish() {
   // Lưu tay: ghi Firebase ngay + đẩy Google Sheet ngay (bỏ cơ chế vercel cũ).
   // Dữ liệu vẫn tự lưu qua syncToCloud/autoPushSheet; nút này chỉ ép sync tức thì.
   if (window._guestMode) { alert('Chế độ chỉ xem — không lưu.'); return; }
+  if (!window.__bxCloudReady) { alert('Chưa tải xong dữ liệu từ cloud — đợi vài giây rồi bấm lại.'); return; } // [A3]
   var btn = document.querySelector('.publish-btn');
   var old = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu…'; }
@@ -2830,7 +2138,9 @@ async function doPublish() {
       cc_summary: JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}'),
       dismissed
     };
-    await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    if (!_r.ok) throw new Error('HTTP ' + _r.status); // [A3] không báo "Đã lưu" khi cloud từ chối
+    window.__bxDirtyAt = 0;
     _lastSync = Date.now();
     bxPushSheet();
     if (btn) { btn.textContent = '✅ Đã lưu'; }
@@ -3014,6 +2324,7 @@ div:has(> .card > div > #file-input-chieu){grid-template-columns:1fr!important;}
 
   // Đẩy cloud NGAY (await) để vòng auto-refresh 30s không ghi đè bản mới
   async function hsPushNow(){
+    if(!window.__bxCloudReady){ console.warn('hsPushNow: chờ tải cloud xong mới ghi'); return; } // [A3]
     try{
       var dismissed={};
       Object.keys(localStorage).filter(function(k){return k.indexOf('bigx_dismissed_')===0;}).forEach(function(k){
