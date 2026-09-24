@@ -674,7 +674,7 @@ function syncToCloud() {
     try {
       const _t = window.__bxDirtyAt;
       const payload = bxCloudPayload();
-      const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) } /* [G] PATCH: chỉ ghi 5 nhánh chấm công, không xoá nhánh khác (hrtasks) */);
       if (!_r.ok) throw new Error('HTTP ' + _r.status);
       if (window.__bxDirtyAt === _t) window.__bxDirtyAt = 0; // [E] có sửa mới trong lúc gửi thì giữ cờ
       _lastSync = Date.now(); bxPushSheet();
@@ -2276,7 +2276,7 @@ async function doPublish() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu…'; }
   try {
     const payload = bxCloudPayload();
-    const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const _r = await bxAuthedFetch(FIREBASE_URL, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) } /* [G] PATCH: chỉ ghi 5 nhánh chấm công, không xoá nhánh khác (hrtasks) */);
     if (!_r.ok) throw new Error('HTTP ' + _r.status); // [A3] không báo "Đã lưu" khi cloud từ chối
     window.__bxDirtyAt = 0;
     _lastSync = Date.now();
@@ -2453,7 +2453,7 @@ button,input,select,textarea{font-family:inherit!important;}
     if(!window.__bxCloudReady){ console.warn('hsPushNow: chờ tải cloud xong mới ghi'); return; } // [A3]
     try{
       var payload=bxCloudPayload();
-      await bxAuthedFetch(FIREBASE_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      await bxAuthedFetch(FIREBASE_URL,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     }catch(e){ console.warn('hsPushNow error:', e); }
   }
 
