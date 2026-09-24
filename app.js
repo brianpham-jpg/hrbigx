@@ -1309,7 +1309,7 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_APP_URL   = 'chamcong.html?cc=13'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
+var CC_APP_URL   = 'chamcong.html?cc=14'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 var CC_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1hao-58wnwDYZPXqtJ37zlRJtohkh30FXHRNLuev4rZg/edit';
 
 function renderChamCong(){
@@ -1360,6 +1360,10 @@ window.bxMainBoot = function(){
 window.__NS_FB="https://bigx-chamcong-hr-default-rtdb.firebaseio.com/public.json";
 window.nsNorm=function(s){return String(s||'').toLowerCase().normalize('NFC').replace(/\s+/g,' ').trim();};
 window.nsMSort=function(a,b){var A=a.slice(1).split('/'),B=b.slice(1).split('/');return ((+A[1])*12+(+A[0]))-((+B[1])*12+(+B[0]));}; // [B1] sắp 'T9/2026' theo năm-tháng
+/* [B2] Đi trễ tính như tab Chấm công: chỉ lượt KHÔNG phép (T-S/T-C/T-C2) từ 3' trở lên; 1 ngày có thể 2 lượt (v.lates). T7/CN bỏ qua. */
+window.nsLates=function(v){ if(!v||typeof v!=='object') return []; if(Array.isArray(v.lates)&&v.lates.length) return v.lates.map(function(x){return +x.m||0;}).filter(function(m){return m>=3;});
+  var st=v.status, m=+v.lateMin||0; return (['T-S','T-C','T-C2'].indexOf(st)>=0 && m>=3)?[m]:[]; };
+window.nsWknd=function(d){ var w=new Date(d+'T12:00:00').getDay(); return w===0||w===6; };
 window.nsEsc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
 /* [B1] Chấm công luôn lấy từ Firebase (không dùng bản lưu cũ trong trình duyệt); quá 2 phút thì tải lại ngầm */
 window.nsuatData=function(){
@@ -1431,18 +1435,17 @@ window.renderNangSuat=function(){
       Object.keys(rec).forEach(function(d){
         var v=rec[d]; var st=(v&&typeof v==='object')?v.status:v;
         if(st===''||st==null) return;
-        var lm=(v&&typeof v==='object'&&v.lateMin)||0;
+        if(window.nsWknd(d)) return; // [B2] T7/CN không tính
         totalRec++; byMonth[ml].rec++; byMonth[ml].emp[e.id]=1;
         if(st==='1'){fullDays++; byMonth[ml].full++;}
-        // "Đi trễ" = mã bắt đầu T-S hoặc T-C (đi trễ sáng/chiều); KHÔNG tính theo lateMin để bỏ ngày đủ công còn sót phút rác
-        if(/^T-[SC]/.test(st)){lateCnt++; byMonth[ml].late++;
+        // [B2] "Đi trễ" = từng LƯỢT không phép từ 3' (giống tab Chấm công); đi trễ có phép (-P) không tính, không phạt
+        window.nsLates(v).forEach(function(lm){ lateCnt++; byMonth[ml].late++;
           var _le=lateEmp[e.id]||(lateEmp[e.id]={name:e.name,phong:dept,mon:{},tot:{c:0,m:0,f:0}});
           _le.phong=dept;
           var _mo=_le.mon[ml]||(_le.mon[ml]={c:0,m:0,f:0});
-          // tiền phạt chỉ áp cho đi trễ KHÔNG phép (mã không kết thúc -P); đi trễ có phép trừ vào phép, không phạt tiền
-          var _f=(/-P$/.test(st))?0:((lm>=3&&lm<=20)?20000:((lm>=21&&lm<=45)?50000:0));
+          var _f=(lm>=3&&lm<=20)?20000:((lm>=21&&lm<=45)?50000:0);
           _mo.c++;_mo.m+=lm;_mo.f+=_f;_le.tot.c++;_le.tot.m+=lm;_le.tot.f+=_f;
-        }
+        });
       });
     });
     byDept[dept]=byDept[dept]||{n:0,full:0,late:0,rec:0};
@@ -1672,18 +1675,21 @@ function bcCham(p){
     var id=mm[0]; var rec=cc[k]||{};
     Object.keys(rec).forEach(function(d){
       if(!bcInRangeYmd(d, sY, eY)) return;         // d = 'YYYY-MM-DD'
+      if(window.nsWknd(d)) return;                  // [B2] T7/CN không tính
       var v=rec[d]; var st=(v&&typeof v==='object')?v.status:v;
       if(st===''||st==null) return;
       if(st==='NL'||st==='ĐÃ NGHỈ') return;        // nghỉ lễ / đã nghỉ việc: không tính
       if(/^P/.test(st)||/-P$/.test(st)){ leave++; if(!/^T-[SC]/.test(st)) return; } // nghỉ phép (đi trễ có phép vẫn tính là đi làm bên dưới)
       work++;
       if(st==='1'){ full++; return; }
-      if(/^T-[SC]/.test(st)){
-        late++;
+      var _L=window.nsLates(v); // [B2] chỉ lượt không phép ≥3'
+      if(_L.length){
+        late+=_L.length;
         var e=empById[id]; var nm=e?e.name:id; var dept=(nsByName[norm(nm)]&&nsByName[norm(nm)].phong)||(e&&e.dept)||'—';
-        var o=lateBy[id]||(lateBy[id]={name:nm, dept:dept, c:0}); o.c++;
+        var o=lateBy[id]||(lateBy[id]={name:nm, dept:dept, c:0}); o.c+=_L.length;
         return;
       }
+      if(/^T-[SC]/.test(st)){ full++; return; }    // [B2] trễ <3' hoặc có phép: tính là có mặt đúng giờ
       if(st==='K'){ absent++; return; }
       // các mã nửa buổi N-S/N-C… tính vào "work" nhưng không phải full/late/absent
     });

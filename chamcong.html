@@ -830,7 +830,7 @@ function isResigned(id){ var r=empRec(id); return !!(r&&r.lastCycle!=null); }
 function leaveCycleWindow(y,m){ var sm=m===1?12:m-1, sy=m===1?y-1:y; var pad=function(n){return n<10?'0'+n:''+n;}; return [sy+'-'+pad(sm)+'-25', y+'-'+pad(m)+'-24']; }
 // Phép đã dùng tính theo BẢNG chấm công (bigx_cc = chỗ user sửa tay/chốt), KHÔNG theo điểm danh gốc.
 // → sửa ô trong bảng là phép tự trừ đúng rules. Điểm danh chỉ để ghi nhận.
-function leaveUsedFromBang(id,y,m){ var cc; try{cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}');}catch(e){cc={};} var cd=cc[id+'_'+y+'_'+m]||{}; var w=leaveCycleWindow(y,m),s0=w[0],e0=w[1],sum=0; for(var dt in cd){ if(dt>=s0&&dt<=e0){ var v=cd[dt]; if(v&&v.status){ sum+=window.tinhNgay(String(v.status),v.lateMin,false).phep; } } } return Math.round(sum*1000)/1000; }
+function leaveUsedFromBang(id,y,m){ var cc; try{cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}');}catch(e){cc={};} var cd=cc[id+'_'+y+'_'+m]||{}; var w=leaveCycleWindow(y,m),s0=w[0],e0=w[1],sum=0; for(var dt in cd){ if(dt>=s0&&dt<=e0){ var v=cd[dt]; if(v&&v.status&&!bxIsWknd(dt)){ sum+=window.bxDay(v).phep; } /* [B2] */ } } return Math.round(sum*1000)/1000; }
 
 // ============================================================
 // GỘP NV BỊ TRÙNG MÃ (1 người mang 2 mã NV)
@@ -957,9 +957,11 @@ function syncAttToCC(dateStr){
       if(r.faceIssue){ if(r.session==='chieu') _one.faceC=true; else _one.faceS=true; } // [faceSess] ghi rõ ca thiếu mặt
       return _one;
     }
-    // Sort: sang first, chieu second
-    const sang = recs.find(r=>(r.session||'sang')==='sang');
-    const chieu = recs.find(r=>r.session==='chieu');
+    // [B2] 1 ca có 2 bản ghi trùng → lấy bản có mã đặc biệt (khác "1"), tránh mất lượt xin phép/đi trễ
+    const _pick = list => list.find(r=>toCC(r)!=='1') || list[0] || null;
+    const _sList = recs.filter(r=>(r.session||'sang')==='sang'), _cList = recs.filter(r=>r.session==='chieu');
+    const sang = _pick(_sList);
+    const chieu = _pick(_cList);
     const sStatus = sang ? toCC(sang) : null;
     const cStatus = chieu ? toCC(chieu) : null;
     // Merge logic
@@ -972,12 +974,29 @@ function syncAttToCC(dateStr){
     } else {
       status = sStatus || cStatus || '1';
     }
-    const lateMin = (sang&&sang.lateMin||0) + (chieu&&chieu.lateMin||0);
+    let lateMin = (sang&&sang.lateMin||0) + (chieu&&chieu.lateMin||0);
+    // [B2] quy tắc mới
+    const UN=['T-S','T-C','T-C2'], EX=['T-S-P','T-C-P'], work=x=>x==='1'||UN.includes(x);
+    if(sStatus==='K' && cStatus && work(cStatus)) status='N-S-K';        // sáng vắng không phép, chiều làm
+    else if(cStatus==='K' && sStatus && work(sStatus)) status='N-C-K';   // chiều vắng không phép, sáng làm
+    const lu=[]; // các lượt đi trễ/về sớm KHÔNG phép
+    if(sang && UN.includes(sStatus) && (+sang.lateMin||0)>0) lu.push({c:sStatus, m:+sang.lateMin});
+    if(chieu && UN.includes(cStatus) && (+chieu.lateMin||0)>0) lu.push({c:cStatus, m:+chieu.lateMin});
+    let lates=null;
+    if(lu.length){
+      if(['N-S','N-C','N-S-K','N-C-K'].includes(status)) lates=lu;                 // nửa ngày mà vẫn đi trễ → vẫn phạt
+      else if(lu.length>=2) lates=lu;                                               // trễ sáng + về sớm chiều → phạt riêng từng lượt
+      else if(EX.includes(sStatus)||EX.includes(cStatus)){                          // 1 ca xin phép + 1 ca không phép
+        const pr = EX.includes(sStatus)?sang:chieu; status=toCC(pr); lateMin=+pr.lateMin||0; lates=lu;
+      }
+    }
     const notes = [sang&&sang.note, chieu&&chieu.note].filter(Boolean).join(' | ');
-    const _two = { status, lateMin, note: notes, faceIssue: !!(sang&&sang.faceIssue) || !!(chieu&&chieu.faceIssue) };
-    if(sang&&sang.faceIssue) _two.faceS=true; if(chieu&&chieu.faceIssue) _two.faceC=true; // [faceSess]
+    const _two = { status, lateMin, note: notes, faceIssue: _sList.concat(_cList).some(r=>r.faceIssue) };
+    if(lates) _two.lates=lates;
+    if(_sList.some(r=>r.faceIssue)) _two.faceS=true; if(_cList.some(r=>r.faceIssue)) _two.faceC=true; // [faceSess]
     return _two;
   }
+  if(bxIsWknd(dateStr)) return; // [B2] check-in T7/CN: không tính công, không phạt
   Object.keys(byId).forEach(id => {
     const key = id + '_' + cycleYear + '_' + cycleMonth;
     if(!all[key]) all[key] = {};
@@ -1092,11 +1111,11 @@ function renderFineTable(){
     const empCC=getEmpCCForCycle(emp.id,y,m);
     let cnt=0,mins=0,fine=0,halfDays=0;
     getCycleDates(y,m).forEach(d=>{
-      const v=empCC[d]; if(!v||!v.status) return;
-      if(v.status==='T-S'||v.status==='T-C'||v.status==='T-C2'){
-        const lm=v.lateMin||0; if(lm<3) return;
-        cnt++; mins+=lm; fine+=tinhPhatNgay(v); if(lm>45) halfDays++;
-      }
+      const v=empCC[d]; if(!v||!v.status||bxIsWknd(d)) return;
+      // [B2] đếm theo LƯỢT (1 ngày có thể 2 lượt), gồm cả nửa ngày có đi trễ
+      const L=(Array.isArray(v.lates)&&v.lates.length)?v.lates.map(x=>+x.m||0):((v.status==='T-S'||v.status==='T-C'||v.status==='T-C2')?[+v.lateMin||0]:[]);
+      L.forEach(lm=>{ if(lm<3) return; cnt++; mins+=lm; if(lm>45) halfDays++; });
+      fine+=tinhPhatNgay(v);
     });
     if(cnt>0) rows.push({name:emp.name,cnt,mins,fine,halfDays});
   });
@@ -1597,7 +1616,7 @@ function makeOfficial(id){
   if(!isNaN(x)) setLeaveBalanceForCurrentCycle(id,x);
   renderBangCC();
 }
-function lateDays(id,y,m){var cc=getEmpCCForCycle(id,y,m),n=0;getCycleDates(y,m).forEach(function(d){var dw=new Date(d).getDay();if(dw===0||dw===6)return;var v=cc[d];if(!v||!v.status)return;var s=v.status;if((s==='T-S'||s==='T-C'||s==='T-C2')&&(v.lateMin||0)>=3)n++;});return n;}
+function lateDays(id,y,m){var cc=getEmpCCForCycle(id,y,m),n=0;getCycleDates(y,m).forEach(function(d){var dw=new Date(d).getDay();if(dw===0||dw===6)return;var v=cc[d];if(!v||!v.status)return;n+=window.bxDay(v).luot;});return n;} /* [B2] đếm theo lượt */
 function lateCell(id,y,m){var n=lateDays(id,y,m);return '<span style="color:'+(n>0?'#A65A4B':'#8B897E')+';font-weight:'+(n>0?'500':'400')+'">'+n+' ngày</span>';}
 function renderBangCC(){
   const y=state.currentYear, m=state.currentMonth;
@@ -1660,16 +1679,38 @@ function getEmpCCForCycle(empId,year,month){
 }
 window.selfCheck=function(){var out=[];try{var cc=JSON.parse(localStorage.getItem('bigx_cc')||'{}');for(var key in cc){var id=key.split('_')[0];var isNL=isNoLeave(id);var rec=cc[key];for(var d in rec){var v=rec[d];if(!v||!v.status)continue;var r=window.tinhNgay(v.status,v.lateMin,isNL);if(isNL&&r.phep!==0)out.push(key+' '+d+': thu viec co phep '+r.phep);if(isNaN(r.cong)||isNaN(r.phep)||isNaN(r.phat)||isNaN(r.nghi))out.push(key+' '+d+': NaN');var s2=v.status;if((s2==='T-S-P'||s2==='T-C-P'||s2==='N-S'||s2==='N-C')&&!isNL){var tot=r.cong+r.phep;if(Math.abs(tot-1)>1e-9)out.push(key+' '+d+': cong+phep='+tot);}}}}catch(e){out.push('ERR '+e);}return {anomalies:out.length,list:out.slice(0,50)};};
 window.tinhNgay=function(st,mn,nl){var s=st||'',m=+mn||0,cong=0,phep=0,phat=0,nghi=0;if(s==='1')cong=1;else if(s==='N-S'||s==='N-C'||s==='N-S-K'||s==='N-C-K')cong=0.5;else if(s==='T-S-P'||s==='T-C-P')cong=Math.max(0,1-m/480);else if(s==='T-S'||s==='T-C'||s==='T-C2')cong=m>45?0.5:1;if(!nl){if(s==='P')phep=1;else if(s==='N-S'||s==='N-C')phep=0.5;else if(s==='T-S-P'||s==='T-C-P')phep=m/480;else if(s==='T-S'||s==='T-C'||s==='T-C2')phep=m>45?0.5:0;}if(s==='T-S'||s==='T-C'||s==='T-C2'){if(m>=3&&m<=20)phat=20000;else if(m>=21&&m<=45)phat=50000;}if(s==='P'||s==='K'||s==='P-KL')nghi=1;else if(s==='N-S'||s==='N-C'||s==='N-S-K'||s==='N-C-K')nghi=0.5;else if(s==='T-S-P'||s==='T-C-P')nghi=m/480;else if(s==='T-S'||s==='T-C'||s==='T-C2')nghi=m>45?0.5:0;return {cong:cong,phep:phep,phat:phat,nghi:nghi};};
+/* [B2] Tính 1 ngày — MỘT hàm chung cho web + số đẩy sheet.
+   - Mỗi LƯỢT đi trễ/về sớm không phép (T-S/T-C/T-C2) phạt riêng: 3–20' = 20k, 21–45' = 50k; lượt >45' mất 0,5 công và trừ 0,5 phép.
+   - v.lates = [{c,m}] khi 1 ngày có nhiều lượt, hoặc nửa ngày (N-*) mà vẫn đi trễ. Không có v.lates → giống hệt tinhNgay cũ.
+   - N-S-K/N-C-K = nửa ngày làm + nửa vắng không phép (không trừ phép). */
+window.bxDay=function(v){
+  var r={cong:0,phep:0,phat:0,phut:0,nghi:0,luot:0};
+  if(!v||!v.status) return r;
+  var s=String(v.status), lm=+v.lateMin||0, UN=['T-S','T-C','T-C2'];
+  var L=(Array.isArray(v.lates)&&v.lates.length)?v.lates.map(function(x){return +x.m||0;}):(UN.indexOf(s)>=0?[lm]:[]);
+  var over=L.filter(function(m){return m>45;}).length;
+  if(s==='1') r.cong=1;
+  else if(UN.indexOf(s)>=0){ r.cong=Math.max(0,1-0.5*over); r.phep=0.5*over; r.nghi=0.5*over; }
+  else if(s==='N-S'||s==='N-C'){ r.cong=Math.max(0,0.5-0.5*over); r.phep=0.5+0.5*over; r.nghi=0.5+0.5*over; }
+  else if(s==='N-S-K'||s==='N-C-K'){ r.cong=Math.max(0,0.5-0.5*over); r.phep=0.5*over; r.nghi=0.5+0.5*over; }
+  else if(s==='T-S-P'||s==='T-C-P'){ r.cong=Math.max(0,1-lm/480-0.5*over); r.phep=lm/480+0.5*over; r.nghi=r.phep; }
+  else if(s==='P'){ r.phep=1; r.nghi=1; }
+  else if(s==='K'||s==='P-KL'){ r.nghi=1; }
+  L.forEach(function(m){ if(m>=3&&m<=20) r.phat+=20000; else if(m>=21&&m<=45) r.phat+=50000; if(m>=3) r.luot++; });
+  r.phut=L.reduce(function(a,b){return a+b;},0);
+  return r;
+};
+function bxIsWknd(d){ var w=new Date(d+'T12:00:00').getDay(); return w===0||w===6; } // [B2] T7/CN: không tính công, không phạt
 function tinhCongNgay(v){
   if(!v||!v.status) return 0;
-  return window.tinhNgay(v.status, v.lateMin||0, false).cong;
+  return window.bxDay(v).cong; // [B2]
 }
 function tinhPhatNgay(v){
   if(!v||!v.status) return 0;
-  return window.tinhNgay(v.status, v.lateMin||0, false).phat;
+  return window.bxDay(v).phat; // [B2]
 }
 function countActualDays(empCC){
-  return parseFloat(Object.values(empCC).reduce((t,v)=>t+tinhCongNgay(v),0).toFixed(2));
+  return parseFloat(Object.keys(empCC).filter(d=>!bxIsWknd(d)).reduce((t,d)=>t+tinhCongNgay(empCC[d]),0).toFixed(2)); // [B2] bỏ T7/CN
 }
 function toggleCalendar(empId){
   state.expandedEmpId = state.expandedEmpId===empId ? null : empId;
@@ -1712,7 +1753,7 @@ function calcPhepConLaiLegacy(empId, year, month){
 // ---- Tính phép HỢP NHẤT — MỘT rule chung cho MỌI nhân viên ----
 // AQ chu kỳ = AQ chu kỳ trước + 1 (tích lũy) - phép đã dùng (đọc từ bigx_attendance).
 // NV không phép -> 0. NV đã nghỉ -> 0.
-function calcPhepConLai(empId, year, month){
+function calcPhepConLai(empId, year, month, raw){
   if(year<2026 || (year===2026 && month<6)) return calcPhepConLaiLegacy(empId, year, month);
   if(isNoLeave(empId)) return 0;
   if(isResigned(empId)) return 0;
@@ -1727,8 +1768,15 @@ function calcPhepConLai(empId, year, month){
   }
   let v=calc(year,month);
   if(v==null) return v;
-  if(v<0) v=0;
+  if(v<0 && !raw) v=0; // [B2] raw=true: không chặn 0 (để tính phép khả dụng)
   return Math.round(v*1000)/1000;
+}
+/* [B2] Phép khả dụng của kỳ (= còn đầu kỳ + 1 tích luỹ). Thử việc / part-time / chưa chính thức = 0 → nghỉ ăn phép chuyển thành trừ công. */
+function bxPhepAvail(empId, year, month){
+  if(isNoLeave(empId)||isResigned(empId)) return 0;
+  var off=empOfficialFrom(empId); if(off&&(year<off.y||(year===off.y&&month<off.m))) return 0;
+  var con=calcPhepConLai(empId, year, month, true); if(con==null) return null;
+  return Math.round((con+leaveUsedFromBang(empId, year, month))*1000)/1000;
 }
 function renderCalendarExpand(emp, year, month){
   const empCC=getEmpCCForCycle(emp.id,year,month);
@@ -1742,21 +1790,24 @@ function renderCalendarExpand(emp, year, month){
     const v=empCC[d];
     if(!v||!v.status) return;
     if(v.status==='1') cntOk++;
-    else if(v.status==='T-S-P'||v.status==='T-C-P'){ const _p=window.tinhNgay(v.status,v.lateMin,isNoLeave(emp.id)).phep; if(_p>0){ cntLeave+=_p; } else { cntOk++; } } else if(v.status.startsWith('T')){ const lm=v.lateMin||0; if(lm<3){ cntOk++; } else { cntLate++; totalLateMin+=lm; } }
+    else if(v.status==='T-S-P'||v.status==='T-C-P'){ const _p=window.tinhNgay(v.status,v.lateMin,isNoLeave(emp.id)).phep; if(_p>0){ cntLeave+=_p; } else { cntOk++; } if(v.lates){ const _d=window.bxDay(v); cntLate+=_d.luot; totalLateMin+=_d.phut; } } else if(v.status.startsWith('T')){ const _d=window.bxDay(v); if(_d.luot===0){ cntOk++; } else { cntLate+=_d.luot; totalLateMin+=_d.phut; } }
     else if(v.status==='K') cntAbs++;
     else if(v.status==='P'||v.status==='OFF'){ cntLeave+=window.tinhNgay(v.status,v.lateMin,isNoLeave(emp.id)).phep; }
         else if(v.status==='N-S'||v.status==='N-C'){ cntLeave+=window.tinhNgay(v.status,v.lateMin,isNoLeave(emp.id)).phep; }
   });
-  let tongCong=0, tienPhat=0, cntNL=0;
-  dates.forEach(d=>{ const dw=new Date(d).getDay(); if(dw===0||dw===6) return; const vv=empCC[d]; if(vv&&vv.status==='NL') cntNL++; tongCong+=tinhCongNgay(vv); tienPhat+=tinhPhatNgay(vv); });
+  let tongCong=0, tienPhat=0, cntNL=0, phepReq=0;
+  dates.forEach(d=>{ const dw=new Date(d).getDay(); if(dw===0||dw===6) return; const vv=empCC[d]; if(vv&&vv.status==='NL') cntNL++; tongCong+=tinhCongNgay(vv); tienPhat+=tinhPhatNgay(vv); phepReq+=window.bxDay(vv).phep; });
   tongCong=parseFloat(tongCong.toFixed(2));
+  // [B2] Ngày tính lương = MIN(công chuẩn; công thực tế + MIN(phép muốn dùng; phép khả dụng) + ngày lễ) — y như công thức file Excel gốc
+  const _avail=bxPhepAvail(emp.id,year,month);
+  const _phepDung=_avail==null?phepReq:Math.min(phepReq,_avail);
   // Summary ext row — read from bigx_cc_summary if available
   const allSumm=JSON.parse(localStorage.getItem('bigx_cc_summary')||'{}');
   const summ=allSumm[`${emp.id}_${year}_${month}`]||null;
-  const AI=summ!=null?summ.AI:tongCong;
-  const AL=summ!=null?summ.AL:cntNL;
-  const AM=summ!=null?summ.AM:0;
-  const AO=summ!=null?(summ.AO!=null?summ.AO:AI):parseFloat(Math.min(tongCong+cntLeave+cntNL,getWorkdays(year,month)).toFixed(2));
+  // [B2] Giữ số tĩnh cũ (nhập từ file Excel, VD T6) nếu có; chỗ nào trống ("—") thì tính trực tiếp theo công thức chung
+  const AL=(summ!=null&&summ.AL!=null)?summ.AL:cntNL;
+  const AM=(summ!=null&&summ.AM!=null)?summ.AM:0;
+  const AO=(summ!=null&&summ.AO!=null)?summ.AO:(summ!=null&&summ.AI!=null)?summ.AI:parseFloat(Math.min(tongCong+_phepDung+cntNL,getWorkdays(year,month)).toFixed(2));
   const aqLive=(isNoLeave(emp.id))?calcPhepConLai(emp.id,year,month):((summ!=null&&summ.AQ!=null)?summ.AQ:calcPhepConLai(emp.id,year,month)); const AQ=aqLive!=null?aqLive:(leave.remaining||0);
   const AR=(summ!=null&&summ.AR!=null)?summ.AR:getWorkdays(year,month);
   const fmt=v=>(v==null?'—':(v===Math.floor(v)?v:parseFloat(v.toFixed(2))));
@@ -2030,15 +2081,19 @@ function bxSheetPayload(){
   const rows=getEmployees().map(e=>{
     const cd=cc[e.id+'_'+y+'_'+m]||{};
     let cong=0,nghi=0,phut=0,phat=0,nghiPhep=0,nghiKL=0,nghiLe=0;
-    const statuses=dates.map(dt=>{const v=cd[dt]; if(!v) return '';
-      cong+=tinhCongNgay(v);
-      var _s=v.status,_m=+(v.lateMin||0),t=window.tinhNgay(_s,_m,false);
-      nghi+=t.nghi; nghiPhep+=t.phep;
+    const statuses=dates.map(dt=>{const v=cd[dt]; if(!v||bxIsWknd(dt)) return ''; // [B2] T7/CN để trống
+      var _s=v.status,t=window.bxDay(v);
+      cong+=t.cong; nghi+=t.nghi; nghiPhep+=t.phep;
       if(_s==='P-KL') nghiKL+=1;
       if(_s==='NL') nghiLe+=1;
-      if(TULATE.includes(_s)) phut+=_m;
-      phat+=tinhPhatNgay(v);
+      phut+=t.phut; phat+=t.phat;
       var st=_s||'';
+      if(Array.isArray(v.lates)&&v.lates.length){ // [B2] nhiều lượt trong 1 ô: "T-S 20' · T-C 30'", "N-S · T-C2 10'", "T-S-P 30' · T-C 20'"
+        var _lp=v.lates.map(function(x){return x.c+' '+x.m+"'";}).join(' · ');
+        if(st==='T-S-P'||st==='T-C-P') return st+' '+(+v.lateMin||0)+"' · "+_lp;
+        if(TULATE.includes(st)) return _lp;
+        return st+' · '+_lp;
+      }
       if((st==='T-S-P'||st==='T-C-P')&&v.lateMin){var c=tinhCongNgay(v);return parseFloat(c.toFixed(4));}
       if((st==='T-S'||st==='T-C'||st==='T-C2')&&v.lateMin){return st+' '+v.lateMin+"'";}
       return st;});const faceFlags=dates.map(dt=>{const v=cd[dt]; return !!(v&&v.faceIssue);});const faceSess=dates.map(dt=>faceSessOf(cd[dt]));
@@ -2066,25 +2121,35 @@ function bxSheetPayload(){
  var PT='T'+pm+'-'+py;
  var DR='INDIRECT("$E"&ROW()&":$'+LC+'"&ROW())';
  var ID='INDIRECT("$C"&ROW())';
- var TXT='ARRAYFORMULA(TO_TEXT('+DR+'))';
- var MN='ARRAYFORMULA(IFERROR(VALUE(REGEXEXTRACT('+TXT+',"(\\d+)\'")),0))';
- var REQ='COUNTIF('+DR+',"P")+0.5*(COUNTIF('+DR+',"N-S")+COUNTIF('+DR+',"N-C"))+SUMPRODUCT(IF(ISNUMBER('+DR+'),IF('+DR+'<1,1-'+DR+',0),0))';
  var CAPNUM='IFERROR(VLOOKUP('+ID+",'"+PT+"'!$C:$BZ,MATCH(\"*còn lại*\",'"+PT+"'!$7:$7,0)-2,FALSE)+1,0)";
  var CAPRAW='IFERROR(VLOOKUP('+ID+",'"+PT+"'!$C:$BZ,MATCH(\"*còn lại*\",'"+PT+"'!$7:$7,0)-2,FALSE)+1,\"—\")";
+ // [B2] Công thức mới — đọc được 2 lượt/ô ("T-S 20' · T-C 30'"), nửa ngày + đi trễ, N-S-K/N-C-K; trễ >45' ăn phép (hết phép/không phép → không lương)
+ var LH='ARRAYFORMULA(LET(r,'+DR+',t,ARRAYFORMULA(TO_TEXT(r)),'
+   +'m_a,ARRAYFORMULA(IFERROR(VALUE(REGEXEXTRACT(t,"(\\d+)\'")),0)),'
+   +'m_b,ARRAYFORMULA(IFERROR(VALUE(REGEXEXTRACT(t,"\\d+\'.*?(\\d+)\'")),0)),'
+   +'isT,ARRAYFORMULA(N(REGEXMATCH(t,"^T-(S|C|C2) "))),'
+   +'isP,ARRAYFORMULA(N(REGEXMATCH(t,"^T-[SC]-P "))),'
+   +'isN,ARRAYFORMULA(N(REGEXMATCH(t,"^N-[SC]"))),'
+   +'isNK,ARRAYFORMULA(N(REGEXMATCH(t,"^N-[SC]-K"))),'
+   +'u_a,(isT+isN)*m_a,u_b,m_b,ov,(u_a>45)+(u_b>45),'
+   +'cong,SUM(r)+SUMPRODUCT(ARRAYFORMULA(IF(isT*(1-0.5*ov)<0,0,isT*(1-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isN*(0.5-0.5*ov)<0,0,isN*(0.5-0.5*ov))))+SUMPRODUCT(ARRAYFORMULA(IF(isP*(1-m_a/480-0.5*ov)<0,0,isP*(1-m_a/480-0.5*ov)))),'
+   +'req,COUNTIF(r,"P")+0.5*SUMPRODUCT(isN-isNK)+SUMPRODUCT(ARRAYFORMULA(IF(ISNUMBER(r),IF(r<1,1-r,0),0)))+SUMPRODUCT(isP*m_a/480)+0.5*SUMPRODUCT((isT+isN+isP)*ov),'
+   +'cap,'+CAPNUM+',';
  var F={};
- F.cong='=LET(r,'+DR+',t,ARRAYFORMULA(TO_TEXT(r)),mn,ARRAYFORMULA(IFERROR(VALUE(REGEXEXTRACT(t,"(\\d+)\'")),0)),SUM(r)+SUMPRODUCT(ARRAYFORMULA(N(REGEXMATCH(t,"^T-[SC]")))*IF(mn<=45,1,0.5))+0.5*SUMPRODUCT(ARRAYFORMULA(N(REGEXMATCH(t,"^N-[SC]$")))))';
- F.nghiPhep='=MIN('+REQ+','+CAPNUM+')';
- F.nghiKL='=COUNTIF('+DR+',"P-KL")+0.5*SUMPRODUCT(ARRAYFORMULA(N(REGEXMATCH('+TXT+',"^T-[SC]")))*IF('+MN+'>45,1,0))+('+REQ+'-MIN('+REQ+','+CAPNUM+'))';
+ F.cong='='+LH+'cong))';
+ F.nghiPhep='='+LH+'MIN(req,cap)))';
+ F.nghiKL='='+LH+'COUNTIF(r,"P-KL")+(req-MIN(req,cap))))';
  F.nghiLe='=COUNTIF('+DR+',"NL")';
  F.phepCap='='+CAPRAW;
- F.ngayLuong='=MIN('+wd+',('+F.cong.slice(1)+')+MIN('+REQ+','+CAPNUM+')+COUNTIF('+DR+',"NL"))';
- F.phep='=IF(ISNUMBER('+CAPRAW+'),'+CAPRAW+'-MIN('+REQ+','+CAPNUM+'),"—")';
- F.phut='=SUMPRODUCT('+MN+')';
- F.phat='=SUMPRODUCT(('+MN+'>=3)*('+MN+'<=20))*20000+SUMPRODUCT(('+MN+'>=21)*('+MN+'<=45))*50000';
+ F.ngayLuong='='+LH+'MIN('+wd+',cong+MIN(req,cap)+COUNTIF(r,"NL"))))';
+ F.phep='='+LH+'IF(ISNUMBER('+CAPRAW+'),'+CAPRAW+'-MIN(req,cap),"—")))';
+ F.phut='='+LH+'SUMPRODUCT(u_a+u_b)))';
+ F.phat='='+LH+'SUMPRODUCT((u_a>=3)*(u_a<=20)+(u_b>=3)*(u_b<=20))*20000+SUMPRODUCT((u_a>=21)*(u_a<=45)+(u_b>=21)*(u_b<=45))*50000))';
  // Convert to Vietnamese locale: argument separator ';' and decimal comma. No string literal here contains ',' so global swap is safe.
  var viLoc=function(f){return f.replace(/,/g,';').replace(/(\d)\.(\d)/g,'$1,$2');};
  Object.keys(F).forEach(function(k){F[k]=viLoc(F[k]);});
  (rows||[]).forEach(function(rw){
+   var _congVal=rw.cong, _leVal=rw.nghiLe;
    rw.cong=F.cong;rw.nghiLe=F.nghiLe;rw.phut=F.phut;rw.phat=F.phat;
    var _off=empOfficialFrom(rw.id);
    var _prevDash=isNoLeave(rw.id)||(_off&&(py<_off.y||(py===_off.y&&pm<_off.m)));
@@ -2093,7 +2158,13 @@ function bxSheetPayload(){
      // NV mới lên chính thức: tab tháng trước còn "—" nên công thức VLOOKUP gãy (ra "—").
      // Giữ giá trị phép web tính, NHƯNG còn lại = được cấp − nghỉ phép trong kỳ (khớp cột "Nghỉ phép" của sheet;
      // tránh lệch do ngày P nhập tay không nằm trong kho điểm danh gốc).
-     if(typeof rw.phepCap==='number'){ rw.phep=Math.max(0,+(rw.phepCap-(+rw.nghiPhep||0)).toFixed(3)); }
+     if(typeof rw.phepCap==='number'){
+       // [B2] hết phép → phần vượt thành không lương, ngày tính lương giảm tương ứng
+       var _np=+rw.nghiPhep||0, _dung=Math.min(_np, rw.phepCap), _cv=+_congVal||0, _lv=+_leVal||0;
+       rw.nghiKL=+((+rw.nghiKL||0)+(_np-_dung)).toFixed(3); rw.nghiPhep=+_dung.toFixed(3);
+       rw.ngayLuong=+Math.min(wd,_cv+_dung+_lv).toFixed(3);
+       rw.phep=Math.max(0,+(rw.phepCap-_dung).toFixed(3));
+     }
    } else {
      rw.nghiPhep=F.nghiPhep;rw.nghiKL=F.nghiKL;rw.phepCap=F.phepCap;rw.ngayLuong=F.ngayLuong;rw.phep=F.phep;
    }
