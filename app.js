@@ -2383,7 +2383,15 @@ function ngStyle(){ return '<style id="ng-style">'
   function lastDay(ym){ var p=ym.split('-'); return new Date(+p[0], +p[1], 0).getDate(); }
   function fbKey(k){ return String(k).replace(/[.#$\[\]\/|%]/g,'_'); }
   function fetchJ(url, opt){ return (window.bxAuthedFetch?window.bxAuthedFetch(url,opt):fetch(url,opt)).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
-  function rerender(){ if(window.currentTab==='cong-viec' && window.go) window.go('cong-viec'); }
+  /* Vẽ lại tab nhưng GIỮ vị trí cuộn (go() mặc định kéo lên đầu trang) */
+  function rerender(){
+    if(window.currentTab!=='cong-viec' || !window.go) return;
+    var c=document.getElementById('content'), y=c?c.scrollTop:0, wy=window.scrollY||0;
+    window.go('cong-viec');
+    var back=function(){ if(c) c.scrollTop=y; if(wy) window.scrollTo(0,wy); };
+    back(); setTimeout(back,0); setTimeout(back,30); // bảng vẽ sau setTimeout → khôi phục lại lần nữa
+  }
+  function showForm(){ setTimeout(function(){ var f=document.querySelector('.cv-form'); if(f&&f.scrollIntoView) f.scrollIntoView({block:'center'}); var t=document.getElementById('cvf-title'); if(t) t.focus({preventScroll:true}); },60); }
   function saveBak(){ try{ localStorage.setItem(BAK, JSON.stringify({tasks:S.tasks, autoDone:S.autoDone})); }catch(e){} }
   function fixes(t){ return (t.log||[]).filter(function(x){return x.t==='fix';}).length; }
 
@@ -2550,10 +2558,9 @@ function ngStyle(){ return '<style id="ng-style">'
   }
   window.cvAdd=function(){
     var ym=S.month||curMonth(); var due=(ym===curMonth())?'':ym+'-'+p2(lastDay(ym));
-    S.form={id:'', title:'', owner:'Brian', dept:'', due:due, pri:'tb', cat:'khac', note:''}; rerender();
-    setTimeout(function(){ var t=document.getElementById('cvf-title'); if(t) t.focus(); },0);
+    S.form={id:'', title:'', owner:'Brian', dept:'', due:due, pri:'tb', cat:'khac', note:''}; rerender(); showForm();
   };
-  window.cvEdit=function(id){ var t=S.tasks[id]; if(!t) return; S.form=Object.assign({id:id, title:'', owner:'', dept:'', due:'', pri:'tb', cat:'khac', note:''}, t, {id:id}); rerender(); var c=document.getElementById('content'); if(c) c.scrollTop=0; };
+  window.cvEdit=function(id){ var t=S.tasks[id]; if(!t) return; S.form=Object.assign({id:id, title:'', owner:'', dept:'', due:'', pri:'tb', cat:'khac', note:''}, t, {id:id}); rerender(); showForm(); };
   window.cvCancel=function(){ S.form=null; rerender(); };
   window.cvSave=function(){
     readForm(); var f=S.form; if(!f) return;
@@ -2585,7 +2592,7 @@ function ngStyle(){ return '<style id="ng-style">'
   }
   window.cvSetStatus=function(id, st, note){
     var t=ensure(id); if(!t) return;
-    if(st==='fix' && note==null){ OPEN_ID=id; S.fixDraft=id; rerender(); setTimeout(function(){ var el=document.getElementById('cv-fb-'+id); if(el) el.focus(); },0); return; }
+    if(st==='fix' && note==null){ OPEN_ID=id; S.fixDraft=id; rerender(); setTimeout(function(){ var el=document.getElementById('cv-fb-'+id); if(el){ el.focus({preventScroll:true}); if(el.scrollIntoView) el.scrollIntoView({block:'nearest'}); } },60); return; }
     var log=(t.log||[]).slice(), d=todayISO();
     if(st==='review' && t.status!=='review') log.push({d:d, t:'submit'});
     if(st==='fix') log.push({d:d, t:'fix', note:String(note||'').trim()});
