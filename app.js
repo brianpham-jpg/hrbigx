@@ -1317,7 +1317,7 @@ function renderOverview(){
 /* ============================================================
    TAB: CHẤM CÔNG & PHÉP — nhúng nguyên web chấm công (giữ 100%)
    ============================================================ */
-var CC_APP_URL   = 'chamcong.html?cc=21'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
+var CC_APP_URL   = 'chamcong.html?cc=22'; // chấm công giờ ở ngay trong hrbigx (cùng Firebase → data giữ nguyên)
 
 function renderChamCong(){
   return '<div class="cc-frame-wrap"><iframe class="cc-frame" src="'+CC_APP_URL+'" title="BigX Chấm công" allow="clipboard-read; clipboard-write"></iframe></div>';
@@ -1920,6 +1920,7 @@ function bcStyle(){ return '<style id="bc-style">'
   +'#baocao .bc-stat .s-l{font-size:13px;color:#414B54}#baocao .bc-stat .s-l .sub{font-size:11px;color:#8B897E;margin-top:2px}'
   +'#baocao .bc-stat .s-r{display:flex;align-items:baseline;gap:10px}'
   +'#baocao .bc-stat .s-v{font-family:Fraunces,serif;font-size:19px;color:#21303B;font-weight:600;font-variant-numeric:tabular-nums}'
+  +'#baocao .bc-tbl .nw{white-space:nowrap}'
   +'#baocao .bc-minih{font-size:12px;font-weight:600;color:#8B897E;margin:14px 0 2px}'
   +'#baocao .late-badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:#fbf1df;color:#b07a43}'
   +'#baocao .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:#eef4f2;color:#35655B}'
@@ -2883,6 +2884,7 @@ function ngStyle(){ return '<style id="ng-style">'
 
   /* ---- Cho tab Báo cáo dùng chung ---- */
   window.cvReportSection=function(p, pv, mode){
+    css(); // nạp CSS khối Đánh giá (cv-eval) cả khi chưa mở tab Công việc HR
     if(!S.loaded){ load(); return '<div class="bc-sec full"><div class="bc-sh"><span class="dot"></span><h3>Hiệu suất công việc HR</h3></div><div class="muted">Đang tải danh sách công việc…</div></div>'; }
     var s=iso(p.start), e=iso(p.end), r=perf(s,e), rp=perf(iso(pv.start), iso(pv.end));
     var lbl=(mode==='week'?'tuần ':'')+(typeof bcLabel==='function'?bcLabel(mode,p):s+' – '+e);

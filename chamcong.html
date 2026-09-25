@@ -458,7 +458,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#FBFAF6;color:#21303B;mi
               <th>Mã NV</th>
               
               <th>Phòng ban ✎</th>
-              <th>Ngày công</th><th>Đi trễ</th>
+              <th>Ngày công</th><th>Đi trễ</th><th>Thiếu mặt</th>
               <th>Bảng chấm công</th>
             </tr>
           </thead>
@@ -1669,6 +1669,9 @@ function makeOfficial(id){
 }
 function lateDays(id,y,m){var cc=getEmpCCForCycle(id,y,m),n=0;getCycleDates(y,m).forEach(function(d){var dw=new Date(d).getDay();if(dw===0||dw===6)return;var v=cc[d];if(!v||!v.status)return;n+=window.bxDay(v).luot;});return n;} /* [B2] đếm theo lượt */
 function lateCell(id,y,m){var n=lateDays(id,y,m);return '<span style="color:'+(n>0?'#A65A4B':'#8B897E')+';font-weight:'+(n>0?'500':'400')+'">'+n+' ngày</span>';}
+/* [faceCnt] Đếm lượt check-in thiếu góc mặt trong chu kỳ: S sáng, C chiều (SC = 2 lượt), U = cờ cũ không rõ buổi (1 lượt). Bỏ T7/CN như đếm đi trễ. */
+function faceCounts(id,y,m){var cc=getEmpCCForCycle(id,y,m),r={S:0,C:0,U:0,n:0};getCycleDates(y,m).forEach(function(d){var dw=new Date(d).getDay();if(dw===0||dw===6)return;var fs=faceSessOf(cc[d]);if(!fs)return;if(fs==='?')r.U++;else{if(fs.indexOf('S')>=0)r.S++;if(fs.indexOf('C')>=0)r.C++;}});r.n=r.S+r.C+r.U;return r;}
+function faceCell(id,y,m){var r=faceCounts(id,y,m);if(!r.n)return '<span style="color:#8B897E">0</span>';var d=[];if(r.S)d.push('S'+r.S);if(r.C)d.push('C'+r.C);if(r.U)d.push(r.U+' không rõ buổi');return '<span style="color:#9A5B12;font-weight:500">'+r.n+' lần</span><div style="font-size:11px;color:#8B897E">'+d.join(' · ')+'</div>';}
 function renderBangCC(){
   const y=state.currentYear, m=state.currentMonth;
   document.getElementById('bcc-title').textContent=MONTHS[m-1];
@@ -1676,7 +1679,7 @@ function renderBangCC(){
   const emps=getEmployees();
   const tbody=document.getElementById('emp-tbody');
   if(!emps.length){
-    tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--gray);font-size:13px">Chưa có danh sách nhân viên.<br><small>Dữ liệu sẽ được cập nhật sau.</small></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--gray);font-size:13px">Chưa có danh sách nhân viên.<br><small>Dữ liệu sẽ được cập nhật sau.</small></td></tr>`;
     return;
   }
   var __by={},__ord=BIGX_DEPTS.concat([""]);emps.forEach(function(e){var d=(e.dept&&BIGX_DEPTS.indexOf(e.dept)>=0)?e.dept:"";(__by[d]=__by[d]||[]).push(e);});var __DC={"Team TSP":["#e6f0ec","#274b43"],"Team Booking KOC/KOLs":["#EDE8DC","#274b43"],"Team Performance":["#e6efdd","#274b43"],"Team Customer Account Manager":["#EFE3D0","#6b4f28"],"Team E - Com":["#e2efe9","#213f39"],"Team Kế toán - Nhân sự":["#F0DED8","#7a3b32"],"Team Kinh Doanh":["#F0DED8","#7a4a2e"]};function __row(emp){
@@ -1693,16 +1696,16 @@ function renderBangCC(){
         <td style="color:var(--gray);font-size:12px">${emp.id||'—'}</td>
         
         <td><select onchange="changeDept('${emp.id}',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #E4DECF;border-radius:6px;max-width:190px;background:#fff">${deptOptions(emp.dept)}</select></td>
-        <td>${actualDays}/${workdays}</td><td>${lateCell(emp.id,y,m)}</td>
+        <td>${actualDays}/${workdays}</td><td>${lateCell(emp.id,y,m)}</td><td>${faceCell(emp.id,y,m)}</td>
         <td>
           <button class="view-btn ${isExpanded?'active-btn':''}" onclick="toggleCalendar('${emp.id}')">
             ${isExpanded?'▲ Đóng':'▦ Xem bảng'}
           </button>
         </td>
       </tr>
-      ${isExpanded?`<tr><td class="cal-expand-td" colspan="6">${renderCalendarExpand(emp,y,m)}</td></tr>`:''}
+      ${isExpanded?`<tr><td class="cal-expand-td" colspan="7">${renderCalendarExpand(emp,y,m)}</td></tr>`:''}
     `;
-  }var __out="";__ord.forEach(function(d){var a=__by[d];if(!a||!a.length)return;var c=__DC[d]||["#EDE8DC","#414B54"];var lbl=d||"Chưa gán phòng";__out+='<tr><td colspan="6" style="padding:7px 14px;background:'+c[0]+';color:'+c[1]+';font-size:12px;font-weight:600;letter-spacing:.2px">'+lbl+' · '+a.length+' người</td></tr>';a.forEach(function(e){__out+=__row(e);});});tbody.innerHTML=__out;
+  }var __out="";__ord.forEach(function(d){var a=__by[d];if(!a||!a.length)return;var c=__DC[d]||["#EDE8DC","#414B54"];var lbl=d||"Chưa gán phòng";__out+='<tr><td colspan="7" style="padding:7px 14px;background:'+c[0]+';color:'+c[1]+';font-size:12px;font-weight:600;letter-spacing:.2px">'+lbl+' · '+a.length+' người</td></tr>';a.forEach(function(e){__out+=__row(e);});});tbody.innerHTML=__out;
   bxApplyNameFilter();
 }
 // ---- Tìm nhân viên theo tên (đã gộp từ khối vá cũ vào script chính) ----
