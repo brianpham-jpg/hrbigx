@@ -232,6 +232,20 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#FBFAF6;color:#21303B;mi
 .status-opt.selected{border-color:var(--purple);background:var(--purple-bg)}
 .status-opt-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:4px}
 .status-opt-lbl{font-size:10px;color:var(--gray);display:block}
+.ss-sec{border:1px solid var(--gray-bd);border-radius:10px;padding:9px 10px 8px;margin-bottom:9px}
+.ss-t{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--gray);margin-bottom:7px}
+.ss-opts{display:flex;flex-wrap:wrap;gap:5px}
+.ss-opt{border:1.5px solid var(--gray-bd);border-radius:8px;padding:4px 8px;font-size:11.5px;cursor:pointer;display:inline-flex;gap:5px;align-items:center;background:#fff}
+.ss-opt:hover,.ss-opt.selected{border-color:var(--purple);background:var(--purple-bg)}
+.ss-b{font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px}
+.ss-min{margin-top:7px;font-size:11.5px;color:var(--gray);display:flex;align-items:center;gap:6px}
+.ss-min input{width:80px;padding:4px 7px;border:1px solid var(--gray-bd);border-radius:6px;font:inherit}
+.ss-day{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:11.5px;color:var(--gray);margin-bottom:9px}
+.ss-res{background:#f5f1e8;border-radius:10px;padding:9px 11px;margin-bottom:8px}
+.ss-code{font-size:13.5px;font-weight:700;color:#274b43}
+.ss-nums{display:flex;flex-wrap:wrap;gap:12px;margin-top:4px;font-size:11.5px;color:var(--gray)}.ss-nums b{color:#21303B}
+.ss-err{color:var(--red);font-size:12px}.ss-note{font-size:11px;color:var(--gray);margin-top:3px}
+.ss-adv{display:inline-block;font-size:11px;color:#3f7669;text-decoration:underline;cursor:pointer;margin:2px 0 8px}
 
 /* ===== UPLOAD PROCESSING ===== */
 .upload-processing{text-align:center;padding:20px;color:var(--purple)}
@@ -529,10 +543,14 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#FBFAF6;color:#21303B;mi
       <button class="modal-close" onclick="closeModal(&#39;modal-day&#39;)">×</button>
     </div>
     <div class="modal-body">
+      <div id="ss-wrap"></div>
+      <div id="adv-wrap" style="display:none">
       <div class="status-grid" id="status-grid"></div>
       <div class="form-group" id="day-late-group" style="display:none">
         <label class="form-label">SỐ PHÚT TRỄ</label>
         <input class="form-input" id="day-late-min" type="number" min="1" max="480" placeholder="Nhập số phút trễ">
+      </div>
+      <a class="ss-adv" onclick="ssAdv(false)">← Quay lại chọn theo buổi Sáng / Chiều</a>
       </div>
       <div class="form-group">
         <label class="form-label">GHI CHÚ</label>
@@ -942,6 +960,11 @@ function syncAttToCC(dateStr){
       else if(_W2(cS) && sS==='P'){ st='N-S'; L=lateOf(ch,cS); }
       else if(_W2(sS) && cS==='P-KL'){ st='N-C-K'; L=lateOf(sa,sS); }
       else if(_W2(cS) && sS==='P-KL'){ st='N-S-K'; L=lateOf(ch,cS); }
+      // [fix 01/10] buổi nghỉ được đánh bằng mã nửa ngày (N-C ở ca chiều / N-S ở ca sáng) mà buổi kia đi trễ → giữ nửa ngày + vẫn phạt trễ
+      else if(_W2(sS) && cS==='N-C'){ st='N-C'; L=lateOf(sa,sS); }
+      else if(_W2(cS) && sS==='N-S'){ st='N-S'; L=lateOf(ch,cS); }
+      else if(_W2(sS) && cS==='N-C-K'){ st='N-C-K'; L=lateOf(sa,sS); }
+      else if(_W2(cS) && sS==='N-S-K'){ st='N-S-K'; L=lateOf(ch,cS); }
       if(st){ _m.status=st; _m.lateMin=L.length?L[0].m:0; if(L.length) _m.lates=L; else delete _m.lates; }
     }
     return _m;
@@ -2040,6 +2063,7 @@ function openDayModal(empId, dateStr){
   document.getElementById('day-late-group').style.display=isLate?'block':'none';
   document.getElementById('day-late-min').value=cur.lateMin||'';
   document.getElementById('day-note').value=cur.note||'';document.getElementById('day-face-issue').checked=!!cur.faceIssue;document.getElementById('day-face-s').checked=!!cur.faceS;document.getElementById('day-face-c').checked=!!cur.faceC;
+  try{ ssInit(empId,cur); }catch(e){ console.error('ssInit',e); ssAdv(true); }
   document.getElementById('modal-day').classList.add('show');
 }
 function selectDayStatus(code){
@@ -2050,6 +2074,7 @@ function selectDayStatus(code){
 }
 function saveDayStatus(){
   if(!state.editingDayKey) return;
+  if(!window.__ssAdv) return ssSave(); // [2BUOI] chọn theo buổi
   const {empId, dateStr}=state.editingDayKey;
   const selected=document.querySelector('.status-opt.selected');
   if(!selected){ alert('Vui lòng chọn trạng thái'); return; }
@@ -2061,6 +2086,116 @@ function saveDayStatus(){
   if(noteVal) entry.note=noteVal;if(faceIssue) entry.faceIssue=true;if(faceS) entry.faceS=true;if(faceC) entry.faceC=true;
   const all=getCCData();
   const key=ccCycleKey(empId, dateStr);
+  if(!all[key]) all[key]={};
+  all[key][dateStr]=entry;
+  setCCData(all);
+  document.getElementById('modal-day').classList.remove('show');
+  renderBangCC();
+}
+
+/* [2BUOI 01/10] Hộp thoại sửa ngày: chọn riêng Buổi sáng / Buổi chiều → tự gộp ra mã ngày (status + lateMin + lates) đúng format cũ.
+   Mở ngày cũ mà KHÔNG đổi lựa chọn sáng/chiều → Lưu giữ nguyên status/lateMin/lates cũ. Ca hiếm → "lưới mã cả ngày" (như cũ). */
+var SS_UN=['T-S','T-C','T-C2'], SS_EX=['T-S-P','T-C-P'];
+var SS_SANG=[['1','Đủ'],['T-S','Trễ sáng'],['T-S-P','Xin đi trễ'],['P','Nghỉ phép'],['P-KL','Nghỉ KL'],['K','Vắng'],['-','Chưa có']];
+var SS_CHIEU=[['1','Đủ'],['T-C2','Trễ chiều'],['T-C','Về sớm'],['T-C-P','Xin về sớm'],['P','Nghỉ phép'],['P-KL','Nghỉ KL'],['K','Vắng'],['-','Chưa có']];
+window.__ss=null; window.__ssAdv=false;
+function ssDec(cur){
+  var st=cur&&cur.status; if(!st) return {S:{c:'1',m:0},C:{c:'1',m:0},day:null};
+  var L=Array.isArray(cur.lates)?cur.lates:[], lm=+cur.lateMin||0;
+  var sL=L.filter(function(x){return x.c==='T-S';})[0], cL=L.filter(function(x){return x.c==='T-C2'||x.c==='T-C';})[0];
+  var one=function(x){return {c:x.c,m:+x.m||0};}, ok={c:'1',m:0};
+  var sW=sL?one(sL):ok, cW=cL?one(cL):ok;
+  if(st==='NL'||st==='ĐÃ NGHỈ') return {S:ok,C:ok,day:st};
+  if(st==='1') return {S:ok,C:ok,day:null};
+  if(st==='P'||st==='P-KL'||st==='K') return {S:{c:st,m:0},C:{c:st,m:0},day:null};
+  if(st==='T-S') return {S:sL?one(sL):{c:'T-S',m:lm},C:cW,day:null};
+  if(st==='T-C2'||st==='T-C') return {S:sW,C:cL?one(cL):{c:st,m:lm},day:null};
+  if(st==='T-S-P'){ if(sL) return null; return {S:{c:'T-S-P',m:lm},C:cW,day:null}; }
+  if(st==='T-C-P'){ if(cL) return null; return {S:sW,C:{c:'T-C-P',m:lm},day:null}; }
+  if(st==='N-C'){ if(cL) return null; return {S:sW,C:{c:'P',m:0},day:null}; }
+  if(st==='N-S'){ if(sL) return null; return {S:{c:'P',m:0},C:cW,day:null}; }
+  if(st==='N-C-K'){ if(cL) return null; return {S:sW,C:{c:'K',m:0},day:null}; }
+  if(st==='N-S-K'){ if(sL) return null; return {S:{c:'K',m:0},C:cW,day:null}; }
+  if(st==='CS'){ if(cL) return null; return {S:sW,C:{c:'-',m:0},day:null}; }
+  if(st==='CC'){ if(sL) return null; return {S:{c:'-',m:0},C:cW,day:null}; }
+  return null;
+}
+function ssEnc(S,C,day){
+  if(day) return {status:day,lateMin:0};
+  var LT=SS_UN.concat(SS_EX);
+  if(LT.indexOf(S.c)>=0&&!(S.m>0)) return {err:'Nhập số phút cho buổi sáng'};
+  if(LT.indexOf(C.c)>=0&&!(C.m>0)) return {err:'Nhập số phút cho buổi chiều'};
+  var W=function(x){return x==='1'||SS_UN.indexOf(x)>=0||SS_EX.indexOf(x)>=0;}, U=function(x){return SS_UN.indexOf(x)>=0;}, E=function(x){return SS_EX.indexOf(x)>=0;};
+  var sl=U(S.c)?{c:S.c,m:S.m}:null, cl=U(C.c)?{c:C.c,m:C.m}:null;
+  var half=function(st,l){ var o={status:st,lateMin:l?l.m:0}; if(l) o.lates=[l]; return o; };
+  var rare={err:'Tổ hợp hiếm — bấm "Lưới mã cả ngày" để chọn tay'};
+  if(S.c==='-'&&C.c==='-') return {err:'Chọn ít nhất 1 buổi'};
+  if(C.c==='-') return (S.c==='1'||U(S.c))?half('CS',sl):rare;
+  if(S.c==='-') return (C.c==='1'||U(C.c))?half('CC',cl):rare;
+  if(S.c==='1'&&C.c==='1') return {status:'1',lateMin:0};
+  if(S.c===C.c&&['P','P-KL','K'].indexOf(S.c)>=0) return {status:S.c,lateMin:0};
+  if(C.c==='P') return (S.c==='1'||U(S.c))?half('N-C',sl):rare;
+  if(S.c==='P') return (C.c==='1'||U(C.c))?half('N-S',cl):rare;
+  if(C.c==='P-KL'||C.c==='K') return (S.c==='1'||U(S.c))?half('N-C-K',sl):rare;
+  if(S.c==='P-KL'||S.c==='K') return (C.c==='1'||U(C.c))?half('N-S-K',cl):rare;
+  if(W(S.c)&&W(C.c)){
+    if(C.c==='1') return {status:S.c,lateMin:S.m};
+    if(S.c==='1') return {status:C.c,lateMin:C.m};
+    if(U(S.c)&&U(C.c)) return {status:S.c,lateMin:S.m+C.m,lates:[sl,cl]};
+    if(E(S.c)&&U(C.c)) return {status:S.c,lateMin:S.m,lates:[cl]};
+    if(U(S.c)&&E(C.c)) return {status:C.c,lateMin:C.m,lates:[sl]};
+    if(E(S.c)&&E(C.c)) return {status:'T-S-P',lateMin:S.m+C.m};
+  }
+  return rare;
+}
+function ssSame(a,b){ return a&&b&&a.day===b.day&&(a.day||(a.S.c===b.S.c&&(+a.S.m||0)===(+b.S.m||0)&&a.C.c===b.C.c&&(+a.C.m||0)===(+b.C.m||0))); }
+function ssChips(ses,arr){
+  var sel=window.__ss[ses];
+  return arr.map(function(a){ var sc=STATUS_CODES[a[0]]||{bg:'#EDE8DC',color:'#414B54'};
+    return '<div class="ss-opt'+((!window.__ss.day&&sel.c===a[0])?' selected':'')+'" onclick="ssPick(\''+ses+'\',\''+a[0]+'\')"><span class="ss-b" style="background:'+sc.bg+';color:'+sc.color+'">'+a[0]+'</span>'+a[1]+'</div>'; }).join('');
+}
+function ssRender(){
+  var s=window.__ss, LT=SS_UN.concat(SS_EX), w=document.getElementById('ss-wrap'); if(!w) return;
+  var minBox=function(ses){ var v=s[ses]; if(s.day||LT.indexOf(v.c)<0) return ''; return '<div class="ss-min">Số phút: <input type="number" min="1" max="480" value="'+(v.m||'')+'" oninput="ssMin(\''+ses+'\',this.value)"></div>'; };
+  var dayChip=function(c){ var sc=STATUS_CODES[c]; return '<div class="ss-opt'+(s.day===c?' selected':'')+'" onclick="ssDay(\''+c+'\')"><span class="ss-b" style="background:'+sc.bg+';color:'+sc.color+'">'+c+'</span>'+(c==='NL'?'Nghỉ lễ':'')+'</div>'; };
+  w.innerHTML='<div class="ss-sec"><div class="ss-t">BUỔI SÁNG</div><div class="ss-opts">'+ssChips('S',SS_SANG)+'</div>'+minBox('S')+'</div>'+
+    '<div class="ss-sec"><div class="ss-t">BUỔI CHIỀU</div><div class="ss-opts">'+ssChips('C',SS_CHIEU)+'</div>'+minBox('C')+'</div>'+
+    '<div class="ss-day">Cả ngày đặc biệt: '+dayChip('NL')+dayChip('ĐÃ NGHỈ')+'</div><div class="ss-res" id="ss-res"></div>'+
+    '<a class="ss-adv" onclick="ssAdv(true)">Ca hiếm → mở lưới mã cả ngày (như cũ)</a>';
+  ssCalc();
+}
+function ssCalc(){
+  var s=window.__ss, el=document.getElementById('ss-res'); if(!el) return;
+  var e=ssEnc(s.S,s.C,s.day); if(ssSame(s,s.init)&&s.old&&s.old.status) e=s.old;
+  if(e.err){ el.innerHTML='<div class="ss-err">'+e.err+'</div>'; return; }
+  var r=window.bxDay(e), f=function(n){return String(+(+n).toFixed(3)).replace('.',',');};
+  var lp=(Array.isArray(e.lates)&&e.lates.length)?e.lates.map(function(x){return x.c+' '+x.m+"'";}):((SS_UN.concat(SS_EX).indexOf(e.status)>=0&&e.lateMin)?[e.status+' '+e.lateMin+"'"]:[]);
+  var code=(lp.length&&lp[0].indexOf(e.status+' ')===0&&lp.length===1)?lp[0]:e.status+(lp.length?' · '+lp.join(' · '):'');
+  var nl=(typeof isNoLeave==='function'&&s.empId)?isNoLeave(s.empId):false;
+  el.innerHTML='<div class="ss-code">→ Kết quả: '+code+'</div><div class="ss-nums">'+
+    (e.status==='ĐÃ NGHỈ'?'<span>Không tính công</span>':e.status==='NL'?'<span>Nghỉ lễ — hưởng lương</span>':
+    '<span>Công <b>'+f(r.cong)+'</b></span><span>Trừ phép <b>'+f(r.phep)+'</b></span><span>Không lương <b>'+f(Math.max(0,r.nghi-r.phep))+'</b></span><span>Phạt <b>'+(r.phat?(r.phat/1000)+'k':'0')+'</b></span>')+'</div>'+
+    ((nl&&r.phep>0)?'<div class="ss-note">NV không có phép → phần trừ phép tính vào không lương</div>':'');
+}
+function ssPick(ses,c){ var s=window.__ss; s.day=null; if(s[ses].c!==c) s[ses]={c:c,m:(SS_UN.concat(SS_EX).indexOf(c)>=0?(s[ses].m||0):0)}; ssRender(); }
+function ssMin(ses,v){ window.__ss[ses].m=parseInt(v)||0; ssCalc(); }
+function ssDay(c){ var s=window.__ss; s.day=(s.day===c?null:c); ssRender(); }
+function ssAdv(on){ window.__ssAdv=!!on; var a=document.getElementById('adv-wrap'), w=document.getElementById('ss-wrap'); if(a) a.style.display=on?'block':'none'; if(w) w.style.display=on?'none':'block'; }
+function ssInit(empId,cur){
+  var d=ssDec(cur), has=!!(cur&&cur.status);
+  window.__ss={empId:empId, old:has?JSON.parse(JSON.stringify(cur)):null, S:d?d.S:{c:'1',m:0}, C:d?d.C:{c:'1',m:0}, day:d?d.day:null};
+  window.__ss.init=d?JSON.parse(JSON.stringify({S:d.S,C:d.C,day:d.day})):null;
+  ssAdv(!d); if(d) ssRender();
+}
+function ssSave(){
+  var s=window.__ss; if(!state.editingDayKey||!s) return;
+  var empId=state.editingDayKey.empId, dateStr=state.editingDayKey.dateStr;
+  var entry;
+  if(ssSame(s,s.init)&&s.old&&s.old.status){ entry={status:s.old.status, lateMin:+s.old.lateMin||0, manualOverride:true}; if(Array.isArray(s.old.lates)&&s.old.lates.length) entry.lates=s.old.lates; }
+  else { var e=ssEnc(s.S,s.C,s.day); if(e.err){ alert(e.err); return; } entry={status:e.status, lateMin:e.lateMin||0, manualOverride:true}; if(e.lates&&e.lates.length) entry.lates=e.lates; }
+  var noteVal=document.getElementById('day-note').value.trim(), faceS=document.getElementById('day-face-s').checked, faceC=document.getElementById('day-face-c').checked, faceIssue=document.getElementById('day-face-issue').checked||faceS||faceC;
+  if(noteVal) entry.note=noteVal; if(faceIssue) entry.faceIssue=true; if(faceS) entry.faceS=true; if(faceC) entry.faceC=true;
+  var all=getCCData(), key=ccCycleKey(empId, dateStr);
   if(!all[key]) all[key]={};
   all[key][dateStr]=entry;
   setCCData(all);
