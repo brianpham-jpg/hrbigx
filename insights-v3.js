@@ -21,7 +21,7 @@ try{
 }catch(e){ console.warn('[ix] nav',e); }
 
 /* ---------- 1. Bọc router: chạy go() cũ trước, rồi gắn khối mới ---------- */
-var origGo=window.go;
+var origGo=window.__ixOrigGo||window.go; window.__ixOrigGo=origGo; // nạp lại file không bị bọc 2 lần
 window.go=function(id){
   origGo.apply(this,arguments);
   try{
@@ -159,7 +159,7 @@ function blockGrowth(){
    ===================================================================== */
 function blockRecruit(){
   var T=HR.tuyendung||[]; if(!T.length) return null;
-  var STEPS=['CV','HR duyệt','LM duyệt','Qua V1','Qua V2','Trúng tuyển'];
+  var STEPS=['CV','HR duyệt','LM duyệt','Qua V1','Qua V2','Trúng tuyển'], SN=['nộp CV','HR duyệt','Line Manager duyệt','qua vòng 1','qua vòng 2','trúng tuyển'];
   var g={}; T.forEach(function(r){ var k=(String(r.viTri||'').trim())||'(trống)'; (g[k]=g[k]||[]).push(r); });
   var pos=Object.keys(g).map(function(k){ var l=g[k], f=tdFunnel(l).map(function(x){return x.n;});
     var off=l.filter(function(r){return r.final==='TRÚNG TUYỂN'||r.final==='TỪ CHỐI OFFER';}).length, hire=l.filter(function(r){return r.final==='TRÚNG TUYỂN';}).length;
@@ -174,7 +174,7 @@ function blockRecruit(){
   var anom=[];
   pos.forEach(function(p){ var f=p.f;
     for(var i=2;i<f.length;i++){ var r=f[i-1]?f[i]/f[i-1]:null, rp=f[i-2]?f[i-1]/f[i-2]:null;
-      if(r!=null&&rp!=null&&f[i-1]>=10&&rp>0.8&&r<0.05){ anom.push({p:p,i:i,type:'jump'}); return; } }
+      if(r!=null&&rp!=null&&f[i]>0&&f[i-1]>=10&&rp>0.8&&r<0.05){ anom.push({p:p,i:i,type:'jump'}); return; } }
     if(f[3]>=5&&f[4]===0) anom.push({p:p,i:4,type:'zero'}); });
   var rows=pos.filter(function(p){return p.f[0]>=5;});
   var offPos=pos.filter(function(p){return p.off>0;}).sort(function(a,b){return b.off-a.off||b.hire-a.hire;});
@@ -182,7 +182,7 @@ function blockRecruit(){
 
   var ev=[];
   anom.forEach(function(a){ var p=a.p, f=p.f;
-    if(a.type==='jump') ev.push(['er','<b>'+E(p.k)+':</b> '+f[a.i-1]+'/'+f[a.i-2]+' qua bước "'+STEPS[a.i-1]+'" nhưng chỉ <b>'+f[a.i]+' qua "'+STEPS[a.i]+'" ('+vn(pc(f[a.i],f[a.i-1]))+'%)</b>. Gần như chắc chắn là lỗi nhập liệu (đánh Pass hàng loạt), cần kiểm tra lại trước khi đọc phễu.']);
+    if(a.type==='jump') ev.push(['er','<b>'+E(p.k)+':</b> '+f[a.i-1]+'/'+f[a.i-2]+' người '+SN[a.i-1]+' nhưng chỉ <b>'+f[a.i]+' người '+SN[a.i]+' ('+vn(pc(f[a.i],f[a.i-1]))+'%)</b>. Gần như chắc chắn là lỗi nhập liệu (đánh Pass hàng loạt), cần kiểm tra lại trước khi đọc phễu.']);
     else ev.push(['er','<b>'+E(p.k)+':</b> '+f[3]+' người qua vòng 1, <b>0 người qua vòng 2</b>. Nếu dữ liệu đúng thì tiêu chí vòng 2 đang quá chặt hoặc lệch so với vòng 1.']); });
   var lowAcc=offPos.filter(function(p){return p.off>=4&&p.hire/p.off<0.5;});
   if(lowAcc.length) ev.push(['wa',lowAcc.map(function(p){return '<b>'+E(p.k)+'</b> chỉ nhận '+p.hire+'/'+p.off+' offer';}).join(', ')+'. Nên xem lại mức offer hoặc tốc độ ra quyết định ở các vị trí này.']);
@@ -243,12 +243,13 @@ function blockProbation(){
   var qs=Object.keys(qmap).map(Number).sort().slice(-4).map(function(k){ var a=qmap[k]; return {k:'Q'+(k%10)+'/'+Math.floor(k/10),q:cnt(a,'qua'),k2:cnt(a,'khong'),open:cnt(a,'dang')+cnt(a,'trehan')}; });
 
   var ev=[];
-  dl.forEach(function(x){ var d=x.q+x.k; if(d>=5){ var r=x.q/d*100; if(r<50) ev.push(['er','<b>'+E(x.d)+' chỉ '+x.q+'/'+d+' qua thử việc ('+vn(r,0)+'%)</b>, thấp nhất nhóm. Người mới rơi rụng nhiều nên quy mô phòng khó tăng.']); else if(r<75) ev.push(['wa','<b>'+E(x.d)+'</b>: '+x.q+'/'+d+' qua thử việc ('+vn(r,0)+'%).']); } });
+  var dEl=dl.filter(function(x){return x.q+x.k>=5;}), dMin=dEl.length?Math.min.apply(null,dEl.map(function(x){return x.q/(x.q+x.k);})):null;
+  dl.forEach(function(x){ var d=x.q+x.k; if(d>=5){ var r=x.q/d*100; if(r<50) ev.push(['er','<b>'+E(x.d)+' chỉ '+x.q+'/'+d+' qua thử việc ('+vn(r,0)+'%)</b>'+(x.q/d===dMin?', thấp nhất công ty':'')+'. Người mới rơi rụng nhiều nên quy mô phòng khó tăng.']); else if(r<75) ev.push(['wa','<b>'+E(x.d)+'</b>: '+x.q+'/'+d+' qua thử việc ('+vn(r,0)+'%).']); } });
   var qOk=qs.filter(function(q){return q.q+q.k2>=5;});
   qOk.forEach(function(q){ var r=q.q/(q.q+q.k2)*100; if(r<50){ var others=qOk.filter(function(o){return o!==q;}).map(function(o){return o.k+' đạt '+o.q+'/'+(o.q+o.k2)+' ('+vn(o.q/(o.q+o.k2)*100,0)+'%)';});
     ev.push(['er','Đợt vào <b>'+q.k+' chỉ '+q.q+'/'+(q.q+q.k2)+' qua thử việc ('+vn(r,0)+'%)</b>'+(others.length?', trong khi '+others.join(', '):'')+'. Nên xem lại đợt tuyển này (vị trí, người phỏng vấn, nguồn CV).']); } });
-  if(s6&&s6.r<80){ var drops=[]; for(var i=1;i<surv.length;i++) drops.push({m:surv[i].m,d:surv[i-1].r-surv[i].r}); drops.sort(function(a,b){return b.d-a.d;});
-    ev.push(['wa',(s2?'Sau 2 tháng còn <b>'+vn(s2.r)+'%</b> người mới, ':'')+'sau 6 tháng còn <b>'+vn(s6.r)+'%</b>. Rơi mạnh nhất ở tháng thứ '+drops.slice(0,2).map(function(x){return x.m;}).sort(function(a,b){return a-b;}).join(' và tháng thứ ')+'.']); }
+  if(s6&&s6.r<80){ var drops=[]; for(var i=1;i<Math.min(surv.length,7);i++) drops.push({m:surv[i].m,d:surv[i-1].r-surv[i].r}); drops.sort(function(a,b){return b.d-a.d;});
+    ev.push(['wa',(s2?'Sau 2 tháng còn <b>'+vn(s2.r)+'%</b> người mới, ':'')+'sau 6 tháng còn <b>'+vn(s6.r)+'%</b>. Trong 6 tháng đầu, rơi mạnh nhất ở tháng thứ '+drops.slice(0,2).map(function(x){return x.m;}).sort(function(a,b){return a-b;}).join(' và tháng thứ ')+'.']); }
   else if(s6) ev.push(['ok','Sau 6 tháng còn <b>'+vn(s6.r)+'%</b> người mới ('+s6.st+'/'+s6.el+').']);
   if(late.length){ var by={}; late.forEach(function(x){var d=dept(x.e); by[d]=(by[d]||0)+1;});
     ev.push(['wa','<b>'+late.length+' người đã quá 2 tháng thử việc mà chưa ký HĐ</b> ('+Object.keys(by).map(function(d){return E(d)+' '+by[d];}).join(', ')+'): '+late.map(function(x){return E(short(x.e.hoTen));}).join(', ')+'. Cần chốt kết quả.']); }
@@ -291,19 +292,20 @@ function blockProbation(){
 function blockLate(){
   var D=window.__ccData;
   if(!D||!D.cc_data){ if(window.nsuatLoadFirebase) window.nsuatLoadFirebase(); return {html:block('Kỷ luật giờ giấc','Đánh giá chi tiết','','<div class="ix-foot">Đang tải dữ liệu chấm công…</div>')}; }
-  var ns=HR.nhansu, norm=window.nsNorm, byMa={}, byName={}, idName={};
-  ns.forEach(function(n){ byMa[n.maNV]=n; byName[norm(n.hoTen)]=n; });
-  (D.employees||[]).forEach(function(e){ idName[e.id]=e.name; });
-  var cell={}, months={}, dep={}, per={}, wd={}, buck=[0,0,0,0], totL=0, totD=0;
-  Object.keys(D.cc_data).forEach(function(key){
-    var mm=key.match(/^(.*)_(\d{4})_(\d{1,2})$/); if(!mm) return;
-    var p=byMa[mm[1]]||byName[norm(idName[mm[1]]||'')]; if(!p) return;
-    var mk2=(+mm[2])*100+(+mm[3]); months[mk2]=1; var d=dept(p), days2=D.cc_data[key]||{};
-    Object.keys(days2).forEach(function(day){ if(window.nsWknd(day)) return; var v=days2[day]; if(!v||v.status==='ĐÃ NGHỈ') return;
-      var ls=window.nsLates(v), c=(cell[d]=cell[d]||{}), x=(c[mk2]=c[mk2]||[0,0]); x[0]+=ls.length; x[1]++;
-      var w=new Date(day+'T12:00:00').getDay(), q=(wd[w]=wd[w]||[0,0]); q[0]+=ls.length; q[1]++;
-      var dd=(dep[d]=dep[d]||{n:0,min:0,days:0}); dd.days++; totD++;
-      ls.forEach(function(m){ dd.n++; dd.min+=m; totL++; buck[m<10?0:m<30?1:m<60?2:3]++; var pp=(per[p.maNV]=per[p.maNV]||{n:0,min:0,name:p.hoTen,d:d}); pp.n++; pp.min+=m; }); }); });
+  /* gộp y hệt renderNangSuat: duyệt danh sách NV chấm công, phòng lấy theo Hồ sơ (khớp tên), mẫu số = mọi ngày có ký hiệu (T2–T6) */
+  var ns=HR.nhansu, norm=window.nsNorm, byName={};
+  ns.forEach(function(n){ byName[norm(n.hoTen)]=n; });
+  var cell={}, months={}, dep={}, per={}, wd={}, buck=[0,0,0,0], totL=0, totD=0, ccKeys=Object.keys(D.cc_data);
+  (D.employees||[]).forEach(function(e){
+    var n=byName[norm(e.name)], d=(n&&n.phong)||e.dept||'—';
+    var dd=(dep[d]=dep[d]||{n:0,min:0,days:0,emp:0}); dd.emp++;
+    ccKeys.forEach(function(key){ if(key.indexOf(e.id+'_')!==0) return; var mm=key.split('_'); if(mm.length<3) return;
+      var mk2=(+mm[mm.length-2])*100+(+mm[mm.length-1]); months[mk2]=1; var rec=D.cc_data[key]||{};
+      Object.keys(rec).forEach(function(day){ var v=rec[day], stt=(v&&typeof v==='object')?v.status:v; if(stt===''||stt==null) return; if(window.nsWknd(day)) return;
+        var ls=window.nsLates(v), c=(cell[d]=cell[d]||{}), x=(c[mk2]=c[mk2]||[0,0]); x[0]+=ls.length; x[1]++;
+        var w=new Date(day+'T12:00:00').getDay(), q=(wd[w]=wd[w]||[0,0]); q[0]+=ls.length; q[1]++;
+        dd.days++; totD++;
+        ls.forEach(function(m){ dd.n++; dd.min+=m; totL++; buck[m<10?0:m<30?1:m<60?2:3]++; var pp=(per[e.id]=per[e.id]||{n:0,min:0,name:e.name,d:d}); pp.n++; pp.min+=m; }); }); }); });
   if(!totD) return null;
   var mkeys=Object.keys(months).map(Number).sort().slice(-5), Tn=today(), curKey=Tn.getFullYear()*100+Tn.getMonth()+1;
   var deps=Object.keys(cell).sort(function(a,b){ var ra=dep[a].n/dep[a].days, rb=dep[b].n/dep[b].days; return rb-ra||a.localeCompare(b); });
@@ -314,10 +316,10 @@ function blockLate(){
   var wmax=Math.max.apply(null,wr), wmin=Math.min.apply(null,wr), WN=['','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6'];
 
   var ev=[];
-  var worst=deps[0]; if(worst&&dep[worst].n){ var pw=people.filter(function(p){return p.d===worst;})[0], wrate=dep[worst].n/dep[worst].days*100;
-    if(pw&&pw.n/dep[worst].n>0.5) ev.push(['wa','<b>'+E(worst)+'</b> có tỷ lệ trễ cao nhất ('+vn(wrate)+'%) nhưng <b>'+pw.n+'/'+dep[worst].n+' lượt là của 1 người ('+E(pw.name)+')</b>. Đây là vấn đề cá nhân, không phải của cả phòng, nên trao đổi riêng.']);
+  var worst=deps.filter(function(d){return dep[d].emp>=3;})[0]; if(worst&&dep[worst].n){ var pw=people.filter(function(p){return p.d===worst;})[0], wrate=dep[worst].n/dep[worst].days*100;
+    if(pw&&pw.n/dep[worst].n>0.5) ev.push(['wa','<b>'+E(worst)+'</b> có tỷ lệ trễ cao nhất trong các phòng từ 3 người ('+vn(wrate)+'%) nhưng <b>'+pw.n+'/'+dep[worst].n+' lượt là của 1 người ('+E(pw.name)+')</b>. Đây là vấn đề cá nhân, không phải của cả phòng, nên trao đổi riêng.']);
     else ev.push([wrate>=8?'wa':'in','<b>'+E(worst)+'</b> có tỷ lệ trễ cao nhất: '+vn(wrate)+'% ('+dep[worst].n+' lượt).']); }
-  ld.forEach(function(d){ var a=dep[d].min/dep[d].n; if(dep[d].n>=3&&a>20){ var pm=people.filter(function(p){return p.d===d;}).sort(function(x,y){return y.min-x.min;})[0];
+  ld.forEach(function(d){ var a=dep[d].min/dep[d].n; if(dep[d].emp>=2&&dep[d].n>=3&&a>20){ var pm=people.filter(function(p){return p.d===d;}).sort(function(x,y){return y.min-x.min;})[0];
     ev.push(['wa','<b>'+E(d)+'</b>: trung bình <b>'+vn(a)+' phút/lượt</b>'+(worst&&d!==worst&&dep[worst].n?', gấp '+vn(a/(dep[worst].min/dep[worst].n))+' lần '+E(worst):'')+'.'+(pm?' Riêng '+E(pm.name)+': '+pm.n+' lượt, tổng '+pm.min+' phút.':'')]); } });
   var zero=Object.keys(dep).filter(function(d){return dep[d].n===0;});
   if(totL&&buck[0]/totL>=0.6) ev.push(['ok',vn(buck[0]/totL*100,0)+'% lượt trễ dưới 10 phút.'+(zero.length?' '+zero.map(E).join(', ')+' chưa đi trễ lần nào.':'')]);
@@ -325,14 +327,14 @@ function blockLate(){
   if(totL) ev.push([wmax-wmin<2?'in':'wa',WN[wkeys[wr.indexOf(wmax)]]+' có tỷ lệ trễ cao nhất ('+vn(wmax)+'%), thấp nhất '+WN[wkeys[wr.indexOf(wmin)]]+' ('+vn(wmin)+'%).'+(wmax-wmin<2?' Chênh lệch nhỏ, cần thêm dữ liệu trước khi kết luận.':'')]);
 
   var html=block('Kỷ luật giờ giấc','Đánh giá chi tiết','Đi trễ là vấn đề của cả phòng hay của vài cá nhân? Trễ nhẹ hay nặng?',
-    '<div class="ix-kpis">'+kpi(vn(totL/totD*100)+'%','ngày có đi trễ · '+totL+'/'+totD.toLocaleString('vi-VN'),mkeys.length?'T'+(mkeys[0]%100)+'/'+Math.floor(mkeys[0]/100)+' – T'+(mkeys[mkeys.length-1]%100)+'/'+Math.floor(mkeys[mkeys.length-1]/100):'')+
+    '<div class="ix-kpis">'+kpi(vn(totL/totD*100,1)+'%','tỷ lệ đi trễ · '+totL+'/'+totD.toLocaleString('vi-VN'),mkeys.length?'T'+(mkeys[0]%100)+'/'+Math.floor(mkeys[0]/100)+' – T'+(mkeys[mkeys.length-1]%100)+'/'+Math.floor(mkeys[mkeys.length-1]/100):'')+
       kpi(totL?vn(top3/totL*100,0)+'%':'—','số lượt trễ do 3 người gây ra',top3+'/'+totL+' lượt',totL&&top3/totL>0.4?'er':'')+
       kpi(totL?vn(buck[0]/totL*100,0)+'%':'—','lượt trễ dưới 10 phút',buck[0]+'/'+totL+' · trễ nhẹ')+
       kpi(buck[2]+buck[3],'lượt trễ từ 30 phút trở lên','trễ nặng',buck[2]+buck[3]?'wa':'ok')+'</div>'+
     '<div class="ix-g2"><div class="ix-card"><div class="ct">Tỷ lệ đi trễ theo phòng × tháng</div><div class="cs">Lượt trễ ÷ ngày chấm · cùng cách tính với các biểu đồ phía trên · ô viền nét đứt: tháng chưa hết kỳ</div><div class="ix-scroll"><table class="ix-t" id="ix-d1"></table></div></div>'+
       card('ix-d2','Mức độ trễ: số lượt &amp; phút trung bình theo phòng','Phòng nào trễ nhiều lần, phòng nào trễ lâu','tall')+'</div>'+
     '<div class="ix-g2 ix-mt">'+card('ix-d3','Phân bố độ dài mỗi lượt trễ','Theo số phút trễ của từng lượt','sm')+card('ix-d4','Tỷ lệ trễ theo thứ trong tuần','Toàn kỳ','sm')+'</div>'+
-    evalBox(ev,'một người chiếm trên 50% lượt trễ của phòng → ghi "vấn đề cá nhân"; phút trễ trung bình trên 20 phút (từ 3 lượt) → Cảnh báo; từ 60% lượt trễ dưới 10 phút → Tốt; chênh lệch giữa các thứ dưới 2 điểm % → chỉ ghi Lưu ý.'));
+    evalBox(ev,'xếp hạng phòng chỉ tính phòng từ 3 người (giống phần Đọc nhanh phía trên); một người chiếm trên 50% lượt trễ của phòng → ghi "vấn đề cá nhân"; phút trễ trung bình trên 20 phút (phòng từ 2 người, từ 3 lượt) → Cảnh báo; từ 60% lượt trễ dưới 10 phút → Tốt; chênh lệch giữa các thứ dưới 2 điểm % → chỉ ghi Lưu ý.'));
   return {html:html, draw:function(){
     function heat(p){ if(p===0) return '#FFFFFF'; var t=Math.min(p/20,1),a=[251,241,223],b=[208,120,42]; return 'rgb('+a.map(function(v,i){return Math.round(v+(b[i]-v)*t);}).join(',')+')'; }
     var h='<tr><th class="l">Phòng</th>'+mkeys.map(function(k){return '<th>T'+(k%100)+'/'+String(Math.floor(k/100)).slice(2)+(k===curKey?'*':'')+'</th>';}).join('')+'</tr>';
@@ -389,7 +391,7 @@ function blockCompliance(){
   var list2=soon.map(function(x){return '<tr><td>'+E(x.e.hoTen)+'</td><td>'+E(x.e.loaiHD||'—')+'</td><td>'+E(x.e.ngayHetHan||'')+'</td><td><span class="ix-pill '+(x.d<=30?'p-wa':'p-in')+'">'+x.d+' ngày</span></td></tr>';}).join('');
   var list3=rOver.concat(rSoon).map(function(x){return '<tr><td>'+E(x.e.hoTen)+'</td><td>'+E(dept(x.e))+'</td><td>'+dmy(x.due)+'/'+x.due.getFullYear()+'</td><td><span class="ix-pill '+(x.d<0?'p-er':'p-wa')+'">'+(x.d<0?'Quá '+(-x.d):'Còn '+x.d)+' ngày</span></td></tr>';}).join('');
 
-  var html=block('Tuân thủ: hợp đồng, hồ sơ, review lương','Tab mới','Việc hành chính nào đang quá hạn? Ai cần xử lý trước?',
+  var html=block('Tuân thủ: hợp đồng, hồ sơ, review lương','Đánh giá chi tiết','Việc hành chính nào đang quá hạn? Ai cần xử lý trước?',
     '<div class="ix-kpis">'+kpi(over.length,'HĐ đã quá hạn',over.length?'lâu nhất '+(-over[0].d)+' ngày':'không có',over.length?'er':'ok')+
       kpi(soon.length,'HĐ hết hạn trong 60 ngày',soon.length?'gần nhất: '+E(soon[0].e.ngayHetHan||''):'',soon.length?'wa':'ok')+
       kpi(vn(hsR)+'%','người đang làm đủ hồ sơ · '+hsOk+'/'+hsN,(hsN-hsOk)+' người thiếu',hsR<50?'er':(hsR<90?'wa':'ok'))+
