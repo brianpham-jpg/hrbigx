@@ -1,6 +1,6 @@
 /* ============================================================
-   TAB NHỎ: CÔNG VIỆC CỐ ĐỊNH (trong tab Công việc HR) — file riêng, không sửa app.js
-   - Thanh tab con: "Tổng hợp tháng" (giữ nguyên tab cũ) | "Công việc cố định"
+   TAB NHỎ: CÔNG VIỆC CỐ ĐỊNH — mục con ngay dưới "Công việc HR" ở menu trái — file riêng, không sửa app.js
+   - Trang riêng (id: cong-viec-co-dinh). Trang Công việc HR cũ giữ nguyên, không chèn gì vào
    - Nhóm: Hằng ngày (tick theo ngày) · Hằng tuần · Hằng tháng · Theo phát sinh · Liên tục
    - Mỗi việc: ngày nhận, ngày làm, hạn leader CFM, các vòng duyệt (gửi → Đạt / Cần sửa + lý do,
      leader yêu cầu gì, ngày em sửa xong, em đã sửa gì), chốt / xong. Bảng chấm công: 6 bước.
@@ -11,9 +11,11 @@
    - Xuất PDF (A4 ngang) để sếp check.
    ============================================================ */
 (function(){
-  if(typeof window.renderCongViec!=='function') return;
+  if(typeof window.go!=='function' || typeof NAV==='undefined' || typeof MAP==='undefined') return;
+  var PAGE='cong-viec-co-dinh';
   var FB='https://bigx-chamcong-hr-default-rtdb.firebaseio.com/public/hrfixed';
-  var TABKEY='bx_cv_subtab', BAK='bx_hrfixed_bak';
+  var BAK='bx_hrfixed_bak';
+  try{ localStorage.removeItem('bx_cv_subtab'); }catch(e){} // dọn khoá của bản thanh-2-nút trước
   var FREQ={day:'Hằng ngày', week:'Hằng tuần', month:'Hằng tháng', event:'Theo phát sinh', proj:'Liên tục'};
   var FREQ_ORDER=['day','week','month','event','proj'];
   var DEF_REASONS=['Sai số liệu','Thiếu thông tin','Sai format / trình bày','Leader đổi yêu cầu','Khác'];
@@ -61,17 +63,15 @@
   function diffDays(a,b){ var x=pISO(a), y=pISO(b); if(!x||!y) return null; return Math.round((x-y)/86400000); } // a - b
   function fetchJ(url,opt){ return (window.bxAuthedFetch?window.bxAuthedFetch(url,opt):fetch(url,opt)).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }); }
   function put(path,val){ return fetchJ(FB+'/'+path+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(val)}); }
-  function getTab(){ try{ return localStorage.getItem(TABKEY)==='cd'?'cd':'tong'; }catch(e){ return 'tong'; } }
-  function setTab(t){ try{ localStorage.setItem(TABKEY,t); }catch(e){} }
   function saveBak(){ try{ localStorage.setItem(BAK, JSON.stringify({config:S.config, months:S.months})); }catch(e){} }
   function tasks(){ return (S.config&&S.config.tasks&&S.config.tasks.length)?S.config.tasks:DEF_TASKS; }
   function reasons(){ return (S.config&&S.config.reasons&&S.config.reasons.length)?S.config.reasons:DEF_REASONS; }
   function taskById(id){ var t=tasks(); for(var i=0;i<t.length;i++) if(t[i].id===id) return t[i]; return null; }
   function mon(ym){ if(!S.months[ym]) S.months[ym]={}; var m=S.months[ym]; if(!m.items) m.items={}; if(!m.day) m.day={}; return m; }
   function rerender(){
-    if(window.currentTab!=='cong-viec' || !window.go) return;
+    if(window.currentTab!==PAGE || !window.go) return;
     var c=document.getElementById('content'), y=c?c.scrollTop:0, wy=window.scrollY||0;
-    window.go('cong-viec');
+    window.go(PAGE);
     var back=function(){ if(c) c.scrollTop=y; if(wy) window.scrollTo(0,wy); };
     back(); setTimeout(back,0); setTimeout(back,30);
   }
@@ -216,7 +216,6 @@
   };
   window.cdMonth=function(k){ S.month=k===0?curMonth():shiftMonth(S.month,k); S.open={}; S.addEv=null; rerender(); };
   window.cdFilter=function(f){ S.f=f; rerender(); };
-  window.cdSub=function(t){ setTab(t); if(window.go) window.go('cong-viec'); };
   window.cdReload=function(){ S.loaded=false; load(); rerender(); };
 
   /* phát sinh */
@@ -259,9 +258,6 @@
     if(document.getElementById('cvcd-css')) return;
     var s=document.createElement('style'); s.id='cvcd-css';
     s.textContent=''
-    +'.cd-sub{display:flex;gap:4px;border-bottom:1px solid var(--line,#E4DECF);margin:0 0 16px}'
-    +'.cd-sub button{background:none;border:0;font:inherit;font-weight:600;font-size:13.5px;color:var(--muted,#8B897E);padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px}'
-    +'.cd-sub button.on{color:var(--ink,#21303B);border-color:var(--ink,#21303B)}'
     +'#cvcd{--ok:#177A53;--okb:#E3F4EE;--wa:#9A6417;--wab:#FBF1DF;--er:#A42F2F;--erb:#FDECEC;--in:#3548A8;--inb:#E8EBF8;font-size:13px}'
     +'#cvcd .cd-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}'
     +'#cvcd .cd-btn{background:var(--paper,#FBFAF6);border:1px solid var(--line,#E4DECF);border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;color:var(--ink,#21303B);cursor:pointer}'
@@ -646,10 +642,9 @@
   };
 
   /* ---------- trang ---------- */
-  function subBar(t){ return '<div class="cd-sub"><button class="'+(t==='tong'?'on':'')+'" onclick="cdSub(\'tong\')">Tổng hợp tháng</button><button class="'+(t==='cd'?'on':'')+'" onclick="cdSub(\'cd\')">Công việc cố định</button></div>'; }
   function renderCD(){
     if(!S.month) S.month=curMonth();
-    var head='<div class="page-head"><div class="page-h1">Công việc HR</div><div class="page-lead">Danh sách việc cố định theo kỳ: nhập ngày nhận, ngày làm, các lần gửi leader duyệt (Đạt / Cần sửa + lý do, đã sửa gì), ngày chốt. Web tự so với hạn và tính đúng hạn / trễ / số lần sửa. Xuất PDF để sếp check.</div></div>'+subBar('cd');
+    var head='<div class="page-head"><div class="page-h1">Công việc cố định</div><div class="page-lead">Danh sách việc cố định theo kỳ: nhập ngày nhận, ngày làm, các lần gửi leader duyệt (Đạt / Cần sửa + lý do, đã sửa gì), ngày chốt. Web tự so với hạn và tính đúng hạn / trễ / số lần sửa. Xuất PDF để sếp check.</div></div>';
     if(!S.loaded){ load(); return head+(window.loadingBox?window.loadingBox():'Đang tải…'); }
     var ym=S.month, items=itemsFor(ym);
     var h='<div id="cvcd">';
@@ -669,15 +664,30 @@
     return head+h+'</div>';
   }
 
-  /* ---------- gắn vào tab Công việc HR ---------- */
-  var orig=window.renderCongViec;
-  window.renderCongViec=function(){
-    css();
-    var t=getTab();
-    if(t==='cd') return renderCD();
-    var h=orig.apply(this,arguments);
-    var i=h.indexOf('<div class="page-head">'), j=i>=0?h.indexOf('</div></div>',i):-1;
-    if(j>=0) return h.slice(0,j+12)+subBar('tong')+h.slice(j+12);
-    return subBar('tong')+h;
+  /* ---------- gắn vào menu trái: mục con ngay dưới "Công việc HR" ---------- */
+  var ITEM={ id:PAGE, label:'Công việc cố định', icon:'ti-repeat', sub:true,
+    lead:'Checklist việc cố định theo kỳ: ngày nhận, ngày làm, leader duyệt / sửa, xuất PDF.' };
+  try{
+    NAV.forEach(function(g){
+      var k=g.items.map(function(it){return it.id;}).indexOf('cong-viec');
+      if(k>=0 && !g.items.some(function(it){return it.id===PAGE;})){ g.items.splice(k+1,0,ITEM); MAP[PAGE]={item:ITEM, group:g}; }
+    });
+    if(!MAP[PAGE]){ var g0=NAV[0]; g0.items.push(ITEM); MAP[PAGE]={item:ITEM, group:g0}; }
+  }catch(e){ console.warn('[cvcd] nav',e); }
+  (function navCss(){
+    if(document.getElementById('cvcd-nav-css')) return;
+    var st=document.createElement('style'); st.id='cvcd-nav-css';
+    st.textContent='#nav-'+PAGE+'{padding-left:44px;font-size:12.5px;position:relative}'
+      +'#nav-'+PAGE+'::before{content:"";position:absolute;left:27px;top:0;bottom:50%;width:9px;border-left:1px solid rgba(255,255,255,.18);border-bottom:1px solid rgba(255,255,255,.18);border-bottom-left-radius:4px}'
+      +'#nav-'+PAGE+' i{font-size:14px}';
+    document.head.appendChild(st);
+  })();
+  // menu đã vẽ trước khi file này nạp → vẽ lại để hiện mục mới
+  try{ if(document.querySelector('#nav .nav-item') && typeof renderNav==='function'){ renderNav(); if(window.currentTab){ var nb=document.getElementById('nav-'+window.currentTab); if(nb) nb.classList.add('active'); } } }catch(e){}
+  var prevGo=window.go;
+  window.go=function(id){
+    prevGo.apply(this,arguments);
+    if(id!==PAGE) return;
+    try{ css(); var c=document.getElementById('content'); if(c) c.innerHTML=renderCD(); }catch(e){ console.warn('[cvcd]',e); }
   };
 })();
