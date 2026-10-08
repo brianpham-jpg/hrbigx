@@ -406,10 +406,11 @@ function kcvViTriOptions(){
   return list.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join('');
 }
 function renderKhoCV(){
+  if(kcvTab==='ai') return kcvTabsHtml()+renderCvAI(); // [CVAI] tab con Chấm CV theo JD
   if(HR.error) return errorBox();
   if(!HR.loaded) return loadingBox();
   setTimeout(kcvRenderList,0);
-  return ''+
+  return ''+kcvTabsHtml()+
     '<div class="page-head"><div class="page-h1">Kho CV — Nạp hồ sơ ứng viên</div>'+
     '<div class="page-lead">Chọn vị trí, tải CV lên → hệ tự lưu file vào Drive và thêm dòng vào file Tuyển dụng (Mã tự tăng · Ngày nộp hôm nay · Vị trí · Họ tên · Link CV). Vị trí lấy từ danh mục chuẩn nên không sai tên.</div></div>'+
     '<div class="kcv-card">'+
@@ -2956,3 +2957,130 @@ function ngStyle(){ return '<style id="ng-style">'
     return html;
   };
 })();
+
+/* ============================================================
+   KHO CV › CHẤM CV THEO JD (AI) — thêm 08/10/2026
+   Đọc API_URL?action=cvai (có kiểm tra đăng nhập ở Apps Script).
+   ============================================================ */
+var kcvTab = 'nap';
+function kcvSwitch(t){ kcvTab = t; go('kho-cv'); }
+function kcvTabsHtml(){
+  var p = (window.CVAI && CVAI.data) ? CVAI.data.pending : 0;
+  return '<div class="kcv-tabs">'+
+    '<button class="kcv-tab'+(kcvTab==='nap'?' on':'')+'" onclick="kcvSwitch(\'nap\')"><i class="ti ti-cloud-upload"></i> Nạp CV</button>'+
+    '<button class="kcv-tab'+(kcvTab==='ai'?' on':'')+'" onclick="kcvSwitch(\'ai\')"><i class="ti ti-sparkles"></i> Chấm CV theo JD'+(p?' <span class="kcv-cnt">'+p+'</span>':' <span class="kcv-new">MỚI</span>')+'</button>'+
+  '</div>';
+}
+
+var CVAI = { loaded:false, loading:false, error:null, data:null, sel:null, running:false, msg:'', f:{ vt:'', kl:'', q:'', chua:false } };
+var CVAI_KL = { 'ĐẠT':{t:'Đạt',c:'teal',hex:'#35655B'}, 'XEM TAY':{t:'Xem tay',c:'clay',hex:'#B07A43'}, 'KHÔNG ĐẠT':{t:'Không đạt',c:'rust',hex:'#A65A4B'} };
+
+function cvaiLoad(){
+  if(CVAI.loading) return; CVAI.loading = true; CVAI.error = null;
+  var url = API_URL + '?action=cvai';
+  var p = window.bxAuthedFetch ? window.bxAuthedFetch(url,{cache:'no-store'}) : fetch(url,{cache:'no-store'});
+  p.then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+   .then(function(d){ if(!d.ok) throw new Error(d.error||'API lỗi'); CVAI.data = d; CVAI.loaded = true; })
+   .catch(function(e){ CVAI.error = e.message; })
+   .then(function(){ CVAI.loading = false; if(currentTab==='kho-cv' && kcvTab==='ai') go('kho-cv'); });
+}
+
+function cvaiRun(){
+  if(CVAI.running) return; CVAI.running = true; CVAI.msg = 'Đang chấm… (mỗi CV ~10 giây, tối đa 10 CV/lần)'; go('kho-cv');
+  var body = JSON.stringify({ key:API_KEY, action:'cvaiRun', limit:10 });
+  var opt = { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:body };
+  (window.bxAuthedFetch ? window.bxAuthedFetch(API_URL,opt) : fetch(API_URL,opt))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.busy) CVAI.msg = 'Hệ thống đang chấm ở một lượt khác, thử lại sau ít phút.';
+      else CVAI.msg = 'Đã chấm '+(d.done||0)+' CV · còn '+(d.left||0)+' CV chờ'+(d.rateLimited?' · Gemini báo giới hạn, lượt sau tự chấm tiếp':'')+((d.errors&&d.errors.length)?' · lỗi: '+d.errors.join('; '):'');
+    })
+    .catch(function(e){ CVAI.msg = 'Lỗi kết nối: '+e.message; })
+    .then(function(){ CVAI.running = false; CVAI.loaded = false; cvaiLoad(); });
+}
+
+function cvaiSet(k,v){ CVAI.f[k] = v; cvaiRenderBody(); }
+function cvaiPick(ma){ CVAI.sel = ma; cvaiRenderBody(); }
+function cvaiFmt(s){ return s==null||s==='' ? '—' : Number(s).toFixed(1).replace('.',','); }
+function cvaiDays(d){ var p=String(d||'').split('/'); if(p.length<3) return 999; return (Date.now()-new Date(+p[2],+p[1]-1,+p[0]).getTime())/864e5; }
+
+function cvaiRows(){
+  var f = CVAI.f, q = f.q.trim().toLowerCase();
+  return CVAI.data.rows.filter(function(r){
+    if(f.vt && r.viTri!==f.vt) return false;
+    if(f.kl && r.kl!==f.kl) return false;
+    if(f.chua && r.hr) return false;
+    if(q && (String(r.ma)+' '+String(r.ten).toLowerCase()).indexOf(q)<0) return false;
+    return true;
+  }).sort(function(a,b){ return b.ma-a.ma; });
+}
+
+function renderCvAI(){
+  if(!CVAI.loaded){
+    if(!CVAI.loading && !CVAI.error) setTimeout(cvaiLoad,0);
+    if(CVAI.error) return '<div class="cva-note rust">Không tải được kết quả chấm: '+esc(CVAI.error)+' · <a href="javascript:void(0)" onclick="CVAI.error=null;cvaiLoad()">thử lại</a></div>';
+    return '<div class="cva-note">Đang tải kết quả chấm CV…</div>';
+  }
+  setTimeout(cvaiRenderBody,0);
+  return '<div class="page-head"><div class="page-lead" style="margin-top:0">AI đối chiếu từng CV với rubric của vị trí — điểm, kết luận, ưu/nhược kèm trích dẫn từ CV. File Tuyển dụng chỉ nhận kết luận ở cột O; quyết định cuối vẫn là HR.</div></div><div id="cva-body"></div>';
+}
+
+function cvaiRenderBody(){
+  var el = document.getElementById('cva-body'); if(!el || !CVAI.data) return;
+  var D = CVAI.data, rows = cvaiRows(), all = D.rows, cfg = D.config||{};
+  var cnt = function(k){ return all.filter(function(r){return r.kl===k;}).length; };
+  var mas = all.map(function(r){return r.ma;}), minMa = Math.min.apply(null,mas), maxMa = Math.max.apply(null,mas);
+  var pass = all.filter(function(r){return r.hr==='SCAN CV PASS';}), agree = pass.filter(function(r){return r.kl==='ĐẠT';}).length;
+  var lr = D.lastRun||{};
+  var sub = D.pending ? D.pending+' CV mới đang chờ chấm' : (lr.at ? 'Đã cập nhật '+lr.at : 'Không có CV chờ');
+  var vts = {}; all.forEach(function(r){ vts[r.viTri]=1; });
+  var kpi = function(l,v,n,extra){ return '<div class="cva-kpi"><div class="l">'+l+'</div><div class="v">'+v+(extra||'')+'</div><div class="n">'+n+'</div></div>'; };
+  var html = '';
+  if(!D.hasKey) html += '<div class="cva-note clay"><i class="ti ti-key"></i> Chưa có GEMINI_API_KEY trong Apps Script → CV mới chưa tự chấm được. Kết quả bên dưới là lô đã chấm sẵn.</div>';
+  html += '<div class="cva-kpis">'+
+    kpi('Đã chấm', all.length, sub+' · Mã '+minMa+' → '+maxMa, D.pending?'<small> / '+(all.length+D.pending)+'</small>':'')+
+    kpi('Đạt', cnt('ĐẠT'), '≥ '+String(cfg.DAT).replace('.',',')+' điểm')+
+    kpi('Xem tay', cnt('XEM TAY'), String(cfg.XEM_TAY).replace('.',',')+' – dưới '+String(cfg.DAT).replace('.',',')+' hoặc thiếu thông tin')+
+    kpi('Không đạt', cnt('KHÔNG ĐẠT'), '< '+String(cfg.XEM_TAY).replace('.',',')+' hoặc trượt điều kiện')+
+    kpi('Khớp HR PASS', pass.length?Math.round(agree/pass.length*100)+'%':'—', agree+' / '+pass.length+' CV HR đã PASS được AI chấm Đạt')+
+  '</div>';
+  html += '<div class="cva-bar">'+
+    '<select onchange="cvaiSet(\'vt\',this.value)"><option value="">Tất cả vị trí</option>'+Object.keys(vts).sort().map(function(v){return '<option'+(CVAI.f.vt===v?' selected':'')+'>'+esc(v)+'</option>';}).join('')+'</select>'+
+    [['','Tất cả'],['ĐẠT','Đạt'],['XEM TAY','Xem tay'],['KHÔNG ĐẠT','Không đạt']].map(function(c){return '<span class="cva-chip'+(CVAI.f.kl===c[0]?' on':'')+'" onclick="cvaiSet(\'kl\',\''+c[0]+'\')">'+c[1]+'</span>';}).join('')+
+    '<span class="cva-chip'+(CVAI.f.chua?' on':'')+'" onclick="cvaiSet(\'chua\','+(!CVAI.f.chua)+')">Chưa HR review</span>'+
+    '<input class="cva-q" placeholder="Tìm mã / tên viết tắt" value="'+esc(CVAI.f.q)+'" oninput="CVAI.f.q=this.value;clearTimeout(window.__cvq);window.__cvq=setTimeout(cvaiRenderBody,250)">'+
+    '<button class="btn-primary cva-run" onclick="cvaiRun()"'+((CVAI.running||!D.pending||!D.hasKey)?' disabled':'')+'><i class="ti ti-sparkles"></i> '+(CVAI.running?'Đang chấm…':'Chấm CV chưa chấm ('+D.pending+')')+'</button>'+
+  '</div>';
+  if(CVAI.msg) html += '<div class="cva-note">'+esc(CVAI.msg)+'</div>';
+  if(!rows.find(function(r){return r.ma===CVAI.sel;})) CVAI.sel = rows.length ? rows[0].ma : null;
+  html += '<div class="cva-split"><div class="table-wrap cva-tbl"><table class="dt"><thead><tr><th>Mã</th><th>Ngày</th><th>Vị trí</th><th>Ứng viên</th><th>Điểm</th><th>AI kết luận</th><th>HR</th></tr></thead><tbody>'+
+    (rows.length ? rows.map(function(r){
+      var k = CVAI_KL[r.kl]||{t:r.kl,c:'gray',hex:'#999'};
+      return '<tr class="cva-row'+(r.ma===CVAI.sel?' sel':'')+'" onclick="cvaiPick('+r.ma+')"><td class="dt-mono">'+r.ma+(cvaiDays(r.ngay)<=3?' <span class="pill gold">Mới</span>':'')+'</td><td class="dt-date nw" title="'+esc(r.ngay)+'">'+esc(String(r.ngay).slice(0,5))+'</td><td class="nw">'+esc(r.viTri)+'</td><td class="dt-name nw">'+esc(r.ten||'—')+'</td>'+
+        '<td><div class="cva-sc">'+cvaiFmt(r.diem)+'<span class="tr"><span style="width:'+((r.diem||0)*10)+'%;background:'+k.hex+'"></span></span></div></td>'+
+        '<td><span class="pill '+k.c+'">'+k.t+'</span></td><td class="dt-muted nw" title="'+esc(r.hr||'')+'">'+esc(String(r.hr||'—').replace('SCAN CV ',''))+'</td></tr>';
+    }).join('') : '<tr><td colspan="7" class="dt-empty">Không có CV khớp bộ lọc.</td></tr>')+
+    '</tbody></table><div class="cva-foot">'+rows.length+' / '+all.length+' CV · mới nhất trước</div></div>'+
+    '<div class="cva-det">'+cvaiDetail(rows.find(function(r){return r.ma===CVAI.sel;}))+'</div></div>';
+  el.innerHTML = html;
+}
+
+function cvaiDetail(r){
+  if(!r) return '<div class="dt-muted">Chọn một CV để xem chi tiết.</div>';
+  var D = CVAI.data, jd = (D.map||{})[r.viTri], crit = (D.rubric||{})[jd]||[], det = r.det||{}, k = CVAI_KL[r.kl]||{t:r.kl,c:'gray'};
+  var byId = {}; crit.forEach(function(c){ byId[c.id]=c; });
+  var lt = (det.lt||[]).map(function(x){ var c=byId[x[0]]||{t:'Điều kiện #'+x[0]}; var col = x[1]==='Đạt'?'teal':(x[1]==='Không đạt'?'rust':'clay');
+    return '<div class="cva-cr"><div class="t"><span>'+esc(c.t)+'</span><span class="pill '+col+'">ĐK loại trừ · '+esc(x[1])+'</span></div>'+(x[2]?'<q>'+esc(x[2])+'</q>':'')+'</div>'; }).join('');
+  var dd = (det.d||[]).slice().sort(function(a,b){return a[0]-b[0];}).map(function(x){ var c=byId[x[0]]||{t:'Tiêu chí #'+x[0]};
+    return '<div class="cva-cr"><div class="t"><span>'+esc(c.t)+(c.w?' <em>· '+c.w+'%</em>':'')+'</span><span class="cva-dots">'+[1,2,3].map(function(n){return '<i class="'+(n<=x[1]?'f':'')+'"></i>';}).join('')+'</span></div>'+(x[2]?'<q>'+esc(x[2])+'</q>':'')+'</div>'; }).join('');
+  var li = function(a){ return (a&&a.length) ? '<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>' : '<div class="dt-muted">—</div>'; };
+  return '<div class="cva-h">'+esc(r.ten||'—')+'</div>'+
+    '<div class="cva-meta">Mã '+r.ma+' · '+esc(r.viTri)+' · nộp '+esc(r.ngay)+' · KN đúng mảng: '+(r.soNam==null?'không rõ':String(r.soNam).replace('.',',')+' năm')+'</div>'+
+    '<div class="cva-big"><div class="s">'+cvaiFmt(r.diem)+'</div><div><span class="pill '+k.c+'">'+k.t+'</span><br><small>HR review: '+esc(r.hr||'chưa review')+'</small></div></div>'+
+    '<div class="cva-sec">Ưu điểm so với JD</div>'+li(det.uu)+
+    '<div class="cva-sec">Nhược điểm / còn thiếu</div>'+li(det.nh)+
+    (lt||dd ? '<div class="cva-sec">Theo từng tiêu chí</div>'+lt+dd : '')+
+    (det.gc ? '<div class="cva-note clay" style="margin-top:12px"><b>Cần xác minh:</b> '+esc(det.gc)+'</div>' : '')+
+    '<div class="cva-fs">'+(r.fileId?'<a class="cva-btn" href="https://drive.google.com/file/d/'+encodeURIComponent(r.fileId)+'/view" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> Mở CV</a>':'')+
+    '<span class="dt-muted" style="font-size:11px">Rubric '+esc(r.rubric||'')+' · '+esc(r.nguon||'')+' · '+esc(r.luc||'')+'</span></div>';
+}
