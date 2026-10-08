@@ -25,9 +25,6 @@ const NAV = [
     { id:'kho-cv',   label:'Kho CV', icon:'ti-folder',
       lead:'Kho lưu và tra cứu hồ sơ CV ứng viên.',
       points:['Lưu trữ CV theo vị trí','Tra cứu nhanh','Gắn kết với pipeline tuyển dụng'] },
-    { id:'cong-viec', label:'Công việc HR', icon:'ti-checklist',
-      lead:'Danh sách task HR: phụ trách, phòng ban, deadline, ưu tiên, trạng thái.',
-      points:['Bảng task đang chạy','Lọc theo người phụ trách / trạng thái','Nhắc deadline'] },
     { id:'cham-cong', label:'Chấm công & phép', icon:'ti-calendar-stats', badge:'gộp',
       lead:'Bảng công theo tháng và phép năm còn lại — gộp chung một chỗ.',
       points:['Ngày công, đi trễ, tăng ca theo tháng','Nghỉ phép & phép còn lại','Theo khoá Tháng + Mã NV'] },
@@ -1353,7 +1350,6 @@ function go(id){
   else if(id==='so-do'){content.innerHTML=window.renderSoDo();}
   else if(id==='calendar'){content.innerHTML=window.renderCalendar();}
   else if(id==='nguon'){content.innerHTML=window.renderNguon();}
-  else if(id==='cong-viec'){content.innerHTML=window.renderCongViec();} // [G]
     else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
 }
@@ -1792,7 +1788,6 @@ window.renderBaoCao = function(){
     +bcKpi('Nhân sự vào mới', B.vao.length, bcDelta(B.vao.length,Bp.vao.length,true))
     +bcKpi('Nghỉ việc', B.nghi.length, bcDelta(B.nghi.length,Bp.nghi.length,false))
     +bcKpi('Tỷ lệ có mặt', chamReady?(cham.rate+'%'):'—', cmpCham?bcDeltaPct(cham.rate,champ.rate):'')
-    +(function(){ var sc=window.cvPerfScore?window.cvPerfScore(p):null, sp=window.cvPerfScore?window.cvPerfScore(pv):null; return bcKpi('Điểm hiệu suất HR', sc==null?'—':sc+'/100', (sc!=null&&sp!=null)?bcDelta(sc,sp,true):''); })() // [K]
     +'</div>';
 
   /* Section A: Tuyển dụng */
@@ -1845,11 +1840,10 @@ window.renderBaoCao = function(){
     +(H.expire.length?'<div class="bc-warn">⚠ '+H.expire.length+' hợp đồng đến hạn trong kỳ — kiểm tra để gia hạn/ký lại.</div>':'')
     +'</div></div></div>';
 
-  var secE=window.cvReportSection?window.cvReportSection(p,pv,mode):''; // [K] hiệu suất công việc HR
-  var foot='<div class="bc-foot">Số liệu lấy trực tiếp từ dữ liệu web (Tuyển dụng · Hồ sơ · Chấm công · Công việc HR). Kỳ: '+bcLabel(mode,p)+'.</div>';
+  var foot='<div class="bc-foot">Số liệu lấy trực tiếp từ dữ liệu web (Tuyển dụng · Hồ sơ · Chấm công). Kỳ: '+bcLabel(mode,p)+'.</div>';
 
   if(typeof setTimeout==='function') setTimeout(function(){ bcInitChart(T.chart); }, 30);
-  return head+style+'<div id="baocao">'+controls+kpis+secA+'<div class="bc-grid2">'+secB+secC+'</div>'+secD+secE+foot+'</div>';
+  return head+style+'<div id="baocao">'+controls+kpis+secA+'<div class="bc-grid2">'+secB+secC+'</div>'+secD+foot+'</div>';
 };
 
 function bcKpi(t, v, d){ return '<div class="bc-kpi"><div class="k-t">'+t+'</div><div class="k-v">'+v+'</div><div class="k-dw">'+(d||'')+'</div></div>'; }
@@ -1894,7 +1888,7 @@ function bcStyle(){ return '<style id="bc-style">'
   +'#baocao .bc-pdf{margin-left:auto;display:inline-flex;align-items:center;background:#21303B;color:#fff;border:0;font-family:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:9px;cursor:pointer}'
   +'#baocao .bc-cad{margin:12px 0 4px;font-size:12.5px;color:#414B54;background:#eef4f2;border:1px solid #d6e6e2;border-radius:9px;padding:8px 13px;display:inline-block}'
   +'#baocao .bc-cad b{color:#35655B;font-weight:600}'
-  +'#baocao .bc-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:13px;margin:16px 0 18px}'
+  +'#baocao .bc-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin:16px 0 18px}'
   +'#baocao .bc-kpi{background:#fff;border:1px solid #E4DECF;border-radius:12px;padding:15px 16px 13px}'
   +'#baocao .bc-kpi .k-t{font-size:12px;color:#8B897E}'
   +'#baocao .bc-kpi .k-v{font-family:Fraunces,Georgia,serif;font-size:28px;font-weight:600;color:#21303B;line-height:1;margin-top:7px}'
