@@ -2977,7 +2977,7 @@ var CVAI_KL = { 'ĐẠT':{t:'Đạt',c:'teal',hex:'#35655B'}, 'XEM TAY':{t:'Xem 
 
 function cvaiLoad(){
   if(CVAI.loading) return; CVAI.loading = true; CVAI.error = null;
-  var url = API_URL + '?action=cvai';
+  var url = API_URL + '?action=cvai' + (CVAI.fresh ? '&fresh=1' : ''); CVAI.fresh = false;
   var p = window.bxAuthedFetch ? window.bxAuthedFetch(url,{cache:'no-store'}) : fetch(url,{cache:'no-store'});
   p.then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
    .then(function(d){ if(!d.ok) throw new Error(d.error||'API lỗi'); CVAI.data = d; CVAI.loaded = true; })
@@ -2996,7 +2996,7 @@ function cvaiRun(){
       else CVAI.msg = 'Đã chấm '+(d.done||0)+' CV · còn '+(d.left||0)+' CV chờ'+(d.rateLimited?' · Gemini báo giới hạn, lượt sau tự chấm tiếp':'')+((d.errors&&d.errors.length)?' · lỗi: '+d.errors.join('; '):'');
     })
     .catch(function(e){ CVAI.msg = 'Lỗi kết nối: '+e.message; })
-    .then(function(){ CVAI.running = false; CVAI.loaded = false; cvaiLoad(); });
+    .then(function(){ CVAI.running = false; CVAI.loaded = false; CVAI.fresh = true; cvaiLoad(); });
 }
 
 function cvaiSet(k,v){ CVAI.f[k] = v; cvaiRenderBody(); }
