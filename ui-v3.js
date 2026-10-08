@@ -428,4 +428,9 @@ R.rep=function(){
     nd.length?['w','Các tháng trước có thể thấp hơn thực tế: '+nd.length+' người nghỉ thiếu ngày nghỉ (vào '+fmt(nd[0])+'/'+nd[0].getFullYear()+' – '+fmt(nd[nd.length-1])+'/'+nd[nd.length-1].getFullYear()+') bị loại khỏi mọi tháng.']:null]);
 };
 
+
+/* ================= 10. KHỞI ĐỘNG MUỘN =================
+   Đăng nhập Firebase có thể xong TRƯỚC khi file này tải xong → app đã boot bằng sidebar/trang cũ.
+   Trường hợp đó vẽ lại sidebar + trang hiện tại bằng bản mới. */
+if(window.__bxAppBooted){ try{ window.renderNav(); if(window.currentTab) window.go(window.currentTab); }catch(e){ console.warn('[v3] late boot',e); } }
 })();
