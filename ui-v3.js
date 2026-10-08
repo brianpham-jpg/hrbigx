@@ -24,7 +24,7 @@ function drawerHtml(){
   });
   return '<div class="v3-drawer"><div class="v3-brand"><div class="v3-logo">B</div><div><b>BigX Agency</b><small>HR Analytics</small></div></div>'+
     '<div class="v3-tiles">'+tiles+'</div>'+groups+
-    '<div class="v3-foot"><div class="av">BP</div><div><b>Brian Pham</b><small>HR Specialist</small></div></div></div>';
+    (window.BX_ROLE==='viewer'?'<div class="v3-foot"><div class="av">'+E(String(window.BX_USER||'?').slice(0,2).toUpperCase())+'</div><div><b>'+E(window.BX_USER||'')+'</b><small>Chỉ xem</small></div></div></div>':'<div class="v3-foot"><div class="av">BP</div><div><b>Brian Pham</b><small>HR Specialist</small></div></div></div>');
 }
 function railHtml(){
   var h='<div class="v3-rail"><div class="v3-logo">B</div>', sep=false;
@@ -428,6 +428,11 @@ R.rep=function(){
     nd.length?['w','Các tháng trước có thể thấp hơn thực tế: '+nd.length+' người nghỉ thiếu ngày nghỉ (vào '+fmt(nd[0])+'/'+nd[0].getFullYear()+' – '+fmt(nd[nd.length-1])+'/'+nd[nd.length-1].getFullYear()+') bị loại khỏi mọi tháng.']:null]);
 };
 
+
+/* ================= 9b. CHẾ ĐỘ CHỈ XEM (viewer) =================
+   Ẩn nút nạp CV / chấm AI; mở Kho CV thẳng vào tab kết quả. Lệnh ghi còn bị chặn ở index.html và máy chủ. */
+if(window.kcvSwitch){ var _kcvS=window.kcvSwitch; window.kcvSwitch=function(t){ if(window.BX_ROLE==='viewer'&&t==='nap'){ t='ai'; } return _kcvS(t); }; }
+var _goV=window.go; window.go=function(id){ if(window.BX_ROLE==='viewer'&&id==='kho-cv'&&window.kcvTab==='nap') window.kcvTab='ai'; return _goV.apply(this,arguments); };
 
 /* ================= 10. KHỞI ĐỘNG MUỘN =================
    Đăng nhập Firebase có thể xong TRƯỚC khi file này tải xong → app đã boot bằng sidebar/trang cũ.

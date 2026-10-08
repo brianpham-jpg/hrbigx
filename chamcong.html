@@ -265,7 +265,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#0E131D;color:#E8ECF3;mi
 </head>
 <body>
 
-<!-- ===== GOOGLE AUTH GATE (bao mat - chi brian.pham@bigx.vn) ===== -->
+<!-- ===== GOOGLE AUTH GATE (bao mat - chi email trong BX_USERS) ===== -->
 <div id="google-gate" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:var(--cream,#1C2436)">
   <div class="login-card">
     <div class="login-head">
@@ -583,6 +583,23 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const bxAuth = firebase.auth();
 const BX_ALLOWED_EMAIL = 'brian.pham@bigx.vn';
+// Cùng danh sách với index.html: admin = toàn quyền, viewer = chỉ xem
+const BX_USERS = { 'brian.pham@bigx.vn':'admin', 'kim.nguyen@bigx.vn':'viewer' };
+function bxRoleOf(email){ return BX_USERS[String(email||'').trim().toLowerCase()] || null; }
+window.BX_ROLE = null;
+// Chỉ xem: chặn mọi lệnh ghi lên Firebase / Google Sheet (máy chủ và luật Firebase chặn thêm lần nữa)
+(function(){ var _f=window.fetch, lastTap=0;
+  document.addEventListener('pointerdown',function(){ lastTap=Date.now(); },true);
+  window.fetch=function(url,opts){ var m=String((opts&&opts.method)||'GET').toUpperCase(), u=String((url&&url.url)||url||'');
+    if(window.BX_ROLE==='viewer' && m!=='GET' && m!=='HEAD' && /script\.google\.com|firebaseio\.com/.test(u)){
+      if(Date.now()-lastTap<3000){ try{ bxRoToast(); }catch(e){} }
+      return Promise.resolve(new Response('{"ok":false,"error":"viewer"}',{status:403,headers:{'Content-Type':'application/json'}})); }
+    return _f.apply(this,arguments); };
+})();
+function bxRoToast(){ var t=document.getElementById('bx-ro-toast'); if(!t){ t=document.createElement('div'); t.id='bx-ro-toast';
+    t.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:99998;background:#1C2436;border:1px solid #E0A84A;color:#E8ECF3;padding:9px 16px;border-radius:9px;font:13px "Be Vietnam Pro",sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.4)';
+    t.textContent='Tài khoản của bạn chỉ có quyền xem, thay đổi không được lưu.'; document.body.appendChild(t); }
+  t.style.display='block'; clearTimeout(window.__bxRoT); window.__bxRoT=setTimeout(function(){ t.style.display='none'; },3500); }
 
 async function bxAuthedFetch(url, opts){
   var token = null;
@@ -594,16 +611,23 @@ async function bxAuthedFetch(url, opts){
 
 function bxBootApp(){
   var ap = document.getElementById('app'); if (ap) ap.style.display = 'flex';
-  try{ state.currentUser = BX_ALLOWED_EMAIL; }catch(e){}
-  try{ localStorage.setItem(LS_USER, BX_ALLOWED_EMAIL); }catch(e){}
-  var te = document.getElementById('topbar-user-email'); if (te) te.textContent = BX_ALLOWED_EMAIL;
+  var me = (bxAuth.currentUser && String(bxAuth.currentUser.email).toLowerCase()) || BX_ALLOWED_EMAIL;
+  try{ state.currentUser = me; }catch(e){}
+  try{ localStorage.setItem(LS_USER, me); }catch(e){}
+  var te = document.getElementById('topbar-user-email'); if (te) te.textContent = me + (window.BX_ROLE==='viewer' ? ' · chỉ xem' : '');
+  if (window.BX_ROLE==='viewer') { var bn=document.createElement('div'); bn.id='bx-ro-banner';
+    bn.style.cssText='background:rgba(224,168,74,.12);border-bottom:1px solid rgba(224,168,74,.38);color:#E0A84A;font:12.5px "Be Vietnam Pro",sans-serif;padding:7px 20px;text-align:center';
+    bn.textContent='Chế độ chỉ xem: bạn xem được bảng công và điểm danh, mọi thay đổi sẽ không được lưu.';
+    if (ap && ap.firstChild) ap.insertBefore(bn, ap.firstChild); }
   try{ initApp(); }catch(e){ console.warn('initApp error', e); }
 }
 
 bxAuth.onAuthStateChanged(function(user){
   var gate = document.getElementById('google-gate');
   var errEl = document.getElementById('google-gate-error');
-  if (user && user.email === BX_ALLOWED_EMAIL) {
+  var role = user ? bxRoleOf(user.email) : null;
+  if (user && role) {
+    window.BX_ROLE = role;
     if (gate) gate.style.display = 'none';
     if (errEl) errEl.style.display = 'none';
     if (!window.__bxAppBooted) { window.__bxAppBooted = true; bxBootApp(); }
@@ -621,7 +645,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var btn = document.getElementById('google-gate-btn');
   if (btn) btn.addEventListener('click', function(){
     var provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ login_hint: BX_ALLOWED_EMAIL });
+    provider.setCustomParameters({ prompt: 'select_account' });
     bxAuth.signInWithPopup(provider).catch(function(e){
       var err = document.getElementById('google-gate-error');
       if (err) { err.textContent = 'Đăng nhập thất bại: ' + (e && e.message ? e.message : e); err.style.display = 'block'; }
