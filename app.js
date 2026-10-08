@@ -2969,13 +2969,16 @@ function kcvTabsHtml(){
 var CVAI = { loaded:false, loading:false, error:null, data:null, sel:null, running:false, msg:'', f:{ vt:'', kl:'', q:'', chua:false } };
 var CVAI_KL = { 'ĐẠT':{t:'Đạt',c:'teal',hex:'#35655B'}, 'XEM TAY':{t:'Xem tay',c:'clay',hex:'#B07A43'}, 'KHÔNG ĐẠT':{t:'Không đạt',c:'rust',hex:'#A65A4B'} };
 
+var CVAI_LS = 'bigx_cvai_cache_v1';
 function cvaiLoad(){
   if(CVAI.loading) return; CVAI.loading = true; CVAI.error = null;
+  // [CVAI] hiện ngay bản đã lưu trên trình duyệt, rồi làm mới ngầm
+  if(!CVAI.data){ try{ var c = JSON.parse(localStorage.getItem(CVAI_LS)||'null'); if(c && c.ok){ CVAI.data = c; CVAI.loaded = true; CVAI.stale = true; setTimeout(function(){ if(currentTab==='kho-cv' && kcvTab==='ai') go('kho-cv'); },0); } }catch(e){} }
   var url = API_URL + '?action=cvai' + (CVAI.fresh ? '&fresh=1' : ''); CVAI.fresh = false;
   var p = window.bxAuthedFetch ? window.bxAuthedFetch(url,{cache:'no-store'}) : fetch(url,{cache:'no-store'});
   p.then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-   .then(function(d){ if(!d.ok) throw new Error(d.error||'API lỗi'); CVAI.data = d; CVAI.loaded = true; })
-   .catch(function(e){ CVAI.error = e.message; })
+   .then(function(d){ if(!d.ok) throw new Error(d.error||'API lỗi'); CVAI.data = d; CVAI.loaded = true; CVAI.stale = false; try{ localStorage.setItem(CVAI_LS, JSON.stringify(d)); }catch(e){} })
+   .catch(function(e){ if(CVAI.data){ CVAI.stale = false; CVAI.msg = 'Chưa làm mới được: '+e.message+' (đang hiện bản lưu trước).'; } else CVAI.error = e.message; })
    .then(function(){ CVAI.loading = false; if(currentTab==='kho-cv' && kcvTab==='ai') go('kho-cv'); });
 }
 
@@ -3016,7 +3019,7 @@ function renderCvAI(){
     return '<div class="cva-note">Đang tải kết quả chấm CV…</div>';
   }
   setTimeout(cvaiRenderBody,0);
-  return '<div class="page-head"><div class="page-lead" style="margin-top:0">AI đối chiếu từng CV với rubric của vị trí — điểm, kết luận, ưu/nhược kèm trích dẫn từ CV. File Tuyển dụng chỉ nhận kết luận ở cột O; quyết định cuối vẫn là HR.</div></div><div id="cva-body"></div>';
+  return '<div class="page-head"><div class="page-lead" style="margin-top:0">AI đối chiếu từng CV với rubric của vị trí — điểm, kết luận, ưu/nhược kèm trích dẫn từ CV. File Tuyển dụng chỉ nhận kết luận ở cột \"AI Đánh giá\"; quyết định cuối vẫn là HR.</div></div><div id="cva-body"></div>';
 }
 
 function cvaiRenderBody(){
@@ -3026,7 +3029,7 @@ function cvaiRenderBody(){
   var mas = all.map(function(r){return r.ma;}), minMa = Math.min.apply(null,mas), maxMa = Math.max.apply(null,mas);
   var pass = all.filter(function(r){return r.hr==='SCAN CV PASS';}), agree = pass.filter(function(r){return r.kl==='ĐẠT';}).length;
   var lr = D.lastRun||{};
-  var sub = D.pending ? D.pending+' CV mới đang chờ chấm' : (lr.at ? 'Đã cập nhật '+lr.at : 'Không có CV chờ');
+  var sub = (CVAI.stale ? 'Đang làm mới… · ' : '') + (D.pending ? D.pending+' CV mới đang chờ chấm' : (lr.at ? 'Đã cập nhật '+lr.at : 'Không có CV chờ'));
   var vts = {}; all.forEach(function(r){ vts[r.viTri]=1; });
   var kpi = function(l,v,n,extra){ return '<div class="cva-kpi"><div class="l">'+l+'</div><div class="v">'+v+(extra||'')+'</div><div class="n">'+n+'</div></div>'; };
   var html = '';
