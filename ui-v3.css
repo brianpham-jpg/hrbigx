@@ -152,5 +152,6 @@ body.bx-viewer [onclick="kcvSwitch('nap')"],body.bx-viewer [onclick^="cvaiRun"],
 
 /* ---------- KHO CV: ô tự điền từ CV ---------- */
 .kcv-file .v3-auto{border-color:rgba(147,119,230,.7)!important;background:rgba(147,119,230,.10)!important;box-shadow:inset 3px 0 0 #9377E6}
-.kcv-file{position:relative;flex-wrap:wrap}
-.kcv-file[data-cvx]::after{content:attr(data-cvx);flex-basis:100%;font-size:11px;color:var(--muted);padding-left:26px;margin-top:2px}
+.kcv-file{position:relative}
+.kcv-file[data-cvx]{margin-bottom:18px}
+.kcv-file[data-cvx]::after{content:attr(data-cvx);position:absolute;left:34px;top:100%;margin-top:3px;font-size:11px;color:var(--muted);white-space:nowrap}

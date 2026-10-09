@@ -501,13 +501,14 @@ function cvxParse(text, links){
   var ph=[];
   links.forEach(function(u){ var mm=String(u).match(/^(?:tel|callto|sms):(.+)$/i); if(mm){ var n=norm(decodeURIComponent(mm[1])); if(n) ph.push({v:n,s:100}); }
     var z=String(u).match(/(?:zalo\.me|wa\.me)\/(\+?\d{9,12})/i); if(z){ var n2=norm(z[1]); if(n2) ph.push({v:n2,s:60}); } });
-  var t2=text.replace(/ /g,' '), phRe=/(?:\+\s?)?\(?\d[\d\s.\-()]{7,20}\d/g;
+  var t2=text.replace(/ /g,' '), phRe=/(?:\+[ \t]?)?\(?\d[\d \t.\-()]{7,20}\d/g; // không vượt qua xuống dòng
   while((m=phRe.exec(t2))){
     var raw=m[0], digits=raw.replace(/[^\d]/g,'');
-    if(digits.length<9||digits.length>13) continue;
+    if(digits.length<9||digits.length>22) continue;
     var n=norm(raw);
-    if(!n){ // chuỗi dài dính 2 số → thử tách theo khoảng trắng lớn / dấu |
-      continue; }
+    if(!n){ // dính thêm nhóm số phía sau (VD "0912 345 678 2019") → bỏ dần từng nhóm cuối
+      var parts=raw.split(/[ \t]+/); while(!n && parts.length>1){ parts.pop(); n=norm(parts.join(' ')); }
+      if(!n) continue; raw=parts.join(' '); }
     var pre2=t2.slice(Math.max(0,m.index-30),m.index).toLowerCase(), post=t2.slice(m.index+raw.length,m.index+raw.length+3);
     if(/\d/.test(post.charAt(0))) continue;
     var sc=/^0[35789]/.test(n)?10:0;
