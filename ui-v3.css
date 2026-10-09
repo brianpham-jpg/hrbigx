@@ -149,3 +149,8 @@ body{font-variant-numeric:tabular-nums}
 
 /* ---------- CHẾ ĐỘ CHỈ XEM ---------- */
 body.bx-viewer [onclick="kcvSwitch('nap')"],body.bx-viewer [onclick^="cvaiRun"],body.bx-viewer [onclick^="kcvSubmit"]{display:none!important}
+
+/* ---------- KHO CV: ô tự điền từ CV ---------- */
+.kcv-file .v3-auto{border-color:rgba(147,119,230,.7)!important;background:rgba(147,119,230,.10)!important;box-shadow:inset 3px 0 0 #9377E6}
+.kcv-file{position:relative;flex-wrap:wrap}
+.kcv-file[data-cvx]::after{content:attr(data-cvx);flex-basis:100%;font-size:11px;color:var(--muted);padding-left:26px;margin-top:2px}

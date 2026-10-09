@@ -434,6 +434,129 @@ R.rep=function(){
 if(window.kcvSwitch){ var _kcvS=window.kcvSwitch; window.kcvSwitch=function(t){ if(window.BX_ROLE==='viewer'&&t==='nap'){ t='ai'; } return _kcvS(t); }; }
 var _goV=window.go; window.go=function(id){ if(window.BX_ROLE==='viewer'&&id==='kho-cv'&&window.kcvTab==='nap') window.kcvTab='ai'; return _goV.apply(this,arguments); };
 
+/* ================= 9c. KHO CV: TỰ ĐIỀN EMAIL / SĐT / GIỚI TÍNH NGAY KHI CHỌN FILE =================
+   Bước 1 (trên trình duyệt, ~1 giây): PDF có chữ (pdf.js, đọc cả link mailto:/tel:), DOCX (đọc cả header/footer + link).
+   Bước 2 (chỉ khi bước 1 còn thiếu email hoặc SĐT): gửi file cho Apps Script đọc bằng Google Drive OCR
+   → đọc được ảnh, PDF scan, .doc cũ. Chỉ đọc, KHÔNG lưu gì vào Drive/Sheet (file tạm xoá ngay).
+   Chỉ điền ô còn trống, không ghi đè thứ anh đã gõ. Ô tự điền có viền tím để anh kiểm tra lại. */
+var CVX={pdf:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',worker:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'};
+var cvxLoaded={};
+function cvxLoad(src){ if(cvxLoaded[src]) return cvxLoaded[src];
+  return (cvxLoaded[src]=new Promise(function(res,rej){ var sc=document.createElement('script'); sc.src=src; sc.onload=res; sc.onerror=function(){ delete cvxLoaded[src]; rej(new Error('load '+src)); }; document.head.appendChild(sc); })); }
+function cvxPdf(file){
+  return cvxLoad(CVX.pdf).then(function(){ var lib=window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc=CVX.worker;
+    return file.arrayBuffer().then(function(buf){ return lib.getDocument({data:buf}).promise; }).then(function(pdf){
+      var jobs=[], links=[], max=Math.min(pdf.numPages,4);
+      for(var i=1;i<=max;i++) jobs.push(pdf.getPage(i).then(function(pg){
+        return Promise.all([pg.getTextContent(), pg.getAnnotations().catch(function(){return [];})]).then(function(r){
+          r[1].forEach(function(an){ if(an.url) links.push(an.url); });
+          // ghép chữ theo vị trí: cùng dòng + sát nhau thì không chèn khoảng trắng (tránh tách đôi email)
+          var out='', prev=null;
+          r[0].items.forEach(function(it){ if(!it.str) return; var x=it.transform[4], y=it.transform[5];
+            if(prev){ if(Math.abs(y-prev.y)>2) out+='\n'; else if(x-(prev.x+prev.w)>1.5) out+=' '; }
+            out+=it.str; prev={x:x,y:y,w:it.width||0}; if(it.hasEOL){ out+='\n'; prev=null; } });
+          return out; }); }));
+      return Promise.all(jobs).then(function(a){ return {text:a.join('\n'), links:links}; }); }); });
+}
+function cvxDocx(file){
+  return cvxLoad(CVX.zip).then(function(){ return file.arrayBuffer(); }).then(function(buf){ return window.JSZip.loadAsync(buf); }).then(function(z){
+    var names=Object.keys(z.files).filter(function(n){ return /^word\/(document|header\d*|footer\d*|footnotes)\.xml$/.test(n)||/^word\/_rels\/.*\.rels$/.test(n); });
+    return Promise.all(names.map(function(n){ return z.file(n).async('string').then(function(x){ return {n:n,x:x}; }); })).then(function(parts){
+      var text=[], links=[];
+      parts.forEach(function(p){
+        if(/\.rels$/.test(p.n)){ (p.x.match(/Target="[^"]+"/g)||[]).forEach(function(t){ links.push(t.slice(8,-1).replace(/&amp;/g,'&')); }); return; }
+        text.push(p.x.replace(/<w:tab\/>/g,' ').replace(/<\/w:p>|<w:br\/>/g,'\n').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'));
+      });
+      return {text:text.join('\n'), links:links}; }); });
+}
+function cvxBrowser(file){ var n=String(file.name||'').toLowerCase(), t=String(file.type||'');
+  if(/\.pdf$/.test(n)||/pdf/.test(t)) return cvxPdf(file);
+  if(/\.docx$/.test(n)) return cvxDocx(file);
+  return Promise.resolve({text:'',links:[]}); }
+function cvxServer(file){
+  return readB64(file).then(function(b64){
+    return window.bxAuthedFetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:API_KEY,action:'cvxOcr',fileName:file.name,mimeType:file.type||'',b64:b64})}); })
+    .then(function(r){ return r.json(); }).then(function(d){ if(!d||!d.ok) throw new Error((d&&d.error)||'OCR lỗi'); return {text:d.text||'',links:[]}; });
+}
+/* Bộ tách email / SĐT / giới tính từ chữ trong CV — dùng chung cho mọi định dạng (PDF, DOCX, ảnh qua OCR). */
+function cvxParse(text, links){
+  var o={}; text=String(text||''); links=links||[];
+  /* ---- EMAIL ---- */
+  var t=text.replace(/ /g,' ')
+    .replace(/\s*[\[(]\s*(?:at|a còng)\s*[\])]\s*/gi,'@')
+    .replace(/\s*@\s*/g,'@')
+    .replace(/@([A-Za-z0-9\-]+)\s*(?:\.|\[dot\]|\(dot\))\s*([A-Za-z]{2,})\b/gi,'@$1.$2');
+  var emRe=/[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}/g, ems=[];
+  links.forEach(function(u){ var m=String(u).match(/^mailto:([^?]+)/i); if(m) ems.push({v:decodeURIComponent(m[1]).trim(),s:100}); });
+  var m; while((m=emRe.exec(t))){ var pre=t.slice(Math.max(0,m.index-25),m.index).toLowerCase();
+    ems.push({v:m[0].replace(/^[._\-]+|[._\-]+$/g,''),s:(/mail|e-mail|liên hệ|contact/.test(pre)?20:0)-m.index/1e6}); }
+  ems=ems.filter(function(x){ return !/\.(png|jpe?g|gif|pdf)$/i.test(x.v) && !/@(example|domain|email)\./i.test(x.v); });
+  if(ems.length){ ems.sort(function(a,b){return b.s-a.s;}); o.email=ems[0].v.toLowerCase(); }
+  /* ---- SĐT ---- */
+  function norm(raw){ var d=String(raw).replace(/[^\d]/g,'');
+    if(/^840\d{9}$/.test(d)) d=d.slice(2);            // +84 (0) 912 345 678
+    else if(/^84\d{9}$/.test(d)) d='0'+d.slice(2);    // +84 912 345 678
+    else if(/^[35789]\d{8}$/.test(d)) d='0'+d;        // thiếu số 0 đầu
+    return (/^0[35789]\d{8}$/.test(d)||/^02\d{9}$/.test(d)) ? d : null; }
+  var ph=[];
+  links.forEach(function(u){ var mm=String(u).match(/^(?:tel|callto|sms):(.+)$/i); if(mm){ var n=norm(decodeURIComponent(mm[1])); if(n) ph.push({v:n,s:100}); }
+    var z=String(u).match(/(?:zalo\.me|wa\.me)\/(\+?\d{9,12})/i); if(z){ var n2=norm(z[1]); if(n2) ph.push({v:n2,s:60}); } });
+  var t2=text.replace(/ /g,' '), phRe=/(?:\+\s?)?\(?\d[\d\s.\-()]{7,20}\d/g;
+  while((m=phRe.exec(t2))){
+    var raw=m[0], digits=raw.replace(/[^\d]/g,'');
+    if(digits.length<9||digits.length>13) continue;
+    var n=norm(raw);
+    if(!n){ // chuỗi dài dính 2 số → thử tách theo khoảng trắng lớn / dấu |
+      continue; }
+    var pre2=t2.slice(Math.max(0,m.index-30),m.index).toLowerCase(), post=t2.slice(m.index+raw.length,m.index+raw.length+3);
+    if(/\d/.test(post.charAt(0))) continue;
+    var sc=/^0[35789]/.test(n)?10:0;
+    if(/(công ty|cong ty|company|văn phòng|office|fax)/.test(pre2)) sc-=20;
+    if(/(phone|mobile|tel|sđt|sdt|điện thoại|dien thoai|đt|liên hệ|hotline|zalo|di động|contact|số điện)/.test(pre2)) sc+=30;
+    if(/(cccd|cmnd|căn cước|mst|mã số thuế|stk|tài khoản|account|id)/.test(pre2)) sc-=50;
+    if(/^0(1|2)\d\/|\d{1,2}\/\d{1,2}\/\d{4}/.test(raw)) sc-=50; // ngày tháng
+    ph.push({v:n,s:sc-m.index/1e6});
+  }
+  if(ph.length){ ph.sort(function(a,b){return b.s-a.s;}); if(ph[0].s>-40) o.sdt=ph[0].v; }
+  /* ---- GIỚI TÍNH ---- */
+  var g=text.match(/giới\s*tính\s*[:.\-|]*\s*(nam|nữ)(?![A-Za-zÀ-ỹ])/i)||text.match(/(?:gender|sex)\s*[:.\-|]*\s*(male|female)(?![A-Za-z])/i);
+  if(g){ var v=g[1].toLowerCase(); o.gt=(v==='nam'||v==='male')?'Nam':'Nữ'; }
+  return o;
+}
+
+function cvxStatus(msg){ var el=document.getElementById('kcv-status'); if(el) el.textContent=msg||''; }
+var cvxBusy=0;
+function cvxApply(f,o){ f.auto=f.auto||{};
+  if(o.email&&!String(f.email||'').trim()){ f.email=o.email; f.auto.email=1; }
+  if(o.sdt&&!String(f.sdt||'').trim()){ f.sdt=o.sdt; f.auto.sdt=1; }
+  if(o.gt&&!String(f.gt||'').trim()){ f.gt=o.gt; f.auto.gt=1; } }
+function cvxNeed(f){ return !String(f.email||'').trim()||!String(f.sdt||'').trim(); }
+function cvxRun(f){
+  if(f.__cvx) return; f.__cvx='doc'; cvxBusy++; cvxStatus('Đang đọc CV để tự điền email / SĐT…');
+  function redraw(){ if(window.kcvRenderList) kcvRenderList(); }
+  cvxBrowser(f.file).catch(function(e){ console.warn('[cvx] browser',e); return {text:'',links:[]}; })
+  .then(function(r){ cvxApply(f,cvxParse(r.text,r.links)); redraw();
+    if(!cvxNeed(f)) return 'ok';
+    f.__cvx='ocr'; redraw();
+    return cvxServer(f.file).then(function(r2){ cvxApply(f,cvxParse(r2.text,[])); return 'ok'; }).catch(function(e){ console.warn('[cvx] ocr',e); return 'loi'; }); })
+  .then(function(st){ f.__cvx=st; })
+  .then(function(){ cvxBusy--; redraw(); if(!cvxBusy) cvxStatus(''); });
+}
+if(window.kcvPick){ var _kcvPick=window.kcvPick; window.kcvPick=function(ev){ var r=_kcvPick.apply(this,arguments); try{ (window.kcvFiles||[]).forEach(cvxRun); }catch(e){} return r; }; }
+if(window.kcvRenderList){ var _kcvRL=window.kcvRenderList; window.kcvRenderList=function(){ var r=_kcvRL.apply(this,arguments);
+  try{ var rows=document.querySelectorAll('#kcv-list .kcv-file');
+    (window.kcvFiles||[]).forEach(function(f,i){ var row=rows[i]; if(!row) return; var a=f.auto||{};
+      [['.kcv-email','email','input'],['.kcv-sdt','sdt','input'],['.kcv-gt','gt','change']].forEach(function(q){ var el=row.querySelector(q[0]); if(!el||!a[q[1]]) return;
+        el.classList.add('v3-auto'); el.title='Tự điền từ CV, kiểm tra lại'; el.addEventListener(q[2],function(){ delete a[q[1]]; el.classList.remove('v3-auto'); }); });
+      var msg='';
+      if(f.__cvx==='doc') msg='Đang đọc CV…';
+      else if(f.__cvx==='ocr') msg='CV dạng ảnh / scan, đang nhờ Google đọc chữ (5–15 giây)…';
+      else if(f.__cvx==='loi') msg='Chưa đọc được tự động, anh nhập tay hoặc cứ nạp, hệ thống sẽ đọc lại';
+      else if(f.__cvx==='ok'&&cvxNeed(f)) msg='CV không ghi '+(!String(f.email||'').trim()?'email':'')+(!String(f.email||'').trim()&&!String(f.sdt||'').trim()?' / ':'')+(!String(f.sdt||'').trim()?'SĐT':'');
+      if(msg) row.setAttribute('data-cvx',msg); else row.removeAttribute('data-cvx');
+    }); }catch(e){}
+  return r; }; }
+
 /* ================= 10. KHỞI ĐỘNG MUỘN =================
    Đăng nhập Firebase có thể xong TRƯỚC khi file này tải xong → app đã boot bằng sidebar/trang cũ.
    Trường hợp đó vẽ lại sidebar + trang hiện tại bằng bản mới. */
