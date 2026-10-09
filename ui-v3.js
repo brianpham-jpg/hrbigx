@@ -536,10 +536,10 @@ function cvxRun(f){
   if(f.__cvx) return; f.__cvx='doc'; cvxBusy++; cvxStatus('Đang đọc CV để tự điền email / SĐT…');
   function redraw(){ if(window.kcvRenderList) kcvRenderList(); }
   cvxBrowser(f.file).catch(function(e){ console.warn('[cvx] browser',e); return {text:'',links:[]}; })
-  .then(function(r){ cvxApply(f,cvxParse(r.text,r.links)); redraw();
+  .then(function(r){ f.__text=String(r.text||''); cvxApply(f,cvxParse(r.text,r.links)); redraw();
     if(!cvxNeed(f)) return 'ok';
     f.__cvx='ocr'; redraw();
-    return cvxServer(f.file).then(function(r2){ cvxApply(f,cvxParse(r2.text,[])); return 'ok'; }).catch(function(e){ console.warn('[cvx] ocr',e); return 'loi'; }); })
+    return cvxServer(f.file).then(function(r2){ if(String(r2.text||'').length>f.__text.length) f.__text=String(r2.text); cvxApply(f,cvxParse(r2.text,[])); return 'ok'; }).catch(function(e){ console.warn('[cvx] ocr',e); return 'loi'; }); })
   .then(function(st){ f.__cvx=st; })
   .then(function(){ cvxBusy--; redraw(); if(!cvxBusy) cvxStatus(''); });
 }
@@ -557,6 +557,53 @@ if(window.kcvRenderList){ var _kcvRL=window.kcvRenderList; window.kcvRenderList=
       if(msg) row.setAttribute('data-cvx',msg); else row.removeAttribute('data-cvx');
     }); }catch(e){}
   return r; }; }
+
+/* [CVAI-TEXT] Chấm CV không cần Google OCR: web gửi kèm chữ đã đọc được khi nạp CV,
+   và trước khi bấm "Chấm" thì đọc chữ các CV đang chờ ngay trên trình duyệt. */
+(function(){
+  var _f=window.fetch;
+  window.fetch=function(url,opts){
+    try{ if(opts&&String(opts.method||'').toUpperCase()==='POST'&&typeof opts.body==='string'&&typeof API_URL!=='undefined'&&String(url).indexOf(API_URL)===0&&opts.body.indexOf('"items":[')>-1){
+      var b=JSON.parse(opts.body), fs=window.kcvFiles||[];
+      if(!b.action&&Array.isArray(b.items)){ b.items.forEach(function(it,i){ var f=fs[i]; if(f&&f.file&&f.file.name===it.fileName&&f.__text&&f.__text.length>150) it.text=f.__text.slice(0,45000); });
+        opts=Object.assign({},opts,{body:JSON.stringify(b)}); } } }catch(e){ console.warn('[cvai-text] inject',e); }
+    return _f.call(this,url,opts); };
+})();
+function cvaiB64File(d){ var bin=atob(d.b64), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+  return new File([u], d.name||'cv', {type:d.mime||''}); }
+function cvaiMsgOf(d,pre){
+  if(d.busy) return 'Hệ thống đang chấm ở một lượt khác, thử lại sau ít phút.';
+  var e=(d.errors||[]).join(' '), m='Đã chấm '+(d.done||0)+' CV · còn '+(d.left||0)+' CV chờ';
+  if(/DRIVE_OCR_LIMIT/.test(e)) m+=' · CV dạng ảnh/scan: Google tạm giới hạn lượt đọc chữ, lượt chấm tự động sau sẽ làm tiếp';
+  else if(/GEMINI_BUSY|429|503|quota|RESOURCE_EXHAUSTED/i.test(e)) m+=' · Gemini đang quá tải, lượt chấm tự động sau (mỗi giờ) làm tiếp';
+  else if(e) m+=' · lỗi: '+e.slice(0,300);
+  return (pre?pre+' · ':'')+m; }
+function cvaiPrepText(){
+  var A=window.bxAuthedFetch||fetch, n=0, ok=0;
+  return A(API_URL+'?action=cvaiPending',{cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    if(!d||!d.ok) return '';
+    var need=(d.list||[]).filter(function(p){ return !p.hasText&&p.fileId; }).slice(0,10); n=need.length;
+    return need.reduce(function(pr,p,i){ return pr.then(function(){
+      CVAI.msg='Đang đọc chữ CV '+(i+1)+'/'+n+' trên trình duyệt…'; if(currentTab==='kho-cv') go('kho-cv');
+      return A(API_URL+'?action=cvaiFile&id='+encodeURIComponent(p.fileId),{cache:'no-store'}).then(function(r){ return r.json(); })
+        .then(function(fd){ if(!fd||!fd.ok) throw new Error((fd&&fd.error)||'tải file lỗi'); return cvxBrowser(cvaiB64File(fd)); })
+        .then(function(t){ var txt=String((t&&t.text)||'').trim(); if(txt.length<=150) return;
+          return A(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:API_KEY,action:'cvaiText',ma:p.ma,text:txt.slice(0,45000),nguon:'web · nút chấm'})})
+            .then(function(r){ return r.json(); }).then(function(x){ if(x&&x.ok&&x.saved) ok++; }); })
+        .catch(function(e){ console.warn('[cvai-text] '+p.ma,e); }); }); }, Promise.resolve())
+      .then(function(){ return n?('Đọc được chữ '+ok+'/'+n+' CV ngay trên web'+(ok<n?' (còn lại là ảnh/scan, cần Google đọc)':'')):''; });
+  }).catch(function(e){ console.warn('[cvai-text] pending',e); return ''; });
+}
+window.cvaiRun=function(){
+  if(CVAI.running) return; CVAI.running=true; CVAI.msg='Đang kiểm tra CV chờ chấm…'; go('kho-cv');
+  cvaiPrepText().then(function(pre){
+    CVAI.msg=(pre?pre+' · ':'')+'Đang chấm… (mỗi CV ~10 giây, tối đa 10 CV/lần)'; if(currentTab==='kho-cv') go('kho-cv');
+    var opt={method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:API_KEY,action:'cvaiRun',limit:10})};
+    return (window.bxAuthedFetch?window.bxAuthedFetch(API_URL,opt):fetch(API_URL,opt)).then(function(r){ return r.json(); })
+      .then(function(d){ CVAI.msg=cvaiMsgOf(d,pre); }); })
+  .catch(function(e){ CVAI.msg='Lỗi kết nối: '+e.message; })
+  .then(function(){ CVAI.running=false; CVAI.loaded=false; CVAI.fresh=true; cvaiLoad(); });
+};
 
 /* ================= 10. KHỞI ĐỘNG MUỘN =================
    Đăng nhập Firebase có thể xong TRƯỚC khi file này tải xong → app đã boot bằng sidebar/trang cũ.
