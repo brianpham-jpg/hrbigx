@@ -11,7 +11,7 @@
   --amber:#E0A84A;--amber-bg:rgba(224,168,74,.14);
   --red:#E36B6B;--red-bg:rgba(227,107,107,.14);
   --blue:#4FBF8F;--blue-bg:rgba(47,181,158,.14);--blue-bd:rgba(47,181,158,.38);
-  --gray:#8A94A8;--gray-light:#171E2E;--gray-bd:#263045;
+  --gray:#A7B0C2;--gray-light:#171E2E;--gray-bd:#263045;
 }
 body{font-family:'Be Vietnam Pro',sans-serif;background:#0E131D;color:#E8ECF3;min-height:100vh}
 
@@ -19,14 +19,14 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#0E131D;color:#E8ECF3;mi
 .login-card{background:#1C2436;border-radius:20px;width:360px;overflow:hidden;border:1px solid var(--gray-bd);box-shadow:0 4px 24px rgba(0,0,0,.07)}
 .login-head{background:var(--yellow);padding:28px 32px 24px;text-align:center}
 .login-logo{font-size:32px;font-weight:700;color:#E8ECF3;letter-spacing:-1px}
-.login-logo-sub{font-size:11px;color:#B4BCCB;letter-spacing:1.5px;font-weight:600;margin-top:2px}
+.login-logo-sub{font-size:11px;color:#D2D8E3;letter-spacing:1.5px;font-weight:600;margin-top:2px}
 .login-body{padding:24px 28px 28px}
 .login-title{font-size:17px;font-weight:700;color:#E8ECF3;margin-bottom:4px}
 .login-sub{font-size:12px;color:var(--gray);margin-bottom:20px}
 .login-error{color:var(--red);font-size:12px;margin-top:5px;display:none}
 .login-btn{width:100%;margin-top:14px;padding:12px;background:#6E54C9;color:var(--yellow);border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s}
 .login-btn:hover{opacity:.85}
-.login-note{text-align:center;font-size:11px;color:#8A94A8;margin-top:14px}
+.login-note{text-align:center;font-size:11px;color:#A7B0C2;margin-top:14px}
 
 /* ===== APP SHELL ===== */
 #app{display:none;min-height:100vh;flex-direction:column}
@@ -145,7 +145,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#0E131D;color:#E8ECF3;mi
 .emp-table tr.has-expand > td{border-bottom:none}
 .emp-avatar-sm{width:28px;height:28px;border-radius:50%;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--purple);flex-shrink:0}
 .emp-name-cell{display:flex;align-items:center;gap:8px}
-.dept-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#222B3D;color:#B4BCCB;font-weight:500;white-space:nowrap}
+.dept-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#222B3D;color:#D2D8E3;font-weight:500;white-space:nowrap}
 .view-btn{display:inline-flex;align-items:center;gap:5px;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-bd);border-radius:7px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .view-btn.active-btn{background:var(--purple);color:var(--yellow);border-color:var(--purple)}
 .view-btn:hover:not(.active-btn){background:var(--purple-bd)}
@@ -197,7 +197,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#0E131D;color:#E8ECF3;mi
 .day-cell.empty-cell{background:transparent;border-color:transparent;cursor:default}
 .day-cell.empty-cell:hover{border-color:transparent}
 .day-num{font-size:10px;font-weight:500;color:#E8ECF3}
-.day-num.wknd-num{color:#8A94A8}
+.day-num.wknd-num{color:#A7B0C2}
 .day-status{display:inline-flex;align-items:center;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px;width:fit-content}
 .late-min{font-size:9px;font-weight:600;color:var(--amber)}
 .day-note{font-size:9px;color:var(--gray);margin-top:2px;line-height:1.3;word-break:break-word;font-style:italic}
@@ -456,10 +456,10 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:#0E131D;color:#E8ECF3;mi
         <div class="export-group">
           <span style="font-size:11px;color:var(--gray)">Xuất tổng nhân sự:</span>
           <button class="exp-btn exp-sheet" onclick="openGSheet()">⊞ Mở Google Sheet</button>
-          <button class="exp-btn admin-only" id="bx-push-prev" style="background:#222B3D;color:#B4BCCB;border:1px solid #323D57" title="Chỉ dùng khi đã sửa công tháng cũ (đã chốt)" onclick="bxPushPrevSheet()">↺ Đẩy lại tháng trước</button>
+          <button class="exp-btn admin-only" id="bx-push-prev" style="background:#222B3D;color:#D2D8E3;border:1px solid #323D57" title="Chỉ dùng khi đã sửa công tháng cũ (đã chốt)" onclick="bxPushPrevSheet()">↺ Đẩy lại tháng trước</button>
           <div class="div-v"></div>
-          <button class="exp-btn" style="background:#222B3D;color:#B4BCCB;border:1px solid #323D57" onclick="exportBackup()">↓ Backup</button>
-          <button class="exp-btn" style="background:#222B3D;color:#B4BCCB;border:1px solid #323D57" onclick="document.getElementById(&#39;import-file-input&#39;).click()">↑ Restore</button>
+          <button class="exp-btn" style="background:#222B3D;color:#D2D8E3;border:1px solid #323D57" onclick="exportBackup()">↓ Backup</button>
+          <button class="exp-btn" style="background:#222B3D;color:#D2D8E3;border:1px solid #323D57" onclick="document.getElementById(&#39;import-file-input&#39;).click()">↑ Restore</button>
           <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importBackup(event)">
         </div>
       </div>
@@ -744,7 +744,7 @@ const STATUS_CODES = {
   'P':    { label:'Phép',        bg:'var(--purple-bg)', color:'var(--purple)' },
   'P-KL': { label:'Nghỉ ko trừ phép', bg:'rgba(227,107,107,.14)', color:'#E36B6B' },
   'K':    { label:'Vắng',        bg:'var(--red-bg)',    color:'var(--red)' },
-  'NL':   { label:'Nghỉ lễ',    bg:'#222B3D',          color:'#B4BCCB' },
+  'NL':   { label:'Nghỉ lễ',    bg:'#222B3D',          color:'#D2D8E3' },
   'ĐÃ NGHỈ':  { label:'ĐÃ NGHỈ',    bg:'rgba(227,107,107,.14)',          color:'#E36B6B' },
   'T-S-P':{ label:'Xin đi trễ',  bg:'var(--amber-bg)',  color:'var(--amber)' },
   'T-C-P':{ label:'Xin về sớm',  bg:'var(--amber-bg)',  color:'var(--amber)' },
@@ -1345,7 +1345,7 @@ function showOcrMatches(matched,rawLines,session='sang'){
   }
   const rawHtml=rawLines&&rawLines.length?
     `<details style="margin-top:8px;font-size:11px"><summary style="cursor:pointer;color:var(--gray)">Xem text OCR đọc được (${rawLines.length} dòng)</summary>
-    <div style="margin-top:4px;padding:6px;background:#1C2436;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#B4BCCB">${rawLines.map(hx).join('<br>')}</div></details>`:'';
+    <div style="margin-top:4px;padding:6px;background:#1C2436;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#D2D8E3">${rawLines.map(hx).join('<br>')}</div></details>`:'';
   if(!matched.length){
     box.innerHTML='<div style="color:var(--gray);text-align:center">Không nhận diện được tên nào. Vui lòng thêm thủ công.</div>'+rawHtml;
     return;
@@ -1365,7 +1365,7 @@ function showOcrMatches(matched,rawLines,session='sang'){
   html+=`</div><div style="display:flex;gap:8px">` +
     `<button onclick="applyOcrMatches('${session}')" style="flex:1;padding:7px;background:var(--purple);color:#FFFFFF;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">✅ Thêm vào điểm danh</button>` +
     `<button onclick="document.getElementById('ocr-result-box-${session}').remove()" style="padding:7px 12px;background:#1C2436;border:1px solid var(--gray-bd);border-radius:8px;font-size:12px;cursor:pointer">Bỏ</button></div>`;
-  box.innerHTML=html+(rawLines&&rawLines.length?`<details style='margin-top:8px;font-size:11px'><summary style='cursor:pointer;color:var(--gray)'>Text OCR đọc được</summary><div style='padding:6px;background:#1C2436;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#B4BCCB'>${rawLines.map(hx).join('<br>')}</div></details>`:'');
+  box.innerHTML=html+(rawLines&&rawLines.length?`<details style='margin-top:8px;font-size:11px'><summary style='cursor:pointer;color:var(--gray)'>Text OCR đọc được</summary><div style='padding:6px;background:#1C2436;border-radius:6px;max-height:80px;overflow-y:auto;font-family:monospace;font-size:10px;color:#D2D8E3'>${rawLines.map(hx).join('<br>')}</div></details>`:'');
 }
 function applyOcrMatches(session='sang'){
   const checks=document.querySelectorAll('#ocr-result-box-'+session+' input[type=checkbox][data-id]:not(:disabled):checked');
@@ -1715,10 +1715,10 @@ function makeOfficial(id){
   renderBangCC();
 }
 function lateDays(id,y,m){var cc=getEmpCCForCycle(id,y,m),n=0;getCycleDates(y,m).forEach(function(d){var dw=new Date(d).getDay();if(dw===0||dw===6)return;var v=cc[d];if(!v||!v.status)return;n+=window.bxDay(v).luot;});return n;} /* [B2] đếm theo lượt */
-function lateCell(id,y,m){var n=lateDays(id,y,m);return '<span style="color:'+(n>0?'#E36B6B':'#8A94A8')+';font-weight:'+(n>0?'500':'400')+'">'+n+' ngày</span>';}
+function lateCell(id,y,m){var n=lateDays(id,y,m);return '<span style="color:'+(n>0?'#E36B6B':'#A7B0C2')+';font-weight:'+(n>0?'500':'400')+'">'+n+' ngày</span>';}
 /* [faceCnt] Đếm lượt check-in thiếu góc mặt trong chu kỳ: S sáng, C chiều (SC = 2 lượt), U = cờ cũ không rõ buổi (1 lượt). Bỏ T7/CN như đếm đi trễ. */
 function faceCounts(id,y,m){var cc=getEmpCCForCycle(id,y,m),r={S:0,C:0,U:0,n:0};getCycleDates(y,m).forEach(function(d){var dw=new Date(d).getDay();if(dw===0||dw===6)return;var fs=faceSessOf(cc[d]);if(!fs)return;if(fs==='?')r.U++;else{if(fs.indexOf('S')>=0)r.S++;if(fs.indexOf('C')>=0)r.C++;}});r.n=r.S+r.C+r.U;return r;}
-function faceCell(id,y,m){var r=faceCounts(id,y,m);if(!r.n)return '<span style="color:#8A94A8">0</span>';var d=[];if(r.S)d.push('S'+r.S);if(r.C)d.push('C'+r.C);if(r.U)d.push(r.U+' không rõ buổi');return '<span style="color:#E0A84A;font-weight:500">'+r.n+' lần</span><div style="font-size:11px;color:#8A94A8">'+d.join(' · ')+'</div>';}
+function faceCell(id,y,m){var r=faceCounts(id,y,m);if(!r.n)return '<span style="color:#A7B0C2">0</span>';var d=[];if(r.S)d.push('S'+r.S);if(r.C)d.push('C'+r.C);if(r.U)d.push(r.U+' không rõ buổi');return '<span style="color:#E0A84A;font-weight:500">'+r.n+' lần</span><div style="font-size:11px;color:#A7B0C2">'+d.join(' · ')+'</div>';}
 function renderBangCC(){
   const y=state.currentYear, m=state.currentMonth;
   document.getElementById('bcc-title').textContent=MONTHS[m-1];
@@ -1752,7 +1752,7 @@ function renderBangCC(){
       </tr>
       ${isExpanded?`<tr><td class="cal-expand-td" colspan="7">${renderCalendarExpand(emp,y,m)}</td></tr>`:''}
     `;
-  }var __out="";__ord.forEach(function(d){var a=__by[d];if(!a||!a.length)return;var c=__DC[d]||["#323D57","#B4BCCB"];var lbl=d||"Chưa gán phòng";__out+='<tr><td colspan="7" style="padding:7px 14px;background:'+c[0]+';color:'+c[1]+';font-size:12px;font-weight:600;letter-spacing:.2px">'+lbl+' · '+a.length+' người</td></tr>';a.forEach(function(e){__out+=__row(e);});});tbody.innerHTML=__out;
+  }var __out="";__ord.forEach(function(d){var a=__by[d];if(!a||!a.length)return;var c=__DC[d]||["#323D57","#D2D8E3"];var lbl=d||"Chưa gán phòng";__out+='<tr><td colspan="7" style="padding:7px 14px;background:'+c[0]+';color:'+c[1]+';font-size:12px;font-weight:600;letter-spacing:.2px">'+lbl+' · '+a.length+' người</td></tr>';a.forEach(function(e){__out+=__row(e);});});tbody.innerHTML=__out;
   bxApplyNameFilter();
 }
 // ---- Tìm nhân viên theo tên (đã gộp từ khối vá cũ vào script chính) ----
@@ -2039,7 +2039,7 @@ function renderCalGrid(empId, year, month, empCC){
     const displayDate=parseInt(dd)+'/'+monthNum;
     let statusHtml='';
     if(!isWeekend&&cc&&cc.status){
-      const sc=STATUS_CODES[cc.status]||{bg:'#222B3D',color:'#B4BCCB'};
+      const sc=STATUS_CODES[cc.status]||{bg:'#222B3D',color:'#D2D8E3'};
       let _dsp=cc.status;if((cc.status==='T-S-P'||cc.status==='T-C-P')&&cc.lateMin){const _c=tinhCongNgay(cc);_dsp=cc.status+' '+String(parseFloat(_c.toFixed(4)));}if((cc.status==='T-S'||cc.status==='T-C'||cc.status==='T-C2')&&cc.lateMin>45){_dsp=cc.status+' '+String(parseFloat(tinhCongNgay(cc).toFixed(4)));}statusHtml=`<span class="day-status" style="background:${sc.bg};color:${sc.color}">${_dsp}</span>`;
       if((cc.status==='T-S'||cc.status==='T-C'||cc.status==='T-C2')&&cc.lateMin){
         statusHtml+=`<div class="late-min">Trễ ${cc.lateMin} phút</div>`;
@@ -2077,7 +2077,7 @@ function openDayModal(empId, dateStr){
   // Build status grid
   const grid=document.getElementById('status-grid');
   grid.innerHTML=SIMPLE_STATUSES.map(code=>{
-    const sc=STATUS_CODES[code]||{bg:'#222B3D',color:'#B4BCCB',label:code};
+    const sc=STATUS_CODES[code]||{bg:'#222B3D',color:'#D2D8E3',label:code};
     return `<div class="status-opt ${cur.status===code?'selected':''}" onclick="selectDayStatus('${code}')">
       <span class="status-opt-badge" style="background:${sc.bg};color:${sc.color}">${code}</span>
       <span class="status-opt-lbl">${sc.label}</span>
@@ -2175,7 +2175,7 @@ function ssEnc(S,C,day){
 function ssSame(a,b){ return a&&b&&a.day===b.day&&(a.day||(a.S.c===b.S.c&&(+a.S.m||0)===(+b.S.m||0)&&a.C.c===b.C.c&&(+a.C.m||0)===(+b.C.m||0))); }
 function ssChips(ses,arr){
   var sel=window.__ss[ses];
-  return arr.map(function(a){ var sc=STATUS_CODES[a[0]]||{bg:'#222B3D',color:'#B4BCCB'};
+  return arr.map(function(a){ var sc=STATUS_CODES[a[0]]||{bg:'#222B3D',color:'#D2D8E3'};
     return '<div class="ss-opt'+((!window.__ss.day&&sel.c===a[0])?' selected':'')+'" onclick="ssPick(\''+ses+'\',\''+a[0]+'\')"><span class="ss-b" style="background:'+sc.bg+';color:'+sc.color+'">'+a[0]+'</span>'+a[1]+'</div>'; }).join('');
 }
 function ssRender(){
@@ -2522,11 +2522,11 @@ button,input,select,textarea{font-family:inherit!important;}
 <style>
 #hs-sync-modal{position:fixed;inset:0;background:rgba(32,45,56,.45);z-index:99999;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;font-family:inherit}
 #hs-sync-modal .hs-card{background:#1C2436;border:1px solid #323D57;border-radius:14px;max-width:760px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
-#hs-sync-modal .hs-head{padding:16px 20px;background:#121825;color:#B4BCCB;display:flex;align-items:center;justify-content:space-between}
+#hs-sync-modal .hs-head{padding:16px 20px;background:#121825;color:#D2D8E3;display:flex;align-items:center;justify-content:space-between}
 #hs-sync-modal .hs-head h3{margin:0;font-size:15px;font-weight:700;letter-spacing:.2px}
-#hs-sync-modal .hs-head .hs-x{cursor:pointer;font-size:20px;line-height:1;opacity:.85;background:none;border:none;color:#B4BCCB}
+#hs-sync-modal .hs-head .hs-x{cursor:pointer;font-size:20px;line-height:1;opacity:.85;background:none;border:none;color:#D2D8E3}
 #hs-sync-modal .hs-body{padding:16px 20px;max-height:60vh;overflow:auto}
-#hs-sync-modal .hs-sub{font-size:12.5px;color:#B4BCCB;margin:0 0 12px}
+#hs-sync-modal .hs-sub{font-size:12.5px;color:#D2D8E3;margin:0 0 12px}
 #hs-sync-modal table{width:100%;border-collapse:collapse;font-size:13px;background:#1C2436;border-radius:10px;overflow:hidden;border:1px solid #323D57}
 #hs-sync-modal thead tr{background:#222B3D}
 #hs-sync-modal th{padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#2FB59E;letter-spacing:.3px;white-space:nowrap}
@@ -2535,9 +2535,9 @@ button,input,select,textarea{font-family:inherit!important;}
 #hs-sync-modal .hs-btn{font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;border:none;font-family:inherit}
 #hs-sync-modal .hs-btn-go{background:#1F8A78;color:#FFFFFF}
 #hs-sync-modal .hs-btn-go:disabled{opacity:.5;cursor:not-allowed}
-#hs-sync-modal .hs-btn-cancel{background:#222B3D;color:#B4BCCB;border:1px solid #323D57}
+#hs-sync-modal .hs-btn-cancel{background:#222B3D;color:#D2D8E3;border:1px solid #323D57}
 #hs-sync-modal .hs-note{font-size:11.5px;color:#E36B6B;background:rgba(227,107,107,.14);border:1px solid rgba(227,107,107,.4);border-radius:8px;padding:8px 10px;margin:12px 0 0}
-#hs-sync-modal .hs-empty{padding:24px;text-align:center;color:#B4BCCB;font-size:13px}
+#hs-sync-modal .hs-empty{padding:24px;text-align:center;color:#D2D8E3;font-size:13px}
 .hs-sync-btn{background:#1F8A78;color:#FFFFFF;font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;border:none;font-family:inherit}
 .hs-sync-btn:hover{opacity:.9}
 </style>
@@ -2546,7 +2546,7 @@ button,input,select,textarea{font-family:inherit!important;}
     <div class="hs-head"><h3>➕ Đồng bộ nhân sự từ Hồ sơ</h3><button class="hs-x" onclick="hsSyncClose()">×</button></div>
     <div class="hs-body" id="hs-sync-body"></div>
     <div class="hs-foot">
-      <label style="font-size:12px;color:#B4BCCB;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="hs-sync-all" onchange="hsSyncToggleAll(this.checked)"> Chọn tất cả</label>
+      <label style="font-size:12px;color:#D2D8E3;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="hs-sync-all" onchange="hsSyncToggleAll(this.checked)"> Chọn tất cả</label>
       <div style="display:flex;gap:8px">
         <button class="hs-btn hs-btn-cancel" onclick="hsSyncClose()">Hủy</button>
         <button class="hs-btn hs-btn-go" id="hs-sync-go" onclick="hsSyncApply()">Thêm người đã chọn</button>

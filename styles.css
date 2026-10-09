@@ -14,16 +14,16 @@
 
   /* mực chữ */
   --ink:   #E8ECF3;   /* tiêu đề đậm */
-  --text:  #B4BCCB;   /* chữ thường */
-  --muted: #8A94A8;   /* chữ mờ / phụ */
-  --faint: #6B7488;
+  --text:  #D2D8E3;   /* chữ thường */
+  --muted: #A7B0C2;   /* chữ mờ / phụ */
+  --faint: #8A93A7;
 
   /* sidebar */
   --nav-bg:     #121825;
   --nav-bg-2:   #0E131D;
   --nav-line:   rgba(255,255,255,.08);
-  --nav-text:   #B4BCCB;
-  --nav-mute:   #8A94A8;
+  --nav-text:   #D2D8E3;
+  --nav-mute:   #A7B0C2;
   --nav-active: #222B3D;
 
   /* nhấn (trầm) */
@@ -262,7 +262,7 @@ table.dt tbody tr:hover{background:var(--paper-2);}
 .dt-name{font-weight:500;color:var(--ink);}
 .dt-muted{color:var(--muted);}
 .dt-empty{text-align:center;color:var(--muted);padding:24px!important;}
-.pill.gray{background:#222B3D;color:#8A94A8;}
+.pill.gray{background:#222B3D;color:#A7B0C2;}
 table.dt td.nw{white-space:nowrap;}
 .dt-date{color:var(--text);font-variant-numeric:tabular-nums;}
 .tag-new{font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--teal);background:rgba(53,101,91,.14);padding:1px 5px;border-radius:4px;margin-left:6px;vertical-align:1px;}
@@ -509,3 +509,9 @@ table.dt td.nw{white-space:nowrap;}
 @media(max-width:1200px){.cva-split{grid-template-columns:1fr;}.cva-det{position:static;max-height:none;}.cva-kpis{grid-template-columns:repeat(3,minmax(0,1fr));}}
 .cva-tbl .pill{white-space:nowrap;}.cva-tbl td,.cva-tbl th{padding-left:10px;padding-right:10px;}
 .cva-cr .pill{white-space:nowrap;}
+
+/* [v3.1] chữ dễ đọc hơn trên nền tối */
+.pill.teal{color:#5FD0B8;background:rgba(47,181,158,.16);}
+.pill.rust{color:#F28B8B;background:rgba(227,107,107,.16);}
+.pill.clay,.pill.gold{color:#F0BE68;}
+.pill.gray{color:#B9C1D0;}

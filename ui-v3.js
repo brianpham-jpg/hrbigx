@@ -45,7 +45,7 @@ var prevGo=window.__v3PrevGo||window.go; window.__v3PrevGo=prevGo;
 window.go=function(id){ prevGo.apply(this,arguments); try{ markRail(id); }catch(e){} };
 
 /* ================= 2. TIỆN ÍCH ================= */
-var C={s1:'#9377E6',s2:'#CF7F3F',s3:'#6A80DB',s4:'#23A08C',ink:'#E8ECF3',ink2:'#B4BCCB',mute:'#8A94A8',line:'#263045',grid:'#222B3D',card:'#171E2E',good:'#4FBF8F',warn:'#E0A84A',bad:'#E36B6B',slate:'#2C3650'};
+var C={s1:'#9377E6',s2:'#CF7F3F',s3:'#6A80DB',s4:'#23A08C',ink:'#E8ECF3',ink2:'#D2D8E3',mute:'#A7B0C2',line:'#263045',grid:'#222B3D',card:'#171E2E',good:'#4FBF8F',warn:'#E0A84A',bad:'#E36B6B',slate:'#2C3650'};
 var FONT='"Be Vietnam Pro",system-ui,sans-serif';
 var ANIM={animationDuration:1000,animationEasing:'cubicOut',animationDurationUpdate:600};
 var TIP={trigger:'axis',backgroundColor:'#0B0F17',borderColor:'#2A3348',borderWidth:1,padding:[8,11],textStyle:{color:'#D5DAE3',fontFamily:FONT,fontSize:12},extraCssText:'border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.4)'};
