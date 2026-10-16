@@ -212,7 +212,7 @@ function css(){
 
 /* ---------------- RENDER MÀN HÌNH ---------------- */
 window.renderBaoCao=function(){
-  if(window.HR&&HR.error) return window.__bcOrigRender();
+  if(window.HR&&HR.error) return window.errorBox?window.errorBox():'<div class="ns-note">Lỗi tải dữ liệu</div>';
   if(!(window.HR&&HR.loaded)) return (window.loadingBox?window.loadingBox():'<div class="ns-note">Đang tải…</div>');
   var R=compute(), mode=R.mode, off=R.off;
   var offLbl=off===0?(mode==='week'?'Tuần này':'Tháng này'):(mode==='week'?(off===-1?'Tuần trước':Math.abs(off)+' tuần trước'):(off===-1?'Tháng trước':Math.abs(off)+' tháng trước'));
