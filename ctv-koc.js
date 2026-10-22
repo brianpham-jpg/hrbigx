@@ -36,7 +36,7 @@ function attempt(n){
   p.then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
    .then(function(d){ if(!d||!d.ok) throw new Error((d&&(d.error||d.reason))||'API lỗi');
      var same=S.data && JSON.stringify(S.data.rows)===JSON.stringify(d.rows);
-     S.data=d; S.loaded=true; S.fresh=true; try{ localStorage.setItem(LS,JSON.stringify(d)); }catch(e){}
+     S.data=d; S.loaded=true; S.fresh=true; S.last=Date.now(); try{ localStorage.setItem(LS,JSON.stringify(d)); }catch(e){}
      S.loading=false; if(window.currentTab===TAB && !same) render(); else if(window.currentTab===TAB) stamp();
      if(window.currentTab==='bao-cao' && !same && window.go) try{ window.go('bao-cao'); }catch(e){} })
    .catch(function(e){
@@ -255,7 +255,7 @@ window.addEventListener('resize',function(){ if(S.chart&&window.currentTab===TAB
 /* ---------- 6b. Phần CTV cho tab Báo cáo (baocao-td.js gọi window.ctvReport) — mockup duyệt 22/10/2026 ---------- */
 /* p, pv = {start,end} (Date 00:00) của kỳ đang xem / kỳ trước. Trả null nếu chưa có dữ liệu CTV. */
 window.ctvReport=function(p,pv){
-  if(!S.fresh && !S.loading) load(); // làm mới 1 lần mỗi lần mở web
+  if(!S.loading && Date.now()-(S.last||0)>30000) load(); // mở Báo cáo là lấy số mới (quá 30 giây thì gọi lại)
   if(!S.loaded) return null;
   var rows=S.data.rows||[], today=d0(new Date());
   function inQ(d,q){ if(!d) return false; d=d0(d); return d>=q.start && d<=q.end; }
@@ -310,7 +310,15 @@ window.go=function(id){
 
 /* nạp muộn (app đã khởi động trước file này) → vẽ lại menu */
 if(window.__bxAppBooted){ try{ window.renderNav(); if(window.currentTab) window.go(window.currentTab); }catch(e){ console.warn('[ctv] late boot',e); } }
-/* [22/10] tự làm mới dữ liệu CTV sau khi đăng nhập (không chờ mở tab), và mỗi 5 phút khi đang mở tab CTV / Báo cáo */
-(function bootCtv(n){ if(window.__bxAppBooted&&window.BX_ROLE){ setTimeout(function(){ if(!S.fresh) load(); },2500); return; } if(n<600) setTimeout(function(){ bootCtv(n+1); },500); })(0);
-setInterval(function(){ if((window.currentTab===TAB||window.currentTab==='bao-cao') && !S.loading && document.visibilityState==='visible') load(); },300000);
+/* [22/10] LUÔN tự cập nhật:
+   - sau khi đăng nhập: đợi dữ liệu chính tải xong rồi mới gọi (gọi cùng lúc dễ bị Apps Script trả lỗi 404)
+   - mỗi 60 giây khi trang đang mở trên màn hình (mọi tab), có thay đổi thì tự vẽ lại tab CTV / Báo cáo
+   - quay lại cửa sổ web (sau khi chuyển tab trình duyệt) là làm mới ngay */
+(function bootCtv(n){
+  var note=(document.getElementById('tb-note')||{}).textContent||'';
+  if(window.__bxAppBooted && window.BX_ROLE && window.HR && HR.loaded && !/đang làm mới|Đang tải/.test(note)){ setTimeout(function(){ if(!S.loading) load(); },800); return; }
+  if(n<240) setTimeout(function(){ bootCtv(n+1); },500); else if(!S.loading) load();
+})(0);
+setInterval(function(){ if(window.BX_ROLE && !S.loading && document.visibilityState==='visible') load(); },60000);
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && window.BX_ROLE && !S.loading && Date.now()-(S.last||0)>30000) load(); });
 })();
