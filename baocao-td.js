@@ -64,7 +64,7 @@ function compute(){
   var old7=0; WS.forEach(function(w){ if(BL[w]) old7+=BL[w][2]+BL[w][3]; }); var totBL=WS.reduce(function(s,w){return s+(BL[w]?BL[w][4]:0);},0);
   var bpe=Object.keys(BP).map(function(k){return [k,BP[k]];}).sort(function(a,b){return b[1]-a[1];});
 
-  var R={W:W,mode:mode,off:off,p:p,pv:pv,f:f,fp:fp,cv:cv,cvp:cvp,pend:pend,hrR:hrR,hrAll:hrAll,hist:hist,avg:avg,PR:PR,silent:silent,anomIn:anomIn,labs:labs,vals:vals,BL:BL,old7:old7,totBL:totBL,bpe:bpe,ev:{}};
+  var R={pendP:Lp.filter(waitStep).length,W:W,mode:mode,off:off,p:p,pv:pv,f:f,fp:fp,cv:cv,cvp:cvp,pend:pend,hrR:hrR,hrAll:hrAll,hist:hist,avg:avg,PR:PR,silent:silent,anomIn:anomIn,labs:labs,vals:vals,BL:BL,old7:old7,totBL:totBL,bpe:bpe,ev:{}};
   var it;
   /* 1. tóm tắt */
   var sm=[]; if(!f[0]) sm.push('Kỳ '+bcLabel(mode,p)+' <b>chưa có CV mới</b>'+(off===0?' (kỳ đang diễn ra).':'.'));
@@ -73,6 +73,10 @@ function compute(){
     sm.push('<b>'+f[1]+'</b> CV qua HR duyệt ('+vn(hrR,1)+'%, mức chung là '+vn(hrAll,1)+'%), '+f[3]+' người qua phỏng vấn vòng 1, <b>'+f[5]+'</b> người trúng tuyển.');
     if(pend) sm.push('<b>'+pend+'</b> CV ('+vn(pc(pend,f[0]),0)+'%) vẫn chưa có kết quả.'); }
   if(old7) sm.push('Toàn hệ thống đang có <b>'+old7+' CV tồn quá 7 ngày</b> chưa xử lý xong.');
+  /* [CTV] gộp CTV Booking KOC vào cùng báo cáo (22/10/2026) */
+  R.ctv=(typeof window.ctvReport==='function')?window.ctvReport(p,pv):null;
+  if(sm.length) sm[0]='<b>Inhouse:</b> '+sm[0];
+  if(R.ctv&&R.ctv.sum) sm.push('<br>'+R.ctv.sum.replace(/^CTV Booking KOC:/,'<b>CTV Booking KOC:</b>'));
   R.summary=sm.join(' ');
   /* 2. phễu */
   it=[]; if(f[0]){ var waitAt=function(j){ return L.filter(function(c){return waitStep(c)===WS[j-1];}).length; }; var mi=-1,mm=1e9,sk=0;
@@ -115,6 +119,7 @@ function compute(){
   var n2=g(WS[3])[4]+g(WS[4])[4]; if(n2) td.push([1,'Chốt kết quả vòng 2 / offer cho <b>'+n2+' ứng viên</b>.','HR + Quản lý']);
   if(silent.length) td.push([2,'Xem lại tin tuyển của '+silent.length+' vị trí kỳ này không có CV mới: <b>'+silent.map(function(k){return E(dn(k));}).join(', ')+'</b>. Đăng lại nếu vẫn đang tuyển, hoặc đánh dấu đã đóng.','HR']);
   PR.filter(function(r){return r.f[0]>=5&&!r.f[1]&&r.pend<r.f[0];}).forEach(function(r){ td.push([2,'Đổi kênh hoặc sửa tin đăng <b>'+E(dn(r.k))+'</b>: chưa có CV đạt HR.','HR']); });
+  if(R.ctv) R.ctv.todo.forEach(function(x){ td.push(x); }); // [CTV]
   td.sort(function(a,b){return a[0]-b[0];}); R.todo=td;
   return R;
 }
@@ -152,8 +157,9 @@ function sections(R,charts){ // charts: {fun,day,tr} = html (div cho màn hình 
       +sec(4,'Xu hướng','CV mới '+(R.W?'8 tuần':'6 tháng')+' gần nhất (cột tím = kỳ đang xem) · đường: % qua HR duyệt',charts.tr+evHtml(R.ev.tr))+'</div>',
     sec(5,'Theo vị trí','CV nộp trong kỳ và kết quả hiện tại theo từng bước · cột cuối so lượng CV với kỳ trước','<div class="bt-scroll">'+posTable(R)+'</div>'+evHtml(R.ev.pos)),
     sec(6,'CV tồn đọng (tính đến hôm nay)','Tất cả CV chưa có kết quả, không riêng kỳ này · chia theo bước đang chờ và số ngày từ lúc nộp','<div class="bt-scroll">'+ageTable(R)+'</div>'+evHtml(R.ev.age)),
-    sec(7,'Việc cần làm','Tự đề xuất từ các đánh giá ở trên, sắp theo mức ưu tiên',todoHtml(R))
-  ];
+  ].concat(R.ctv?[R.ctv.html(sec,evHtml)]:[]).concat([ // [CTV] phần 7 = CTV, Việc cần làm (gộp inhouse + CTV) xuống cuối
+    sec(R.ctv?8:7,'Việc cần làm','Tự đề xuất từ các đánh giá ở trên (inhouse + CTV), sắp theo mức ưu tiên',todoHtml(R))
+  ]);
 }
 
 /* ---------------- biểu đồ (theme tối cho màn hình, sáng cho PDF) ---------------- */
@@ -216,7 +222,7 @@ window.renderBaoCao=function(){
   if(!(window.HR&&HR.loaded)) return (window.loadingBox?window.loadingBox():'<div class="ns-note">Đang tải…</div>');
   var R=compute(), mode=R.mode, off=R.off;
   var offLbl=off===0?(mode==='week'?'Tuần này':'Tháng này'):(mode==='week'?(off===-1?'Tuần trước':Math.abs(off)+' tuần trước'):(off===-1?'Tháng trước':Math.abs(off)+' tháng trước'));
-  var head='<div class="page-head"><div class="page-h1">Báo cáo tuyển dụng</div><div class="page-lead">Đánh giá chi tiết tuyển dụng theo tuần hoặc tháng: lượng CV, phễu, từng vị trí, CV tồn đọng và việc cần làm. Số liệu lấy trực tiếp từ dữ liệu web, có so sánh với kỳ liền trước.</div></div>';
+  var head='<div class="page-head"><div class="page-h1">Báo cáo tuyển dụng</div><div class="page-lead">Đánh giá chi tiết tuyển dụng inhouse và CTV Booking KOC theo tuần hoặc tháng: lượng CV, phễu, từng vị trí, CV tồn đọng, đơn CTV và việc cần làm. Số liệu lấy trực tiếp từ dữ liệu web, có so sánh với kỳ liền trước.</div></div>';
   var controls='<div class="bc-controls"><div class="bc-seg"><button class="'+(mode==='week'?'on':'')+'" onclick="bcSetMode(\'week\')">Tuần</button><button class="'+(mode==='month'?'on':'')+'" onclick="bcSetMode(\'month\')">Tháng</button></div>'
     +'<div class="bc-step"><span class="arw" onclick="bcStep(-1)">‹</span><span class="lbl">'+bcLabel(mode,R.p)+'<small>'+offLbl+'</small></span><span class="arw'+(off>=0?' dis':'')+'" onclick="bcStep(1)">›</span></div>'
     +'<span class="bc-cmp">so với kỳ trước · '+bcLabel(mode,R.pv)+'</span><button class="bc-pdf" onclick="bcExportPDF()">⬇&nbsp; Xuất PDF</button></div>'
@@ -304,6 +310,109 @@ window.bcExportPDF=function(){
       pdf.save('BaoCao_TuyenDung_'+slug+'.pdf'); host.remove(); done(); }, function(e){ host.remove(); throw e; });
   }).catch(function(e){ console.warn('[bt] pdf',e); fail(); });
 };
+
+/* ================================================================
+   [PDF BẢNG CHỈ SỐ] 1 trang A4 — inhouse + CTV Booking KOC — mockup duyệt 22/10/2026
+   Thay mẫu "Xuất PDF" cũ (bản cũ vẫn giữ ở window.__btOldPDF, không xoá).
+   Đèn: so với kỳ trước (xanh tốt hơn · vàng bằng/thay đổi nhỏ · đỏ kém hơn · xám chưa đủ dữ liệu).
+   ================================================================ */
+window.__btOldPDF=window.__btOldPDF||window.bcExportPDF;
+function scWaitCtv(){ var S=window.__ctv; if(!S||S.loaded) return Promise.resolve();
+  if(typeof window.__ctvLoad==='function') window.__ctvLoad();
+  return new Promise(function(ok){ var n=0; (function w(){ if(S.loaded||S.error||++n>40) return ok(); setTimeout(w,200); })(); }); }
+function scRow(name,sub,cur,prev,kind,better){
+  /* kind: 'n' số đếm · 'r' tỷ lệ % · 'd' số ngày · 's' ảnh chụp hiện tại (không có kỳ trước) */
+  var fmt=function(v){ if(v==null||isNaN(v)) return '—'; return kind==='r'?vn(v,0)+'%':kind==='d'?vn(v,1):String(v); };
+  var dot='n', ch='<span class="fl">—</span>';
+  if(kind==='s'){ dot=cur?'r':'g'; }
+  else if(cur!=null&&prev!=null&&!isNaN(cur)&&!isNaN(prev)){
+    var d=cur-prev, small=kind==='r'?Math.abs(d)<5:kind==='d'?Math.abs(d)<0.5:d===0;
+    var good=better>0?d>0:d<0;
+    dot=small?'y':good?'g':'r';
+    if(d!==0){ var a=Math.abs(d); ch='<span class="'+(good?'up':'dn')+'">'+(d>0?'▲ ':'▼ ')+(kind==='r'?vn(a,0)+' điểm':kind==='d'?vn(a,1):a)+'</span>'; }
+  }
+  return '<tr><td>'+name+(sub?'<small>'+sub+'</small>':'')+'</td><td><b>'+fmt(cur)+'</b></td><td>'+(kind==='s'?'—':fmt(prev))+'</td><td>'+ch+'</td><td class="c"><span class="dot '+dot+'"></span></td></tr>';
+}
+function scHtml(R){
+  var f=R.f, fp=R.fp, r=function(a,b){ return b?a/b*100:null; }, C=R.ctv, m=C&&C.m;
+  var lbl=bcLabel(R.mode,R.p), now=new Date(), stamp=DMY(now)+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  var tile=function(t,v,p){ var d=v-p; return '<div class="ti"><div class="l">'+t+'</div><div class="v">'+v+'</div><div class="d">'+(d?'<span class="'+(d>0?'up':'dn')+'">'+(d>0?'▲ ':'▼ ')+Math.abs(d)+'</span> vs '+p:'<span class="fl">— bằng kỳ trước</span>')+'</div></div>'; };
+  var h='<div class="hd"><div class="hl"><div class="lg">BigX</div><div><div class="t">BÁO CÁO CHỈ SỐ TUYỂN DỤNG</div><div class="s">Kỳ: '+(R.W?'Tuần ':'Tháng ')+lbl+' · so với '+bcLabel(R.mode,R.pv)+'</div></div></div>'
+    +'<div class="hr">BigX Agency · Phòng Nhân sự<br>Ngày xuất: '+stamp+'</div></div>';
+  h+='<div class="tiles">'+tile('CV inhouse mới',f[0],fp[0])+tile('Trúng tuyển',f[5],fp[5])
+    +(m?tile('Đơn CTV mới',m.k.n,m.kp.n)+tile('Nhận CTV',m.nhan,m.nhanP):'<div class="ti"><div class="l">CTV</div><div class="v">—</div><div class="d fl">chưa tải được</div></div><div class="ti"></div>')+'</div>';
+  h+='<table><tr><th>Chỉ số</th><th>Kỳ này</th><th>Kỳ trước</th><th>Thay đổi</th><th class="c">Đánh giá</th></tr>';
+  h+='<tr class="grp"><td colspan="5">Tuyển dụng inhouse</td></tr>'
+    +scRow('CV mới nhận','',f[0],fp[0],'n',1)
+    +scRow('Tỷ lệ qua HR duyệt','CV qua HR / CV nộp',r(f[1],f[0]),r(fp[1],fp[0]),'r',1)
+    +scRow('Tỷ lệ qua Line Manager','qua LM / qua HR',r(f[2],f[1]),r(fp[2],fp[1]),'r',1)
+    +scRow('Qua phỏng vấn vòng 1','',f[3],fp[3],'n',1)
+    +scRow('Trúng tuyển','',f[5],fp[5],'n',1)
+    +scRow('Tỷ lệ CV → trúng tuyển','',r(f[5],f[0]),r(fp[5],fp[0]),'r',1)
+    +scRow('CV kỳ này chưa có kết quả','',R.pend,R.pendP,'n',-1)
+    +scRow('CV tồn quá 7 ngày','toàn hệ thống, tại ngày xuất',R.old7,null,'s',-1);
+  h+='<tr class="grp"><td colspan="5">CTV Booking KOC</td></tr>';
+  if(m){ var k=m.k, kp=m.kp;
+    h+=scRow('Đơn đăng ký mới','',k.n,kp.n,'n',1)
+      +scRow('Tỷ lệ đã review','đơn trong kỳ',r(k.rev,k.n),r(kp.rev,kp.n),'r',1)
+      +scRow('Tỷ lệ PASS','PASS / đã review',r(k.pass,k.rev),r(kp.pass,kp.rev),'r',1)
+      +scRow('Phỏng vấn trong kỳ','theo Ngày phỏng vấn',m.pv,m.pvP,'n',1)
+      +scRow('Nhận CTV','',m.nhan,m.nhanP,'n',1)
+      +scRow('Tỷ lệ nhận CTV / đơn','',r(m.nhan,k.n),r(m.nhanP,kp.n),'r',1)
+      +scRow('Đăng ký → phỏng vấn (TB ngày)','',k.gapAvg,kp.gapAvg,'d',-1)
+      +scRow('Đơn chờ review','tại ngày xuất',m.chua,null,'s',-1); }
+  else h+='<tr><td colspan="5" class="fl">Chưa tải được dữ liệu CTV — mở tab CTV Booking KOC rồi xuất lại.</td></tr>';
+  h+='</table><div class="leg"><span class="dot g"></span> tốt hơn kỳ trước &nbsp; <span class="dot y"></span> bằng / thay đổi nhỏ &nbsp; <span class="dot r"></span> kém hơn &nbsp; <span class="dot n"></span> chưa đủ dữ liệu · "tại ngày xuất": đỏ khi còn tồn</div>';
+  /* nhận định */
+  var nd=[], dd=fp[0]?Math.round((f[0]-fp[0])/fp[0]*100):null;
+  nd.push('<b>Inhouse:</b> '+f[0]+' CV mới'+(dd==null||!dd?'':' ('+(dd>0?'tăng ':'giảm ')+Math.abs(dd)+'% so với kỳ trước)')+(R.PR&&R.PR[0]?', nhiều nhất <b>'+E(dn(R.PR[0].k))+'</b>':'')+'; '+f[1]+' qua HR duyệt, '+f[3]+' qua phỏng vấn vòng 1, <b>'+f[5]+'</b> trúng tuyển.');
+  if(C&&C.sum) nd.push(C.sum.replace(/^CTV Booking KOC:/,'<b>CTV Booking KOC:</b>'));
+  var ton=[]; if(R.old7) ton.push('<b>'+R.old7+'</b> CV inhouse quá 7 ngày'); if(m&&m.chua) ton.push('<b>'+m.chua+'</b> đơn CTV chưa review'+(m.oldest?' (cũ nhất '+m.oldest+' ngày)':''));
+  nd.push(ton.length?'<b>Tồn đọng:</b> '+ton.join(', ')+'.':'<b>Tồn đọng:</b> không có hồ sơ tồn.');
+  var todo=(R.todo||[]).slice(0,6);
+  h+='<div class="two"><div class="box"><h4>Nhận định</h4><ul>'+nd.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>'
+    +'<div class="box"><h4>Việc cần làm</h4>'+(todo.length?'<ol>'+todo.map(function(x){ return '<li>'+x[1]+' <i>'+x[2]+'</i></li>'; }).join('')+'</ol>':'<div class="fl" style="font-size:11px">Không có việc tồn.</div>')+'</div></div>';
+  h+='<div class="ft"><span>Số liệu lấy trực tiếp từ hệ thống HR BigX (Tuyển dụng + Đăng ký CTV)</span><span>Trang 1/1</span></div>';
+  return h;
+}
+function scCss(){ return '<style>'
+  +'.sc{width:'+PW+'px;height:'+PH+'px;background:#fff;color:#1A2433;font-family:"Be Vietnam Pro",sans-serif;font-variant-numeric:tabular-nums;position:relative;box-sizing:border-box;padding:34px 38px 0;overflow:hidden}'
+  +'.sc *{box-sizing:border-box}.sc b{color:#111827}'
+  +'.sc .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #202D38;padding-bottom:12px}'
+  +'.sc .hl{display:flex;gap:12px;align-items:center}.sc .lg{width:42px;height:42px;border-radius:10px;background:#202D38;color:#fff;font-family:Fraunces,Georgia,serif;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center}'
+  +'.sc .t{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:21px;color:#202D38}.sc .s{font-size:12px;color:#5A6577;margin-top:2px}.sc .hr{text-align:right;font-size:11px;color:#5A6577;line-height:1.6}'
+  +'.sc .tiles{display:flex;gap:8px;margin:14px 0}.sc .ti{flex:1;border:1px solid #E3E7EE;border-radius:10px;padding:9px 12px;background:#F7F9FB;min-height:74px}'
+  +'.sc .ti .l{font-size:10.5px;color:#5A6577;text-transform:uppercase;letter-spacing:.05em}.sc .ti .v{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:26px;color:#202D38;line-height:1.2}.sc .ti .d{font-size:10.5px;color:#7A8496}'
+  +'.sc .up{color:#2F855A;font-weight:600}.sc .dn{color:#C53030;font-weight:600}.sc .fl{color:#7A8496;font-weight:600}'
+  +'.sc table{width:100%;border-collapse:collapse;font-size:11.5px}.sc th{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:#5A6577;text-align:right;padding:6px 8px;border-bottom:1.5px solid #CBD2DC;background:#F7F9FB;font-weight:600}'
+  +'.sc th:first-child,.sc td:first-child{text-align:left}.sc td{padding:5px 8px;border-bottom:1px solid #EDF0F4;text-align:right;color:#2D3748}.sc .c{text-align:center!important}'
+  +'.sc tr.grp td{background:#202D38;color:#fff;font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:5px 8px}'
+  +'.sc td small{display:block;font-size:9.5px;color:#7A8496}'
+  +'.sc .dot{display:inline-block;width:10px;height:10px;border-radius:50%}.sc .g{background:#2F9E6E}.sc .y{background:#E0A84A}.sc .r{background:#D64545}.sc .n{background:#C5CCD6}'
+  +'.sc .leg{font-size:10px;color:#7A8496;margin-top:6px}.sc .leg .dot{width:8px;height:8px}'
+  +'.sc .two{display:flex;gap:12px;margin-top:12px}.sc .box{flex:1;min-width:0;border:1px solid #E3E7EE;border-radius:10px;padding:10px 12px}'
+  +'.sc .box h4{margin:0 0 6px;font-family:Fraunces,Georgia,serif;font-weight:600;font-size:14px;color:#202D38}.sc .box ul,.sc .box ol{margin:0;padding-left:16px}'
+  +'.sc .box li{font-size:11px;line-height:1.5;margin:3px 0;color:#2D3748}.sc .box ol li::marker{color:#6E54C9;font-weight:700}.sc .box i{color:#7A8496;font-style:normal;font-size:10px}'
+  +'.sc .ft{position:absolute;left:38px;right:38px;bottom:18px;display:flex;justify-content:space-between;font-size:10px;color:#7A8496;border-top:1px solid #E3E7EE;padding-top:6px}'
+  +'</style>'; }
+window.bcExportPDF=function(){
+  var btn=document.querySelector('#baocao .bc-pdf'), old=btn?btn.innerHTML:'';
+  function done(){ if(btn){ btn.disabled=false; btn.innerHTML=old; } }
+  if(btn){ btn.disabled=true; btn.innerHTML='⏳&nbsp; Đang tạo PDF…'; }
+  var need=[]; if(!window.html2canvas) need.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'));
+  if(!(window.jspdf&&window.jspdf.jsPDF)) need.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'));
+  Promise.all(need).then(scWaitCtv).then(function(){ return (document.fonts&&document.fonts.ready)||Promise.resolve(); }).then(function(){
+    var R=compute();
+    var host=document.createElement('div'); host.style.cssText='position:fixed;left:-30000px;top:0;z-index:-1';
+    host.innerHTML=scCss()+'<div class="sc">'+scHtml(R)+'</div>'; document.body.appendChild(host);
+    var pg=host.querySelector('.sc');
+    return window.html2canvas(pg,{scale:2,backgroundColor:'#FFFFFF',useCORS:true,logging:false,width:PW,height:PH,windowWidth:PW}).then(function(cv){
+      var pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',orientation:'portrait'}); pdf.addImage(cv.toDataURL('image/jpeg',0.95),'JPEG',0,0,210,297);
+      var slug=(R.mode==='week'?(DMY(R.p.start)+'_'+DMY(R.p.end)):('Thang_'+(R.p.start.getMonth()+1)+'-'+R.p.start.getFullYear())).replace(/\//g,'-');
+      pdf.save('BaoCao_ChiSo_TuyenDung_'+slug+'.pdf'); host.remove(); done(); }, function(e){ host.remove(); throw e; });
+  }).catch(function(e){ console.warn('[sc] pdf',e); done(); alert('Không tạo được PDF, thử lại giúp em.'); });
+};
+window.__scPreview=function(){ var R=compute(); return scCss()+'<div class="sc">'+scHtml(R)+'</div>'; }; // để kiểm tra bố cục
 
 /* nếu đang mở sẵn tab Báo cáo thì vẽ lại bằng bản mới */
 if(window.currentTab==='bao-cao' && window.go){ try{ window.go('bao-cao'); }catch(e){} }

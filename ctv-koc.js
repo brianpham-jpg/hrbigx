@@ -34,7 +34,8 @@ function load(){
    .then(function(d){ if(!d||!d.ok) throw new Error((d&&(d.error||d.reason))||'API lỗi');
      var same=S.data && JSON.stringify(S.data.rows)===JSON.stringify(d.rows);
      S.data=d; S.loaded=true; try{ localStorage.setItem(LS,JSON.stringify(d)); }catch(e){}
-     S.loading=false; if(window.currentTab===TAB && !same) render(); else if(window.currentTab===TAB) stamp(); })
+     S.loading=false; if(window.currentTab===TAB && !same) render(); else if(window.currentTab===TAB) stamp();
+     if(window.currentTab==='bao-cao' && !same && window.go) try{ window.go('bao-cao'); }catch(e){} })
    .catch(function(e){ S.loading=false; S.error=e.message||'Lỗi kết nối'; if(window.currentTab===TAB) render(); });
 }
 
@@ -89,7 +90,7 @@ function calc(rows){
     if(h==='pass') pass++; if(h==='can') can++; if(h==='fail') fail++;
     if(l==='nhan') nhan++; if(l!=='chua') lhAll++;
     if(h==='pass'){ fPass++; if(l!=='chua'){ fLh++; if(l==='nhan') fNhan++; } }
-    var a=pd(r.ngay), b=pd(r.ngayLienHe); if(a&&b&&l!=='chua'){ var g=(d0(b)-d0(a))/864e5; if(g>=0) gap.push(g); }
+    var a=pd(r.ngay), b=pd(r.ngayLienHe); if(a&&b){ var g=(d0(b)-d0(a))/864e5; if(g>=0) gap.push(g); }
   });
   return { n:n, rev:rev, pass:pass, can:can, fail:fail, chua:chua, nhan:nhan, lhAll:lhAll,
     funnel:[['Đăng ký form',n],['HR đã review',rev],['PASS',fPass],['Đã liên hệ',fLh],['Nhận CTV',fNhan]],
@@ -119,7 +120,7 @@ function evFunnel(k){
   if(k.chua) it.push([k.oldest>=3?'er':'wa','<b>'+k.chua+'</b> đơn chưa review'+(k.oldest!=null?', đơn cũ nhất đã chờ <b>'+k.oldest+' ngày</b>':'')+'.']);
   else it.push(['ok','Đã review hết đơn đăng ký.']);
   if(k.nhan) it.push(['ok','Cứ khoảng <b>'+vn(k.n/k.nhan,1)+'</b> người đăng ký thì nhận được 1 CTV.']);
-  if(k.gapAvg!=null) it.push([k.gapAvg>2?'wa':'ok','Từ lúc đăng ký đến khi liên hệ trung bình <b>'+vn(k.gapAvg,1)+' ngày</b>.']);
+  if(k.gapAvg!=null) it.push([k.gapAvg>2?'wa':'ok','Từ lúc đăng ký đến ngày phỏng vấn trung bình <b>'+vn(k.gapAvg,1)+' ngày</b>.']);
   return ev(it);
 }
 function evSeries(sr,view){
@@ -172,7 +173,7 @@ function page(){
     kpi('Đã review',k.rev,(k.n?pc(k.rev,k.n)+'% · ':'')+'còn '+k.chua+' chờ')+
     kpi('PASS',k.pass,k.rev?pc(k.pass,k.rev)+'% số đã review':'—','var(--teal-2)')+
     kpi('Đã nhận CTV',k.nhan,k.n?pc(k.nhan,k.n)+'% số đăng ký':'—','#9B7BEA')+
-    kpi('Ngày xử lý TB',k.gapAvg==null?'—':vn(k.gapAvg,1),'từ đăng ký → liên hệ')+'</div>';
+    kpi('Ngày xử lý TB',k.gapAvg==null?'—':vn(k.gapAvg,1),'từ đăng ký → phỏng vấn')+'</div>';
   var top=f[0][1]||1;
   h+='<div class="ctv-g2"><div class="ctv-card"><div class="ctv-h">Phễu tuyển CTV</div><div class="ctv-s">Mỗi bước = số người đã qua bước trước</div><div class="ctv-fun">'+
     f.map(function(x,i){ return '<div class="row"><div class="lab"><span>'+x[0]+'</span><b>'+x[1]+'</b></div><div class="bar" style="width:'+(x[1]?Math.max(2,Math.round(x[1]/top*100)):0)+'%"></div>'+
@@ -245,6 +246,53 @@ window.__ctvView=function(v){ S.view=v; render(); };
 window.__ctvF=function(){ S.f.q=(document.getElementById('ctv-q')||{}).value||''; S.f.hr=(document.getElementById('ctv-hr')||{}).value||'';
   S.f.lh=(document.getElementById('ctv-lh')||{}).value||''; S.f.kn=(document.getElementById('ctv-kn')||{}).value||''; body(); };
 window.addEventListener('resize',function(){ if(S.chart&&window.currentTab===TAB) try{ S.chart.resize(); }catch(e){} });
+
+/* ---------- 6b. Phần CTV cho tab Báo cáo (baocao-td.js gọi window.ctvReport) — mockup duyệt 22/10/2026 ---------- */
+/* p, pv = {start,end} (Date 00:00) của kỳ đang xem / kỳ trước. Trả null nếu chưa có dữ liệu CTV. */
+window.ctvReport=function(p,pv){
+  if(!S.loaded){ load(); return null; }
+  var rows=S.data.rows||[], today=d0(new Date());
+  function inQ(d,q){ if(!d) return false; d=d0(d); return d>=q.start && d<=q.end; }
+  function nhanKy(r,q){ if(lhOf(r)!=='nhan') return false; var pv2=pd(r.ngayLienHe); return pv2?inQ(pv2,q):inQ(pd(r.ngay),q); }
+  var L=rows.filter(function(r){return inQ(pd(r.ngay),p);}), Lp=rows.filter(function(r){return inQ(pd(r.ngay),pv);});
+  var k=calc(L), kp=calc(Lp), all=calc(rows);
+  var pvKy=rows.filter(function(r){return inQ(pd(r.ngayLienHe),p);}).length, pvKyP=rows.filter(function(r){return inQ(pd(r.ngayLienHe),pv);}).length;
+  var NH=rows.filter(function(r){return nhanKy(r,p);}), nhP=rows.filter(function(r){return nhanKy(r,pv);}).length;
+  var passNoLh=rows.filter(function(r){return hrOf(r)==='pass'&&lhOf(r)==='chua';}).length;
+  var pvQua=rows.filter(function(r){ var d=pd(r.ngayLienHe); return d&&d0(d)<today&&(lhOf(r)==='chua'||lhOf(r)==='da'); }).length;
+  function dl(c,pr){ var d=c-pr; if(!d) return '<span class="bt-d fl">— bằng kỳ trước</span>'; return '<span class="bt-d '+(d>0?'up':'dn')+'">'+(d>0?'▲':'▼')+' '+Math.abs(d)+'</span> <span class="bt-mute">vs '+pr+'</span>'; }
+  function kp1(t,v,s){ return '<div class="bt-kpi"><div class="t">'+t+'</div><div class="v">'+v+'</div><div class="s">'+s+'</div></div>'; }
+  var kpis='<div class="bt-kpis" style="margin:4px 0 12px">'+
+    kp1('Đăng ký mới',k.n,dl(k.n,kp.n))+
+    kp1('Đã review',k.rev,(k.n?pc(k.rev,k.n)+'% · ':'')+'còn '+k.chua+' chờ')+
+    kp1('PASS',k.pass,k.rev?pc(k.pass,k.rev)+'% số đã review':'—')+
+    kp1('Phỏng vấn trong kỳ',pvKy,'theo Ngày phỏng vấn')+
+    kp1('Nhận CTV',NH.length,dl(NH.length,nhP)+(k.n?' · '+pc(NH.length,k.n)+'% đơn':''))+'</div>';
+  var f=k.funnel, fp=kp.funnel, mx=Math.max(1,f[0][1],fp[0][1]);
+  var fun='<table class="bt-t"><tr><th>Bước</th><th style="width:46%"></th><th>Kỳ này</th><th>Kỳ trước</th></tr>'+f.map(function(x,i){
+    var a=x[1], b=fp[i][1], ra=i&&f[i-1][1]?' <small>'+pc(a,f[i-1][1])+'%</small>':'';
+    return '<tr><td>'+x[0]+'</td><td style="text-align:left"><div style="height:7px;border-radius:3px;background:#2FB59E;width:'+Math.round(a/mx*100)+'%;min-width:'+(a?3:0)+'px"></div><div style="height:7px;border-radius:3px;background:#8A93A7;opacity:.55;margin-top:3px;width:'+Math.round(b/mx*100)+'%;min-width:'+(b?3:0)+'px"></div></td><td><b>'+a+'</b>'+ra+'</td><td>'+b+'</td></tr>'; }).join('')+'</table>';
+  var list=NH.slice().sort(function(a,b){ return String(a.maCtv).localeCompare(String(b.maCtv)); });
+  var tbl='<table class="bt-t"><tr><th>Mã CTV</th><th>Ứng viên</th><th>Ngày gửi</th><th>Ngày PV</th><th>Kinh nghiệm</th></tr>'+(list.length?list.map(function(r){ var d=pd(r.ngay);
+    return '<tr><td><b>'+E(r.maCtv||'—')+'</b></td><td style="text-align:left">'+E(r.ten)+'</td><td>'+(d?dd(d):'—')+'</td><td>'+E(r.ngayLienHe?String(r.ngayLienHe).slice(0,5):'—')+'</td><td>'+E(one(r.kinhNghiem,KN)||'—')+'</td></tr>'; }).join(''):'<tr><td colspan="5" class="bt-mute" style="text-align:left">Kỳ này chưa nhận CTV mới.</td></tr>')+'</table>';
+  var ev=[];
+  if(all.chua) ev.push([all.oldest>=3?'er':'wa','<b>'+all.chua+'</b> đơn CTV chưa review'+(all.oldest!=null?', đơn cũ nhất đã chờ <b>'+all.oldest+' ngày</b>':'')+'.','Chưa review']);
+  if(passNoLh||pvQua) ev.push(['wa',[passNoLh?passNoLh+' người PASS nhưng chưa liên hệ':'',pvQua?pvQua+' người đã qua ngày phỏng vấn mà chưa cập nhật kết quả':''].filter(Boolean).join(' · ')+'.','Cần cập nhật']);
+  if(k.n){ var r1=pc(NH.length,k.n), r0=kp.n?pc(nhP,kp.n):null;
+    ev.push([r0!=null&&r1<r0?'in':'ok','Tỷ lệ nhận CTV <b>'+r1+'%</b> số đơn kỳ này'+(r0!=null?' (kỳ trước '+r0+'%)':'')+'.'+(k.gapAvg!=null?' Từ đăng ký đến phỏng vấn trung bình <b>'+vn(k.gapAvg,1)+' ngày</b>.':''),'Kết quả']); }
+  else ev.push(['in','Kỳ này chưa có đơn đăng ký CTV mới.','Không có đơn']);
+  var todo=[];
+  if(all.chua) todo.push([all.oldest>=3?0:1,'Review <b>'+all.chua+' đơn CTV</b> đang chờ trong file Đăng ký CTV.','HR']);
+  if(passNoLh) todo.push([1,'Liên hệ <b>'+passNoLh+' ứng viên CTV</b> đã PASS.','HR']);
+  if(pvQua) todo.push([1,'Cập nhật kết quả cho <b>'+pvQua+' ứng viên CTV</b> đã qua ngày phỏng vấn.','HR']);
+  var dk=k.n-kp.n;
+  var sum='CTV Booking KOC: <b>'+k.n+' đơn đăng ký</b>'+(kp.n||k.n?' ('+(dk?(dk>0?'▲ ':'▼ ')+Math.abs(dk):'bằng')+' so với kỳ trước)':'')+', <b>'+NH.length+' người nhận CTV</b>'+(all.chua?', còn <b>'+all.chua+' đơn chưa review</b>':'')+'.';
+  return { sum:sum, todo:todo,
+    m:{k:k, kp:kp, chua:all.chua, oldest:all.oldest, pv:pvKy, pvP:pvKyP, nhan:NH.length, nhanP:nhP, passNoLh:passNoLh, pvQua:pvQua}, // [CTV] số liệu cho PDF bảng chỉ số
+    html:function(sec,evHtml){ return sec(7,'Tuyển CTV Booking KOC','Đơn đăng ký form CTV gửi trong kỳ, kết quả tính đến hôm nay · so với đơn kỳ trước · "Nhận CTV" tính theo ngày phỏng vấn (chưa có thì theo ngày gửi)',
+      kpis+'<div class="bt-g2" style="gap:12px"><div style="min-width:0;flex:1"><div class="bt-cap" style="margin-top:0"><b>Phễu đơn trong kỳ</b> · xanh = kỳ này, xám = kỳ trước</div><div class="bt-scroll">'+fun+'</div></div>'+
+      '<div style="min-width:0;flex:1"><div class="bt-cap" style="margin-top:0"><b>CTV mới nhận trong kỳ</b></div><div class="bt-scroll">'+tbl+'</div></div></div>'+evHtml(ev)); } };
+};
 
 /* ---------- 7. Router ---------- */
 var prevGo=window.__ctvPrevGo||window.go; window.__ctvPrevGo=prevGo;
