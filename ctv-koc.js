@@ -27,16 +27,21 @@ try{
 var S=window.__ctv={ loaded:false, loading:false, error:null, data:null, view:'ngay', f:{q:'',hr:'',lh:'',kn:''}, chart:null };
 try{ var c0=JSON.parse(localStorage.getItem(LS)||'null'); if(c0&&c0.ok){ S.data=c0; S.loaded=true; } }catch(e){}
 function load(){
-  if(S.loading) return; S.loading=true; S.error=null;
+  if(S.loading) return; S.loading=true; S.error=null; if(window.currentTab===TAB) stamp(); attempt(2);
+}
+/* [22/10] thử lại tối đa 2 lần: Apps Script đôi khi trả 404/lỗi khi đang bận (nhiều yêu cầu cùng lúc / khởi động nguội) */
+function attempt(n){
   var url=API_URL+'?action=ctv';
   var p=window.bxAuthedFetch?window.bxAuthedFetch(url,{cache:'no-store'}):fetch(url,{cache:'no-store'});
   p.then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
    .then(function(d){ if(!d||!d.ok) throw new Error((d&&(d.error||d.reason))||'API lỗi');
      var same=S.data && JSON.stringify(S.data.rows)===JSON.stringify(d.rows);
-     S.data=d; S.loaded=true; try{ localStorage.setItem(LS,JSON.stringify(d)); }catch(e){}
+     S.data=d; S.loaded=true; S.fresh=true; try{ localStorage.setItem(LS,JSON.stringify(d)); }catch(e){}
      S.loading=false; if(window.currentTab===TAB && !same) render(); else if(window.currentTab===TAB) stamp();
      if(window.currentTab==='bao-cao' && !same && window.go) try{ window.go('bao-cao'); }catch(e){} })
-   .catch(function(e){ S.loading=false; S.error=e.message||'Lỗi kết nối'; if(window.currentTab===TAB) render(); });
+   .catch(function(e){
+     if(n>0){ setTimeout(function(){ attempt(n-1); },1500); return; }
+     S.loading=false; S.error=e.message||'Lỗi kết nối'; if(window.currentTab===TAB) render(); });
 }
 
 /* ---------- 3. Tiện ích ---------- */
@@ -156,7 +161,7 @@ function hb(title,sub,arr){ var mx=Math.max.apply(null,[1].concat(arr.map(functi
   return '<div class="ctv-card ctv-hb"><div class="ctv-h">'+title+'</div><div class="ctv-s">'+sub+'</div>'+
    (arr.length?arr.map(function(x){ return '<div class="r"><span>'+E(x[0])+'</span><div class="t"><i style="width:'+Math.round(x[1]/mx*100)+'%"></i></div><span class="n">'+x[1]+'</span></div>'; }).join(''):'<div style="color:var(--faint);font-size:12px">Chưa có dữ liệu</div>')+'</div>'; }
 
-function stamp(){ var up=document.getElementById('ctv-up'); if(up&&S.data) up.textContent='Đọc lúc '+S.data.updated+(S.loading?' · đang làm mới…':''); }
+function stamp(){ var up=document.getElementById('ctv-up'); if(up&&S.data) up.innerHTML=E('Đọc lúc '+S.data.updated)+(S.loading?' · đang làm mới…':S.error?' · <span style="color:var(--rust)">chưa làm mới được ('+E(S.error)+'), đang hiện bản lưu</span> · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvLoad()">thử lại</a>':''); }
 
 function page(){
   css();
@@ -250,7 +255,8 @@ window.addEventListener('resize',function(){ if(S.chart&&window.currentTab===TAB
 /* ---------- 6b. Phần CTV cho tab Báo cáo (baocao-td.js gọi window.ctvReport) — mockup duyệt 22/10/2026 ---------- */
 /* p, pv = {start,end} (Date 00:00) của kỳ đang xem / kỳ trước. Trả null nếu chưa có dữ liệu CTV. */
 window.ctvReport=function(p,pv){
-  if(!S.loaded){ load(); return null; }
+  if(!S.fresh && !S.loading) load(); // làm mới 1 lần mỗi lần mở web
+  if(!S.loaded) return null;
   var rows=S.data.rows||[], today=d0(new Date());
   function inQ(d,q){ if(!d) return false; d=d0(d); return d>=q.start && d<=q.end; }
   function nhanKy(r,q){ if(lhOf(r)!=='nhan') return false; var pv2=pd(r.ngayLienHe); return pv2?inQ(pv2,q):inQ(pd(r.ngay),q); }
@@ -304,4 +310,7 @@ window.go=function(id){
 
 /* nạp muộn (app đã khởi động trước file này) → vẽ lại menu */
 if(window.__bxAppBooted){ try{ window.renderNav(); if(window.currentTab) window.go(window.currentTab); }catch(e){ console.warn('[ctv] late boot',e); } }
+/* [22/10] tự làm mới dữ liệu CTV sau khi đăng nhập (không chờ mở tab), và mỗi 5 phút khi đang mở tab CTV / Báo cáo */
+(function bootCtv(n){ if(window.__bxAppBooted&&window.BX_ROLE){ setTimeout(function(){ if(!S.fresh) load(); },2500); return; } if(n<600) setTimeout(function(){ bootCtv(n+1); },500); })(0);
+setInterval(function(){ if((window.currentTab===TAB||window.currentTab==='bao-cao') && !S.loading && document.visibilityState==='visible') load(); },300000);
 })();
