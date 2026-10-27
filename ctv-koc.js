@@ -345,6 +345,7 @@ window.ctvReport=function(p,pv){
    tạo lịch Google Calendar trên lịch hr@bigx.vn (kèm Meet, 15 phút/người, xếp nối tiếp), rồi ghi Trạng thái liên hệ + Ngày phỏng vấn. */
 var INV_GUESTS=['kim.nguyen@bigx.vn','uyen.nguyen@bigx.vn','nam.nguyen@bigx.vn','huy.nguyen@bigx.vn','dung.tong@bigx.vn','ecom-drive@bigx.vn','an.nguyen@bigx.vn'];
 var INV_MIN=15; // [28/10] mỗi buổi 15 phút
+var INV_MAX_DAY=6; // [28/10] tối đa 6 meeting / host / ngày (chỉ cảnh báo)
 var INV_DESC='Chào {Họ tên},\n\nBigX mời bạn tham gia buổi trao đổi ngắn (15 phút) qua Google Meet về vị trí Cộng tác viên Booking KOC. Bạn vui lòng mở camera trong buổi trao đổi.\n\nThời gian: {Ngày} · {Giờ bắt đầu} – {Giờ kết thúc}\nLink tham gia: Google Meet đính kèm trong lịch này.\n\nTrân trọng,\nPhòng Nhân sự BigX';
 function isAdmin(){ return window.BX_ROLE==='admin'; }
 function tomorrow(){ var d=new Date(); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -388,6 +389,12 @@ function invConfHtml(n){
     '<div style="margin-top:6px;color:var(--faint)">Đổi giờ bắt đầu, bỏ tick người host đó, hoặc vẫn gửi nếu chấp nhận trùng.</div></div>';
   else h+='<div class="inv-note ok">✓ Người host được chọn không bị trùng lịch trong khung giờ này.</div>';
   if(err.length) h+='<div class="inv-msg" style="color:var(--faint)">Không xem được lịch rảnh/bận của: '+err.map(function(x){return E(x.host);}).join(', ')+'.</div>';
+  // [28/10] giới hạn 6 meeting / host / ngày — chỉ cảnh báo, vẫn gửi được
+  var LD=(C.load||[]).filter(function(x){return !x.error;}), over=LD.filter(function(x){return x.total>INV_MAX_DAY;});
+  var ds=(S.inv.date||'').split('-'), dl=ds.length===3?ds[2]+'/'+ds[1]:'';
+  if(over.length) h+='<div class="inv-note"><b>⚠ Vượt '+INV_MAX_DAY+' meeting / ngày ('+dl+')</b>'+over.map(function(x){ return '<div style="margin-top:4px"><b>'+E(x.host)+'</b>: đã có '+x.existing+' + thêm '+x.adding+' = <b>'+x.total+'</b> buổi</div>'; }).join('')+
+    '<div style="margin-top:6px;color:var(--faint)">Chỉ cảnh báo, vẫn gửi được nếu cần.</div></div>';
+  if(LD.length) h+='<div class="inv-msg" style="color:var(--faint)">Số buổi trong ngày '+dl+' (sau khi gửi): '+LD.map(function(x){ return E(x.host.split('@')[0])+' '+x.total+'/'+INV_MAX_DAY; }).join(' · ')+'</div>';
   return h;
 }
 function invSlotConf(k){ var C=S.inv.conf; if(!C||!C.list) return ''; return C.list.filter(function(x){ return !x.error && x.slots.indexOf(k)>=0; }).map(function(x){ return x.host.split('@')[0]+' '+x.busy; }).join(', '); }
@@ -400,7 +407,7 @@ function invCheck(){
   clearTimeout(invT); invT=setTimeout(function(){
     var opt={ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ key:API_KEY, action:'ctvInvCheck', date:I.date, start:I.start, gap:+I.gap||0, n:n, guests:g }) };
     (window.bxAuthedFetch?window.bxAuthedFetch(API_URL,opt):fetch(API_URL,opt)).then(function(r){ return r.json(); })
-      .then(function(d){ if(!I.conf||I.conf.key!==key) return; I.conf=d.ok?{key:key,list:d.conflicts||[]}:{key:key,error:d.error||'lỗi'}; })
+      .then(function(d){ if(!I.conf||I.conf.key!==key) return; I.conf=d.ok?{key:key,list:d.conflicts||[],load:d.load||[]}:{key:key,error:d.error||'lỗi'}; })
       .catch(function(e){ if(I.conf&&I.conf.key===key) I.conf={key:key,error:e.message}; })
       .then(function(){ if(I.conf&&I.conf.key===key&&S.sub==='moi') rerender(); });
   },600);
