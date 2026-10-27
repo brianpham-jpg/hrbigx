@@ -94,7 +94,7 @@ function calc(rows){
     if(h==='chua'){ chua++; var d=pd(r.ngay); if(d) waits.push((now-d)/864e5); } else rev++;
     if(h==='pass') pass++; if(h==='can') can++; if(h==='fail') fail++;
     if(l==='nhan') nhan++; if(l!=='chua') lhAll++;
-    if(h==='pass'){ fPass++; if(l!=='chua'){ fLh++; if(l==='nhan') fNhan++; } }
+    if(h==='pass'){ fPass++; if(l!=='chua') fLh++; } if(l==='nhan') fNhan++; // [CTV] Nhận CTV ghi nhận theo cột Liên hệ, không phụ thuộc HR Review
     var a=pd(r.ngay), b=pd(r.ngayLienHe); if(a&&b){ var g=(d0(b)-d0(a))/864e5; if(g>=0) gap.push(g); }
   });
   return { n:n, rev:rev, pass:pass, can:can, fail:fail, chua:chua, nhan:nhan, lhAll:lhAll,
