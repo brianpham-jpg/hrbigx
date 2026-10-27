@@ -342,12 +342,12 @@ window.ctvReport=function(p,pv){
 /* ---------- 6c. [27/10/2026] Tab con "Gửi thư mời" (chỉ admin) — mockup duyệt 27/10/2026 ----------
    Web chỉ gửi Mã CTV + ngày giờ + nội dung; Apps Script (action ctvInvite) tự lấy họ tên đầy đủ + email trong file,
    tạo lịch Google Calendar trên lịch hr@bigx.vn (kèm Meet, 10 phút/người, xếp nối tiếp), rồi ghi Trạng thái liên hệ + Ngày phỏng vấn. */
-var INV_GUESTS=['kim.nguyen@bigx.vn','uyen.nguyen@bigx.vn','nam.nguyen@bigx.vn','huy.nguyen@bigx.vn','dung.tong@bigx.vn'];
+var INV_GUESTS=['kim.nguyen@bigx.vn','uyen.nguyen@bigx.vn','nam.nguyen@bigx.vn','huy.nguyen@bigx.vn','dung.tong@bigx.vn','ecom-drive@bigx.vn'];
 var INV_DESC='Chào {Họ tên},\n\nBigX mời bạn tham gia buổi trao đổi ngắn (10 phút) qua Google Meet về vị trí Cộng tác viên Booking KOC. Bạn vui lòng mở camera trong buổi trao đổi.\n\nThời gian: {Ngày} · {Giờ bắt đầu} – {Giờ kết thúc}\nLink tham gia: Google Meet đính kèm trong lịch này.\n\nTrân trọng,\nPhòng Nhân sự BigX';
 function isAdmin(){ return window.BX_ROLE==='admin'; }
 function tomorrow(){ var d=new Date(); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 S.sub=S.sub||'tong';
-S.inv=S.inv||{ sel:{}, hr:'', q:'', title:'[BigX] Lịch trao đổi CTV Booking KOC – {Họ tên}', date:tomorrow(), start:'14:00', gap:'0', desc:INV_DESC, guests:{}, confirm:false, sending:false, res:null, msg:'' };
+S.inv=S.inv||{ sel:{}, hr:'', q:'', title:'Meeting trao đổi - phỏng vấn CTV Booking KOC', date:tomorrow(), start:'14:00', gap:'0', desc:INV_DESC, guests:{}, confirm:false, sending:false, res:null, msg:'' };
 function subTabs(){
   if(!isAdmin()) return '';
   return '<div class="ctv-sub">'+[['tong','Tổng quan'],['moi','Gửi thư mời']].map(function(o){ return '<button class="'+(S.sub===o[0]?'on':'')+'" onclick="__ctvSub(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>';
