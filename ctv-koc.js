@@ -342,9 +342,10 @@ window.ctvReport=function(p,pv){
 
 /* ---------- 6c. [27/10/2026] Tab con "Gửi thư mời" (chỉ admin) — mockup duyệt 27/10/2026 ----------
    Web chỉ gửi Mã CTV + ngày giờ + nội dung; Apps Script (action ctvInvite) tự lấy họ tên đầy đủ + email trong file,
-   tạo lịch Google Calendar trên lịch hr@bigx.vn (kèm Meet, 10 phút/người, xếp nối tiếp), rồi ghi Trạng thái liên hệ + Ngày phỏng vấn. */
+   tạo lịch Google Calendar trên lịch hr@bigx.vn (kèm Meet, 15 phút/người, xếp nối tiếp), rồi ghi Trạng thái liên hệ + Ngày phỏng vấn. */
 var INV_GUESTS=['kim.nguyen@bigx.vn','uyen.nguyen@bigx.vn','nam.nguyen@bigx.vn','huy.nguyen@bigx.vn','dung.tong@bigx.vn','ecom-drive@bigx.vn','an.nguyen@bigx.vn'];
-var INV_DESC='Chào {Họ tên},\n\nBigX mời bạn tham gia buổi trao đổi ngắn (10 phút) qua Google Meet về vị trí Cộng tác viên Booking KOC. Bạn vui lòng mở camera trong buổi trao đổi.\n\nThời gian: {Ngày} · {Giờ bắt đầu} – {Giờ kết thúc}\nLink tham gia: Google Meet đính kèm trong lịch này.\n\nTrân trọng,\nPhòng Nhân sự BigX';
+var INV_MIN=15; // [28/10] mỗi buổi 15 phút
+var INV_DESC='Chào {Họ tên},\n\nBigX mời bạn tham gia buổi trao đổi ngắn (15 phút) qua Google Meet về vị trí Cộng tác viên Booking KOC. Bạn vui lòng mở camera trong buổi trao đổi.\n\nThời gian: {Ngày} · {Giờ bắt đầu} – {Giờ kết thúc}\nLink tham gia: Google Meet đính kèm trong lịch này.\n\nTrân trọng,\nPhòng Nhân sự BigX';
 function isAdmin(){ return window.BX_ROLE==='admin'; }
 function tomorrow(){ var d=new Date(); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 S.sub=S.sub||'tong';
@@ -418,11 +419,11 @@ function invPage(rows){
       return '<tr><td><input type="checkbox" '+(I.sel[r.maCtv]?'checked':'')+' onchange="__ctvInv.sel(\''+E(r.maCtv)+'\',this.checked)"></td><td class="nw">'+E(r.maCtv)+'</td><td class="nw">'+E(r.ten)+'</td><td class="nw">'+(d?dd(d):'—')+'</td><td class="nw">'+E(one(r.kinhNghiem,KN)||'—')+'</td><td class="nw">'+pill(HRP,hrOf(r),r.hrReview)+'</td></tr>'; }).join('')
       :'<tr><td colspan="6" class="dt-empty">Không có ai PASS + Đã liên hệ mà chưa có lịch.</td></tr>')+'</tbody></table></div>'+
     '<div class="ctv-s" style="margin:10px 0 0">Đã chọn <b style="color:#9B7BEA">'+SEL.length+'</b> người</div>'+invNotice(rows)+'</div></div><div>';
-  h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">2</span>Thời gian &amp; nội dung</div><div class="ctv-s">Mỗi người 1 lịch riêng · 10 phút cố định · tự xếp nối tiếp · {Họ tên}, {Ngày}, {Giờ bắt đầu}, {Giờ kết thúc} tự điền cho từng người</div>'+
+  h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">2</span>Thời gian &amp; nội dung</div><div class="ctv-s">Mỗi người 1 lịch riêng · 15 phút cố định · tự xếp nối tiếp · {Họ tên}, {Ngày}, {Giờ bắt đầu}, {Giờ kết thúc} tự điền cho từng người</div>'+
     '<label class="inv-l">Tiêu đề</label><input class="inv-i" value="'+E(I.title)+'" oninput="__ctvInv.set(\'title\',this.value)">'+
     '<div class="inv-r3"><div><label class="inv-l">Ngày phỏng vấn</label><input class="inv-i" type="date" value="'+E(I.date)+'" onchange="__ctvInv.set(\'date\',this.value,1)"></div>'+
     '<div><label class="inv-l">Giờ bắt đầu</label><input class="inv-i" type="time" step="300" value="'+E(I.start)+'" onchange="__ctvInv.set(\'start\',this.value,1)"></div>'+
-    '<div><label class="inv-l">Thời lượng</label><div class="inv-fx">10 phút / người</div></div></div>'+
+    '<div><label class="inv-l">Thời lượng</label><div class="inv-fx">15 phút / người</div></div></div>'+
     '<label class="inv-l">Nghỉ giữa các lịch</label><select class="inv-i" onchange="__ctvInv.set(\'gap\',this.value,1)">'+opt('0','Không nghỉ (nối liền)',I.gap)+opt('5','5 phút',I.gap)+'</select>'+
     '<label class="inv-l">Nội dung thư</label><textarea class="inv-i inv-ta" oninput="__ctvInv.set(\'desc\',this.value)">'+E(I.desc)+'</textarea></div>';
   h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">3</span>Người tham gia từ BigX</div><div class="ctv-s">Lịch gửi từ <b>hr@bigx.vn</b> · brian.pham@bigx.vn luôn tham gia</div><div class="inv-chips">'+
@@ -433,10 +434,10 @@ function invPage(rows){
   var ng=1+INV_GUESTS.filter(function(g){return I.guests[g];}).length;
   h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">4</span>Xem trước lịch</div><div class="ctv-s">Mỗi dòng = 1 thư mời Google Calendar kèm link Meet</div>'+
     '<div class="table-wrap inv-scroll"><table class="dt"><thead><tr><th>#</th><th>Giờ</th><th>Mã CTV</th><th>Ứng viên</th><th>Tiêu đề</th><th>Người tham gia</th></tr></thead><tbody>'+
-    (SEL.length?SEL.map(function(r,i){ var a=m0+i*(10+gap);
-      var cf=invSlotConf(i+1); return '<tr'+(cf?' style="background:rgba(227,107,107,.08)"':'')+'><td>'+(i+1)+'</td><td class="nw"><b>'+dlab+' · '+hm(a)+' – '+hm(a+10)+'</b>'+(cf?' <span style="color:var(--rust)" title="'+E(cf)+'">⚠ trùng: '+E(cf)+'</span>':'')+'</td><td class="nw">'+E(r.maCtv)+'</td><td class="nw">'+E(r.ten)+'</td><td class="nw" style="color:var(--faint)">'+E(I.title.replace(/\{Họ tên\}/g,r.ten))+'</td><td class="nw">Ứng viên + '+ng+' mail BigX</td></tr>'; }).join('')
+    (SEL.length?SEL.map(function(r,i){ var a=m0+i*(INV_MIN+gap);
+      var cf=invSlotConf(i+1); return '<tr'+(cf?' style="background:rgba(227,107,107,.08)"':'')+'><td>'+(i+1)+'</td><td class="nw"><b>'+dlab+' · '+hm(a)+' – '+hm(a+INV_MIN)+'</b>'+(cf?' <span style="color:var(--rust)" title="'+E(cf)+'">⚠ trùng: '+E(cf)+'</span>':'')+'</td><td class="nw">'+E(r.maCtv)+'</td><td class="nw">'+E(r.ten)+'</td><td class="nw" style="color:var(--faint)">'+E(I.title.replace(/\{Họ tên\}/g,r.ten))+'</td><td class="nw">Ứng viên + '+ng+' mail BigX</td></tr>'; }).join('')
       :'<tr><td colspan="6" class="dt-empty">Chưa chọn người nhận.</td></tr>')+'</tbody></table></div>';
-  var end=m0+SEL.length*(10+gap)-gap;
+  var end=m0+SEL.length*(INV_MIN+gap)-gap;
   if(SEL.length) h+='<div class="ctv-s" style="margin:8px 0 0">Kết thúc lúc <b>'+hm(end)+'</b>'+(end>18*60?' · <span style="color:var(--warn,#E0A84A)">quá 18:00, nên chia sang ngày khác</span>':'')+(SEL.length>40?' · <span style="color:var(--rust)">tối đa 40 người / lần</span>':'')+'</div>';
   h+=invConfHtml(SEL.length);
   if(I.msg) h+='<div class="inv-msg">'+I.msg+'</div>';
