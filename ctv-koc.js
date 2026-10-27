@@ -183,6 +183,7 @@ function page(){
   var h='<div class="page-head"><div class="page-h1">Tuyển CTV Booking KOC</div>'+
     '<div class="page-lead">Nguồn: form <b>Đăng ký CTV Booking KOC</b> (chỉ đọc). Tự cập nhật khi có người điền form hoặc HR cập nhật trạng thái trong file. Tên viết tắt, không hiện SĐT/Email. <span id="ctv-up" style="color:var(--faint)"></span></div></div>';
   h+=subTabs(); if(S.sub==='moi' && isAdmin()) return h+invPage(rows); // [27/10] tab con Gửi thư mời
+  if(S.sub==='td') return h+tdPage(rows); // [28/10] tab con Tiến độ phỏng vấn
   if(!rows.length) h+='<div class="ctv-empty"><i class="ti ti-inbox"></i> Chưa có ai đăng ký qua form. Khi có đơn đầu tiên, số liệu sẽ tự hiện ở đây.</div>';
   h+='<div class="ctv-kpis">'+
     kpi('Đăng ký',k.n,'tổng số đơn')+
@@ -284,7 +285,7 @@ function draw(){
 function render(){
   var content=document.getElementById('content'); if(!content) return;
   content.innerHTML=page(); stamp();
-  setTimeout(function(){ if(S.sub==='moi' && isAdmin()){ try{ invLoad(); invCheck(); }catch(e){} return; } try{ body(); draw(); }catch(e){ console.warn('[ctv] draw',e); } },30);
+  setTimeout(function(){ if(S.sub==='td'){ try{ tdLoad(); }catch(e){} return; } if(S.sub==='moi' && isAdmin()){ try{ invLoad(); invCheck(); }catch(e){} return; } try{ body(); draw(); }catch(e){ console.warn('[ctv] draw',e); } },30);
 }
 window.__ctvLoad=load;
 window.__ctvView=function(v){ S.view=v; render(); };
@@ -352,8 +353,8 @@ function tomorrow(){ var d=new Date(); d.setDate(d.getDate()+1); return d.getFul
 S.sub=S.sub||'tong';
 S.inv=S.inv||{ sel:{}, hr:'', q:'', title:'Meeting trao đổi - phỏng vấn CTV Booking KOC', date:tomorrow(), start:'14:00', gap:'0', desc:INV_DESC, guests:{}, confirm:false, sending:false, res:null, msg:'' };
 function subTabs(){
-  if(!isAdmin()) return '';
-  return '<div class="ctv-sub">'+[['tong','Tổng quan'],['moi','Gửi thư mời']].map(function(o){ return '<button class="'+(S.sub===o[0]?'on':'')+'" onclick="__ctvSub(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>';
+  var L=isAdmin()?[['tong','Tổng quan'],['moi','Gửi thư mời'],['td','Tiến độ phỏng vấn']]:[['tong','Tổng quan'],['td','Tiến độ phỏng vấn']];
+  return '<div class="ctv-sub">'+L.map(function(o){ return '<button class="'+(S.sub===o[0]?'on':'')+'" onclick="__ctvSub(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>';
 }
 function invEligible(rows){
   return rows.filter(function(r){ return r.maCtv && hrOf(r)==='pass' && lhOf(r)==='da' && !String(r.ngayLienHe||'').trim(); }) // [28/10] chỉ người HR PASS + Đã liên hệ + chưa có ngày PV
@@ -498,6 +499,93 @@ window.__ctvInv={
       .catch(function(e){ I.msg='<span style="color:var(--rust)">Lỗi kết nối: '+E(e.message)+'</span>'; })
       .then(function(){ I.sending=false; if(I.day) I.day.stale=true; I.conf=null; rerender(); if(!S.loading) load(); });
   }
+};
+
+/* ---------- 6d. [28/10/2026] Tab con "Tiến độ phỏng vấn" — mockup duyệt 28/10/2026 ----------
+   Đọc lịch hr@ (chỉ lịch có "CTV Booking KOC", bỏ [THỬ]/đã huỷ) qua API ?action=ctvStats; đếm số buổi / host / ngày.
+   Admin + người xem đều thấy (chỉ đọc). */
+var TD_HOSTS=['kim.nguyen@bigx.vn','uyen.nguyen@bigx.vn','nam.nguyen@bigx.vn','huy.nguyen@bigx.vn','dung.tong@bigx.vn','an.nguyen@bigx.vn'], TD_SHARED='ecom-drive@bigx.vn', TD_MAX=6;
+S.td=S.td||{ view:'tuan', off:0, data:null, key:'', loading:false, error:null, day:null };
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function tdRange(){
+  var T=S.td, t=d0(new Date()), a, b;
+  if(T.view==='thang'){ a=new Date(t.getFullYear(),t.getMonth()+T.off,1); b=new Date(a.getFullYear(),a.getMonth()+1,0); }
+  else { var len=T.view==='14'?14:7, m=new Date(t.getFullYear(),t.getMonth(),t.getDate()-((t.getDay()+6)%7)); a=new Date(m.getFullYear(),m.getMonth(),m.getDate()+T.off*len); b=new Date(a.getFullYear(),a.getMonth(),a.getDate()+len-1); }
+  var days=[]; for(var d=new Date(a); d<=b; d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)) days.push(d);
+  return { a:a, b:b, days:days };
+}
+function tdLoad(force){
+  var T=S.td, R=tdRange(), key=ymd(R.a)+'_'+ymd(R.b);
+  if(!force && T.key===key && (T.data||T.loading)) return;
+  T.key=key; T.loading=true; T.error=null; T.data=null;
+  var url=API_URL+'?action=ctvStats&from='+ymd(R.a)+'&to='+ymd(R.b);
+  (window.bxAuthedFetch?window.bxAuthedFetch(url,{cache:'no-store'}):fetch(url,{cache:'no-store'})).then(function(r){ return r.json(); })
+    .then(function(d){ if(T.key!==key) return; if(d.ok) T.data=d; else T.error=d.error||d.reason||'lỗi'; })
+    .catch(function(e){ if(T.key===key) T.error=e.message; })
+    .then(function(){ if(T.key===key){ T.loading=false; if(S.sub==='td') rerender(); } });
+}
+function tdPage(rows){
+  var T=S.td, R=tdRange(), today=ymd(d0(new Date()));
+  var nav='<div class="ctv-seg">'+[['tuan','Tuần'],['14','14 ngày'],['thang','Tháng']].map(function(o){ return '<button class="'+(T.view===o[0]?'on':'')+'" onclick="__ctvTd.view(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>';
+  var rng='<a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(-1)">‹ trước</a> · <b>'+dd(R.a)+' – '+dd(R.b)+'/'+R.b.getFullYear()+'</b> · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(1)">sau ›</a>'+(T.off?' · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(0)">về hiện tại</a>':'');
+  var h='';
+  if(T.loading || (!T.data && !T.error)) return h+'<div class="ctv-card">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">'+rng+'</div><div class="ctv-empty">Đang đọc lịch HR BIGX…</div></div>';
+  if(T.error) return h+'<div class="ctv-card">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">'+rng+'</div><div class="ctv-empty" style="color:var(--rust)">Không đọc được lịch: '+E(T.error)+' · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.reload()">thử lại</a></div></div>';
+  var ev=T.data.events||[], hosts=TD_HOSTS.concat([TD_SHARED]);
+  var M={}, N={}; R.days.forEach(function(d){ var k=ymd(d); N[k]=0; M[k]={}; hosts.forEach(function(x){ M[k][x]=0; }); });
+  ev.forEach(function(e){ if(N[e.d]==null) return; N[e.d]++; (e.hosts||[]).forEach(function(x){ if(M[e.d][x]!=null) M[e.d][x]++; }); });
+  var keys=R.days.map(ymd), tot={}, sumH=0, sumS=0, over=[];
+  hosts.forEach(function(x){ tot[x]=keys.reduce(function(s,k){ return s+M[k][x]; },0); });
+  TD_HOSTS.forEach(function(x){ sumH+=tot[x]; keys.forEach(function(k){ if(M[k][x]>TD_MAX) over.push([x,k,M[k][x]]); }); }); sumS=tot[TD_SHARED];
+  var nBuoi=keys.reduce(function(s,k){ return s+N[k]; },0);
+  var best=keys.reduce(function(b,k){ return N[k]>(b?N[b]:-1)?k:b; },null);
+  var busy=TD_HOSTS.reduce(function(b,x){ return tot[x]>(b?tot[b]:-1)?x:b; },null);
+  var busyDays=busy?keys.filter(function(k){ return M[k][busy]>0; }).length:0;
+  function sh(x){ return x.split('@')[0]; }
+  function dl(k){ var p=k.split('-'); return p[2]+'/'+p[1]; }
+  var DOW=['CN','T2','T3','T4','T5','T6','T7'];
+  h+='<div class="ctv-kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">'+
+    kpi('Tổng buổi phỏng vấn',nBuoi,'mỗi buổi = 1 ứng viên · '+dd(R.a)+' – '+dd(R.b))+
+    kpi('Ngày nhiều nhất',best&&N[best]?dl(best):'—',best&&N[best]?N[best]+' buổi':'chưa có lịch')+
+    kpi('Host bận nhất',busy&&tot[busy]?sh(busy):'—',busy&&tot[busy]?tot[busy]+' buổi · TB '+vn(tot[busy]/Math.max(1,busyDays),1)+'/ngày làm':'')+
+    kpi('Lượt vượt '+TD_MAX+' buổi/ngày',over.length,'host–ngày > '+TD_MAX+' (không tính ecom-drive)',over.length?'var(--rust)':'')+'</div>';
+  var mx=Math.max(1,Math.max.apply(null,TD_HOSTS.map(function(x){return tot[x];})));
+  function cell(v,k,shared){ var c=shared?'color:var(--faint)':!v?'color:#4A5469':v>TD_MAX?'color:var(--rust);font-weight:600;background:rgba(227,107,107,.08)':v===TD_MAX?'color:#E0A84A;font-weight:600':'color:var(--ink)';
+    return '<td style="text-align:center;'+c+(k===today?';box-shadow:inset 0 0 0 999px rgba(155,123,234,.08)':'')+'">'+v+'</td>'; }
+  h+='<div class="ctv-card" style="margin-bottom:14px">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">Mỗi ô = số buổi host có mặt (lịch có "CTV Booking KOC" trên lịch HR BIGX) · mốc '+TD_MAX+' buổi/ngày · '+rng+' · bấm vào ngày để xem chi tiết</div>'+
+    '<div class="table-wrap"><table class="dt"><thead><tr><th>Host</th>'+keys.map(function(k,i){ var d=R.days[i]; return '<th style="text-align:center;cursor:pointer'+(k===today?';color:#9B7BEA':'')+(T.day===k?';text-decoration:underline':'')+'" onclick="__ctvTd.day(\''+k+'\')">'+DOW[d.getDay()]+' '+dl(k)+'</th>'; }).join('')+'<th style="text-align:center">Tổng</th></tr></thead><tbody>'+
+    TD_HOSTS.map(function(x){ return '<tr><td class="nw">'+sh(x)+'</td>'+keys.map(function(k){ return cell(M[k][x],k); }).join('')+'<td class="nw" style="text-align:center;font-weight:600">'+tot[x]+'<span style="display:inline-block;height:6px;border-radius:3px;background:#23A08C;vertical-align:middle;margin-left:6px;width:'+Math.round(tot[x]/mx*60)+'px"></span></td></tr>'; }).join('')+
+    '<tr><td class="nw" style="color:var(--faint)">ecom-drive <span style="font-size:10px">(mail chung)</span></td>'+keys.map(function(k){ return cell(M[k][TD_SHARED],k,1); }).join('')+'<td style="text-align:center;color:var(--faint)">'+tot[TD_SHARED]+'</td></tr>'+
+    '<tr style="font-weight:600;border-top:1px solid var(--muted)"><td class="nw">Tổng buổi (số ứng viên)</td>'+keys.map(function(k){ return '<td style="text-align:center;color:var(--ink)'+(k===today?';box-shadow:inset 0 0 0 999px rgba(155,123,234,.08)':'')+'">'+N[k]+'</td>'; }).join('')+'<td style="text-align:center">'+nBuoi+'</td></tr>'+
+    '</tbody></table></div>'+
+    '<div class="ctv-s" style="margin:8px 0 0"><b style="color:var(--ink)">4</b> bình thường · <b style="color:#E0A84A">6</b> vừa đủ · <b style="color:var(--rust)">7</b> vượt '+TD_MAX+' buổi · <span style="color:#9B7BEA">cột tím = hôm nay</span></div>';
+  // đánh giá
+  var it=[];
+  if(over.length) it.push(['er','Vượt '+TD_MAX+' buổi/ngày: '+over.map(function(o){ return sh(o[0])+' '+dl(o[1])+' ('+o[2]+')'; }).join(', ')+'.']);
+  if(sumH && busy){ var act=TD_HOSTS.filter(function(x){return tot[x]>0;}), idle=TD_HOSTS.filter(function(x){return !tot[x];}), share=Math.round(tot[busy]/sumH*100);
+    if(act.length>1 && share>=35) it.push(['wa','Lệch tải: '+sh(busy)+' gánh '+tot[busy]+' buổi ('+share+'% lượt host)'+(idle.length?'; chưa có buổi nào: '+idle.map(sh).join(', ')+'.':'.')]);
+    else if(idle.length) it.push(['in','Chưa có buổi nào: '+idle.map(sh).join(', ')+'.']); }
+  var fut=keys.filter(function(k){ return k>today && !N[k] && [0,6].indexOf(new Date(k+'T00:00').getDay())<0; });
+  if(fut.length) it.push(['ok','Ngày làm việc sắp tới chưa có lịch: '+fut.map(dl).join(', ')+'.']);
+  if(!nBuoi) it.push(['in','Khoảng này chưa có buổi phỏng vấn CTV nào.']);
+  var col={er:'var(--rust)',wa:'#E0A84A',ok:'var(--teal-2)',in:'#9B7BEA'};
+  h+='<div class="ctv-ev"><b>● ĐÁNH GIÁ TỰ ĐỘNG</b>'+it.map(function(x){ return '<div><span class="ctv-dot" style="background:'+col[x[0]]+'"></span>'+x[1]+'</div>'; }).join('')+'</div></div>';
+  // chi tiết 1 ngày
+  var dk=T.day && N[T.day]!=null ? T.day : (N[today]!=null?today:keys[0]);
+  var L=ev.filter(function(e){ return e.d===dk; }).sort(function(a,b){ return a.t<b.t?-1:1; });
+  var byMa={}; rows.forEach(function(r){ if(r.maCtv) byMa[String(r.maCtv).toUpperCase()]=r; });
+  h+='<div class="ctv-card"><div class="ctv-h">Chi tiết ngày '+dl(dk)+'</div><div class="ctv-s">'+L.length+' buổi · bấm tiêu đề cột ngày ở bảng trên để đổi ngày · tên viết tắt</div>'+
+    '<div class="table-wrap"><table class="dt"><thead><tr><th>Giờ</th><th>Mã CTV</th><th>Ứng viên</th><th>Host</th></tr></thead><tbody>'+
+    (L.length?L.map(function(e){ var r=byMa[String(e.ma||'').toUpperCase()];
+      return '<tr><td class="nw"><b>'+E(e.t)+' – '+E(e.t2)+'</b></td><td class="nw">'+E(e.ma||'—')+'</td><td class="nw">'+E(r?r.ten:'—')+'</td><td>'+(e.hosts||[]).map(function(x){ return '<span class="nw" style="'+(x===TD_SHARED?'color:var(--faint)':'')+'">'+sh(x)+'</span>'; }).join(' · ')+'</td></tr>'; }).join('')
+      :'<tr><td colspan="4" class="dt-empty">Ngày này chưa có buổi phỏng vấn CTV.</td></tr>')+'</tbody></table></div></div>';
+  return h;
+}
+window.__ctvTd={
+  view:function(v){ S.td.view=v; S.td.off=0; S.td.day=null; tdLoad(); rerender(); },
+  move:function(n){ S.td.off=n?S.td.off+n:0; S.td.day=null; tdLoad(); rerender(); },
+  day:function(k){ S.td.day=k; rerender(); },
+  reload:function(){ tdLoad(true); rerender(); }
 };
 
 /* ---------- 7. Router ---------- */
