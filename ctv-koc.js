@@ -35,7 +35,7 @@ function attempt(n){
   var p=window.bxAuthedFetch?window.bxAuthedFetch(url,{cache:'no-store'}):fetch(url,{cache:'no-store'});
   p.then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
    .then(function(d){ if(!d||!d.ok) throw new Error((d&&(d.error||d.reason))||'API lỗi');
-     var same=S.data && JSON.stringify(S.data.rows)===JSON.stringify(d.rows);
+     var same=S.data && JSON.stringify(S.data.rows)===JSON.stringify(d.rows) && JSON.stringify(S.data.group||[])===JSON.stringify(d.group||[]); // [27/10] so cả sheet Theo dõi Group
      S.data=d; S.loaded=true; S.fresh=true; S.last=Date.now(); try{ localStorage.setItem(LS,JSON.stringify(d)); }catch(e){}
      S.loading=false; if(window.currentTab===TAB && !same) render(); else if(window.currentTab===TAB) stamp();
      if(window.currentTab==='bao-cao' && !same && window.go) try{ window.go('bao-cao'); }catch(e){} })
@@ -154,6 +154,7 @@ function css(){ if(document.getElementById('ctv-css')) return; var s=document.cr
 '.ctv-seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;float:right}.ctv-seg button{background:none;border:none;color:var(--muted);font:inherit;font-size:11.5px;padding:4px 10px;cursor:pointer}.ctv-seg button.on{background:#7B4FD6;color:#fff}'+
 '.ctv-empty{padding:16px;border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted);font-size:13px;margin-bottom:14px}'+
 '.ctv-lk{color:#9B7BEA;text-decoration:underline}'+
+'.ctv-wk td,.ctv-wk th{text-align:center}'+
 '@media(max-width:1100px){.ctv-g4{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:820px){.ctv-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ctv-g2,.ctv-g4{grid-template-columns:1fr}}';
 document.head.appendChild(s); }
 
@@ -187,6 +188,7 @@ function page(){
   h+='<div class="ctv-card"><div class="ctv-seg">'+[['ngay','Ngày'],['tuan','Tuần'],['thang','Tháng']].map(function(o){ return '<button class="'+(S.view===o[0]?'on':'')+'" onclick="__ctvView(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>'+
     '<div class="ctv-h">Đăng ký theo '+{ngay:'ngày',tuan:'tuần',thang:'tháng'}[S.view]+'</div><div class="ctv-s">'+{ngay:'14 ngày gần nhất',tuan:'8 tuần gần nhất (tính từ thứ 2)',thang:'6 tháng gần nhất'}[S.view]+'</div>'+
     '<div id="ctv-chart" style="height:190px"></div>'+evSeries(sr,S.view)+'</div></div>';
+  h+='<div class="ctv-card" style="margin-bottom:14px"><div class="ctv-h">Theo tuần</div><div class="ctv-s">Nhóm theo tuần đăng ký (thứ 2 → CN) · Tỉ lệ nhận = Nhận CTV / Đăng ký · Có KOC đầu & số ngày lấy từ sheet Theo dõi Group (Ngày có KOC đầu tiên − Ngày bắt đầu)</div><div class="table-wrap ctv-wk">'+weekTable(rows,null,'dt')+'</div></div>'; // [27/10]
   h+='<div class="ctv-g4">'+
     hb('Kinh nghiệm','Booking KOC/KOL',count(rows,function(r){return one(r.kinhNghiem,KN);},KN))+
     hb('Tệp KOC','Theo lượng follow · chọn nhiều',count(rows,function(r){return tags(r.tepKoc,TEP);},TEP))+
@@ -203,6 +205,34 @@ function page(){
     '<div class="table-wrap"><table class="dt"><thead><tr><th>Ngày gửi</th><th>Ứng viên</th><th>Kinh nghiệm</th><th>Tệp KOC</th><th>Mảng</th><th>KOC/tháng</th><th>CV</th><th>HR Review</th><th>Liên hệ</th><th>Mã CTV</th><th>Ghi chú</th></tr></thead><tbody id="ctv-body"></tbody></table></div></div>';
   return h;
 }
+/* [27/10/2026] Bảng theo tuần — nhóm theo TUẦN ĐĂNG KÝ (thứ 2 → CN).
+   Nhận CTV = cột Liên hệ "Nhận CTV" (form). Có KOC đầu / số ngày = sheet "Theo dõi Group" (nối theo Mã CTV):
+   số ngày = Ngày có KOC đầu tiên − Ngày bắt đầu. */
+function wkStart(d){ d=d0(d); var w=(d.getDay()+6)%7; return new Date(d.getFullYear(),d.getMonth(),d.getDate()-w); }
+function weekRows(rows,q){
+  var G={}; ((S.data&&S.data.group)||[]).forEach(function(g){ if(g.maCtv) G[String(g.maCtv).trim().toUpperCase()]=g; });
+  var W={};
+  rows.forEach(function(r){ var d=pd(r.ngay); if(!d) return; var ws=wkStart(d);
+    if(q && (ws<wkStart(q.start) || ws>q.end)) return;
+    var key=ws.getTime(); var w=W[key]||(W[key]={ws:ws,n:0,nhan:0,koc:0,days:[]}); w.n++;
+    if(lhOf(r)!=='nhan') return; w.nhan++;
+    var g=G[String(r.maCtv||'').trim().toUpperCase()]; if(!g) return;
+    var k=pd(g.kocDau), b=pd(g.batDau); if(!k) return; w.koc++;
+    if(b){ var x=Math.round((d0(k)-d0(b))/864e5); if(x>=0) w.days.push(x); } });
+  return Object.keys(W).map(function(k){return W[k];}).sort(function(a,b){return b.ws-a.ws;});
+}
+function weekTable(rows,q,cls){
+  var L=weekRows(rows,q); if(!L.length) return '<div style="color:var(--faint);font-size:12px">Chưa có dữ liệu.</div>';
+  function avg(a){ return a.length?vn(a.reduce(function(x,y){return x+y;},0)/a.length,1):'—'; }
+  function pct(a,b){ return b?pc(a,b)+'%':'—'; }
+  function ws(d){ var e=new Date(d.getFullYear(),d.getMonth(),d.getDate()+6); return dd(d)+' – '+dd(e); }
+  var T={n:0,nhan:0,koc:0,days:[]};
+  var body=L.map(function(w){ T.n+=w.n; T.nhan+=w.nhan; T.koc+=w.koc; T.days=T.days.concat(w.days);
+    return '<tr><td style="text-align:left">'+ws(w.ws)+'</td><td>'+w.n+'</td><td><b>'+w.nhan+'</b></td><td>'+pct(w.nhan,w.n)+'</td><td>'+w.koc+'</td><td>'+pct(w.koc,w.nhan)+'</td><td>'+avg(w.days)+'</td></tr>'; }).join('');
+  var tot=L.length>1?'<tr style="font-weight:600"><td style="text-align:left">Tổng</td><td>'+T.n+'</td><td>'+T.nhan+'</td><td>'+pct(T.nhan,T.n)+'</td><td>'+T.koc+'</td><td>'+pct(T.koc,T.nhan)+'</td><td>'+avg(T.days)+'</td></tr>':'';
+  return '<table class="'+cls+'"><tr><th style="text-align:left">Tuần đăng ký</th><th>Đăng ký</th><th>Nhận CTV</th><th>Tỉ lệ nhận</th><th>Có KOC đầu</th><th>Tỉ lệ có KOC</th><th>TB ngày đến KOC</th></tr>'+body+tot+'</table>';
+}
+
 function kpi(l,v,d,c){ return '<div class="ctv-card ctv-k"><div class="l">'+l+'</div><div class="v"'+(c?' style="color:'+c+'"':'')+'>'+v+'</div><div class="d">'+d+'</div></div>'; }
 
 function body(){
@@ -297,7 +327,7 @@ window.ctvReport=function(p,pv){
     m:{k:k, kp:kp, chua:all.chua, oldest:all.oldest, pv:pvKy, pvP:pvKyP, nhan:NH.length, nhanP:nhP, passNoLh:passNoLh, pvQua:pvQua}, // [CTV] số liệu cho PDF bảng chỉ số
     html:function(sec,evHtml){ return sec(7,'Tuyển CTV Booking KOC','Đơn đăng ký form CTV gửi trong kỳ, kết quả tính đến hôm nay · so với đơn kỳ trước · "Nhận CTV" tính theo ngày phỏng vấn (chưa có thì theo ngày gửi)',
       kpis+'<div class="bt-g2" style="gap:12px"><div style="min-width:0;flex:1"><div class="bt-cap" style="margin-top:0"><b>Phễu đơn trong kỳ</b> · xanh = kỳ này, xám = kỳ trước</div><div class="bt-scroll">'+fun+'</div></div>'+
-      '<div style="min-width:0;flex:1"><div class="bt-cap" style="margin-top:0"><b>CTV mới nhận trong kỳ</b></div><div class="bt-scroll">'+tbl+'</div></div></div>'+evHtml(ev)); } };
+      '<div style="min-width:0;flex:1"><div class="bt-cap" style="margin-top:0"><b>CTV mới nhận trong kỳ</b></div><div class="bt-scroll">'+tbl+'</div></div></div>'+'<div class="bt-cap"><b>Theo tuần</b> · nhóm theo tuần đăng ký · Có KOC đầu lấy từ sheet Theo dõi Group</div><div class="bt-scroll">'+weekTable(rows,p,'bt-t')+'</div>'+evHtml(ev)); } };
 };
 
 /* ---------- 7. Router ---------- */
