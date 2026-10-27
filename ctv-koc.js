@@ -162,6 +162,7 @@ function css(){ if(document.getElementById('ctv-css')) return; var s=document.cr
 '.inv-chips{display:flex;flex-wrap:wrap;gap:8px}.inv-chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:5px 11px;font-size:12px;cursor:pointer;color:var(--text)}.inv-chip.on{border-color:#9B7BEA;background:rgba(155,123,234,.12);color:var(--ink)}.inv-chip.fix{cursor:default}'+
 '.inv-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}.inv-b{border:1px solid var(--line);background:none;color:var(--text);border-radius:7px;padding:9px 16px;font:inherit;cursor:pointer}.inv-b.pri{background:#7B4FD6;border-color:#7B4FD6;color:#fff;font-weight:500}.inv-b[disabled]{opacity:.45;cursor:not-allowed}'+
 '.inv-msg{margin-top:10px;font-size:12.5px;color:var(--text)}'+
+'.inv-note{margin-top:12px;border:1px solid rgba(224,168,74,.45);background:rgba(224,168,74,.08);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;color:var(--text)}.inv-note>b{color:#E0A84A}.inv-note.ok{border-color:var(--line);background:none;color:var(--faint)}'+
 '@media(max-width:900px){.inv-grid,.inv-r3{grid-template-columns:1fr}}'+
 '@media(max-width:1100px){.ctv-g4{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:820px){.ctv-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ctv-g2,.ctv-g4{grid-template-columns:1fr}}';
 document.head.appendChild(s); }
@@ -283,7 +284,7 @@ function draw(){
 function render(){
   var content=document.getElementById('content'); if(!content) return;
   content.innerHTML=page(); stamp();
-  setTimeout(function(){ if(S.sub==='moi' && isAdmin()) return; try{ body(); draw(); }catch(e){ console.warn('[ctv] draw',e); } },30);
+  setTimeout(function(){ if(S.sub==='moi' && isAdmin()){ try{ invCheck(); }catch(e){} return; } try{ body(); draw(); }catch(e){ console.warn('[ctv] draw',e); } },30);
 }
 window.__ctvLoad=load;
 window.__ctvView=function(v){ S.view=v; render(); };
@@ -342,7 +343,7 @@ window.ctvReport=function(p,pv){
 /* ---------- 6c. [27/10/2026] Tab con "Gửi thư mời" (chỉ admin) — mockup duyệt 27/10/2026 ----------
    Web chỉ gửi Mã CTV + ngày giờ + nội dung; Apps Script (action ctvInvite) tự lấy họ tên đầy đủ + email trong file,
    tạo lịch Google Calendar trên lịch hr@bigx.vn (kèm Meet, 10 phút/người, xếp nối tiếp), rồi ghi Trạng thái liên hệ + Ngày phỏng vấn. */
-var INV_GUESTS=['kim.nguyen@bigx.vn','uyen.nguyen@bigx.vn','nam.nguyen@bigx.vn','huy.nguyen@bigx.vn','dung.tong@bigx.vn','ecom-drive@bigx.vn'];
+var INV_GUESTS=['kim.nguyen@bigx.vn','uyen.nguyen@bigx.vn','nam.nguyen@bigx.vn','huy.nguyen@bigx.vn','dung.tong@bigx.vn','ecom-drive@bigx.vn','an.nguyen@bigx.vn'];
 var INV_DESC='Chào {Họ tên},\n\nBigX mời bạn tham gia buổi trao đổi ngắn (10 phút) qua Google Meet về vị trí Cộng tác viên Booking KOC. Bạn vui lòng mở camera trong buổi trao đổi.\n\nThời gian: {Ngày} · {Giờ bắt đầu} – {Giờ kết thúc}\nLink tham gia: Google Meet đính kèm trong lịch này.\n\nTrân trọng,\nPhòng Nhân sự BigX';
 function isAdmin(){ return window.BX_ROLE==='admin'; }
 function tomorrow(){ var d=new Date(); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -353,7 +354,7 @@ function subTabs(){
   return '<div class="ctv-sub">'+[['tong','Tổng quan'],['moi','Gửi thư mời']].map(function(o){ return '<button class="'+(S.sub===o[0]?'on':'')+'" onclick="__ctvSub(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>';
 }
 function invEligible(rows){
-  return rows.filter(function(r){ return r.maCtv && lhOf(r)==='chua' && !String(r.ngayLienHe||'').trim(); })
+  return rows.filter(function(r){ return r.maCtv && hrOf(r)==='pass' && lhOf(r)==='da' && !String(r.ngayLienHe||'').trim(); }) // [28/10] chỉ người HR PASS + Đã liên hệ + chưa có ngày PV
     .sort(function(a,b){ var x=pd(a.ngay), y=pd(b.ngay); return (y?y.getTime():0)-(x?x.getTime():0); });
 }
 function invList(rows){
@@ -361,20 +362,62 @@ function invList(rows){
   return invEligible(rows).filter(function(r){ if(I.hr && hrOf(r)!==I.hr) return false; if(q && low(r.ten+' '+r.maCtv).indexOf(q)<0) return false; return true; });
 }
 function invSelected(rows){ var I=S.inv; return invEligible(rows).filter(function(r){ return I.sel[r.maCtv]; }); }
+/* [28/10] Thông báo: ai "Đã liên hệ" mà chưa có ngày phỏng vấn (chưa set lịch) — kể cả người chưa PASS (không gửi được) */
+function invNotice(rows){
+  var today=d0(new Date());
+  var L=rows.filter(function(r){ return lhOf(r)==='da' && !String(r.ngayLienHe||'').trim() && hrOf(r)!=='fail'; })
+    .sort(function(a,b){ var x=pd(a.ngay), y=pd(b.ngay); return (x?x.getTime():0)-(y?y.getTime():0); });
+  if(!L.length) return '<div class="inv-note ok">✓ Không có ai "Đã liên hệ" mà chưa có lịch phỏng vấn.</div>';
+  var ok=L.filter(function(r){return hrOf(r)==='pass';}), no=L.filter(function(r){return hrOf(r)!=='pass';});
+  function nm(r){ var d=pd(r.ngay), w=d?Math.round((today-d0(d))/864e5):null; return '<b>'+E(r.maCtv)+'</b> '+E(r.ten)+(w!=null?' <span style="color:var(--faint)">(gửi đơn '+w+' ngày trước)</span>':''); }
+  var h='<div class="inv-note"><b>⚠ '+L.length+' người "Đã liên hệ" nhưng chưa có lịch phỏng vấn</b>';
+  if(ok.length) h+='<div style="margin-top:6px">Chờ gửi thư mời ('+ok.length+'): '+ok.map(nm).join(' · ')+'</div>';
+  if(no.length) h+='<div style="margin-top:6px">Chưa PASS nên chưa gửi được ('+no.length+'): '+no.map(function(r){return nm(r)+' – '+E(r.hrReview||'Chưa review');}).join(' · ')+'</div>';
+  h+='<div style="margin-top:6px;color:var(--faint)">Nếu đã hẹn tay ngoài hệ thống, điền "Ngày phỏng vấn" trong file để tắt nhắc.</div></div>';
+  return h;
+}
+/* [28/10] Kiểm tra trùng lịch của host (mail nội bộ được tick, không tính brian). Host khác nhau trùng giờ = OK; cùng 1 host có lịch khác chồng giờ = cảnh báo. */
+function invConfHtml(n){
+  var C=S.inv.conf; if(!n || !INV_GUESTS.some(function(g){return S.inv.guests[g];})) return '';
+  if(!C || C.loading) return '<div class="inv-msg" style="color:var(--faint)">Đang kiểm tra lịch trùng của người host…</div>';
+  if(C.error) return '<div class="inv-msg" style="color:var(--faint)">Chưa kiểm tra được lịch trùng ('+E(C.error)+').</div>';
+  var L=C.list||[], bad=L.filter(function(x){return !x.error;}), err=L.filter(function(x){return x.error;});
+  var h='';
+  if(bad.length) h+='<div class="inv-note"><b>⚠ Trùng lịch người host</b>'+bad.map(function(x){ return '<div style="margin-top:4px"><b>'+E(x.host)+'</b> đã có lịch '+E(x.busy)+' → trùng buổi #'+x.slots.join(', #')+'</div>'; }).join('')+
+    '<div style="margin-top:6px;color:var(--faint)">Đổi giờ bắt đầu, bỏ tick người host đó, hoặc vẫn gửi nếu chấp nhận trùng.</div></div>';
+  else h+='<div class="inv-note ok">✓ Người host được chọn không bị trùng lịch trong khung giờ này.</div>';
+  if(err.length) h+='<div class="inv-msg" style="color:var(--faint)">Không xem được lịch rảnh/bận của: '+err.map(function(x){return E(x.host);}).join(', ')+'.</div>';
+  return h;
+}
+function invSlotConf(k){ var C=S.inv.conf; if(!C||!C.list) return ''; return C.list.filter(function(x){ return !x.error && x.slots.indexOf(k)>=0; }).map(function(x){ return x.host.split('@')[0]+' '+x.busy; }).join(', '); }
+var invT=null;
+function invCheck(){
+  var I=S.inv, n=invSelected((S.data&&S.data.rows)||[]).length, g=INV_GUESTS.filter(function(x){return I.guests[x];});
+  if(!n || !g.length || !I.date || !I.start) return;
+  var key=JSON.stringify([I.date,I.start,I.gap,n,g]); if(I.conf && I.conf.key===key) return;
+  I.conf={key:key, loading:true};
+  clearTimeout(invT); invT=setTimeout(function(){
+    var opt={ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ key:API_KEY, action:'ctvInvCheck', date:I.date, start:I.start, gap:+I.gap||0, n:n, guests:g }) };
+    (window.bxAuthedFetch?window.bxAuthedFetch(API_URL,opt):fetch(API_URL,opt)).then(function(r){ return r.json(); })
+      .then(function(d){ if(!I.conf||I.conf.key!==key) return; I.conf=d.ok?{key:key,list:d.conflicts||[]}:{key:key,error:d.error||'lỗi'}; })
+      .catch(function(e){ if(I.conf&&I.conf.key===key) I.conf={key:key,error:e.message}; })
+      .then(function(){ if(I.conf&&I.conf.key===key&&S.sub==='moi') rerender(); });
+  },600);
+}
 function hm(m){ return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
 function invPage(rows){
   var I=S.inv, L=invList(rows), SEL=invSelected(rows);
   function opt(v,l,cur){ return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+l+'</option>'; }
   var allOn=L.length && L.every(function(r){ return I.sel[r.maCtv]; });
   var h='<div class="inv-grid"><div>';
-  h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">1</span>Chọn người nhận</div><div class="ctv-s">Đơn "Chưa liên hệ" và chưa có ngày phỏng vấn · email lấy từ file, không hiện trên web</div>'+
+  h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">1</span>Chọn người nhận</div><div class="ctv-s">HR Review PASS · Trạng thái "Đã liên hệ" · chưa có ngày phỏng vấn · email lấy từ file, không hiện trên web</div>'+
     '<div class="toolbar"><div class="tb-search"><i class="ti ti-search"></i><input id="inv-q" placeholder="Tìm tên hoặc mã CTV…" value="'+E(I.q)+'" oninput="__ctvInv.set(\'q\',this.value,1)"></div>'+
-    '<select onchange="__ctvInv.set(\'hr\',this.value,1)">'+opt('','HR Review: tất cả',I.hr)+opt('pass','PASS',I.hr)+opt('can','Cân nhắc',I.hr)+opt('chua','Chưa review',I.hr)+opt('fail','FAIL',I.hr)+'</select></div>'+
+    '</div>'+
     '<div class="table-wrap inv-scroll"><table class="dt"><thead><tr><th><input type="checkbox" '+(allOn?'checked':'')+' onchange="__ctvInv.all(this.checked)"></th><th>Mã CTV</th><th>Ứng viên</th><th>Ngày gửi</th><th>Kinh nghiệm</th><th>HR Review</th></tr></thead><tbody>'+
     (L.length?L.map(function(r){ var d=pd(r.ngay);
       return '<tr><td><input type="checkbox" '+(I.sel[r.maCtv]?'checked':'')+' onchange="__ctvInv.sel(\''+E(r.maCtv)+'\',this.checked)"></td><td class="nw">'+E(r.maCtv)+'</td><td class="nw">'+E(r.ten)+'</td><td class="nw">'+(d?dd(d):'—')+'</td><td class="nw">'+E(one(r.kinhNghiem,KN)||'—')+'</td><td class="nw">'+pill(HRP,hrOf(r),r.hrReview)+'</td></tr>'; }).join('')
-      :'<tr><td colspan="6" class="dt-empty">Không còn ứng viên chưa liên hệ khớp bộ lọc.</td></tr>')+'</tbody></table></div>'+
-    '<div class="ctv-s" style="margin:10px 0 0">Đã chọn <b style="color:#9B7BEA">'+SEL.length+'</b> người</div></div></div><div>';
+      :'<tr><td colspan="6" class="dt-empty">Không có ai PASS + Đã liên hệ mà chưa có lịch.</td></tr>')+'</tbody></table></div>'+
+    '<div class="ctv-s" style="margin:10px 0 0">Đã chọn <b style="color:#9B7BEA">'+SEL.length+'</b> người</div>'+invNotice(rows)+'</div></div><div>';
   h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">2</span>Thời gian &amp; nội dung</div><div class="ctv-s">Mỗi người 1 lịch riêng · 10 phút cố định · tự xếp nối tiếp · {Họ tên}, {Ngày}, {Giờ bắt đầu}, {Giờ kết thúc} tự điền cho từng người</div>'+
     '<label class="inv-l">Tiêu đề</label><input class="inv-i" value="'+E(I.title)+'" oninput="__ctvInv.set(\'title\',this.value)">'+
     '<div class="inv-r3"><div><label class="inv-l">Ngày phỏng vấn</label><input class="inv-i" type="date" value="'+E(I.date)+'" onchange="__ctvInv.set(\'date\',this.value,1)"></div>'+
@@ -391,10 +434,11 @@ function invPage(rows){
   h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">4</span>Xem trước lịch</div><div class="ctv-s">Mỗi dòng = 1 thư mời Google Calendar kèm link Meet</div>'+
     '<div class="table-wrap inv-scroll"><table class="dt"><thead><tr><th>#</th><th>Giờ</th><th>Mã CTV</th><th>Ứng viên</th><th>Tiêu đề</th><th>Người tham gia</th></tr></thead><tbody>'+
     (SEL.length?SEL.map(function(r,i){ var a=m0+i*(10+gap);
-      return '<tr><td>'+(i+1)+'</td><td class="nw"><b>'+dlab+' · '+hm(a)+' – '+hm(a+10)+'</b></td><td class="nw">'+E(r.maCtv)+'</td><td class="nw">'+E(r.ten)+'</td><td class="nw" style="color:var(--faint)">'+E(I.title.replace(/\{Họ tên\}/g,r.ten))+'</td><td class="nw">Ứng viên + '+ng+' mail BigX</td></tr>'; }).join('')
+      var cf=invSlotConf(i+1); return '<tr'+(cf?' style="background:rgba(227,107,107,.08)"':'')+'><td>'+(i+1)+'</td><td class="nw"><b>'+dlab+' · '+hm(a)+' – '+hm(a+10)+'</b>'+(cf?' <span style="color:var(--rust)" title="'+E(cf)+'">⚠ trùng: '+E(cf)+'</span>':'')+'</td><td class="nw">'+E(r.maCtv)+'</td><td class="nw">'+E(r.ten)+'</td><td class="nw" style="color:var(--faint)">'+E(I.title.replace(/\{Họ tên\}/g,r.ten))+'</td><td class="nw">Ứng viên + '+ng+' mail BigX</td></tr>'; }).join('')
       :'<tr><td colspan="6" class="dt-empty">Chưa chọn người nhận.</td></tr>')+'</tbody></table></div>';
   var end=m0+SEL.length*(10+gap)-gap;
   if(SEL.length) h+='<div class="ctv-s" style="margin:8px 0 0">Kết thúc lúc <b>'+hm(end)+'</b>'+(end>18*60?' · <span style="color:var(--warn,#E0A84A)">quá 18:00, nên chia sang ngày khác</span>':'')+(SEL.length>40?' · <span style="color:var(--rust)">tối đa 40 người / lần</span>':'')+'</div>';
+  h+=invConfHtml(SEL.length);
   if(I.msg) h+='<div class="inv-msg">'+I.msg+'</div>';
   if(I.res) h+='<div class="table-wrap" style="margin-top:10px"><table class="dt"><thead><tr><th>Mã CTV</th><th>Kết quả</th></tr></thead><tbody>'+I.res.map(function(x){
       return '<tr><td class="nw">'+E(x.ma)+'</td><td>'+(x.ok?'<span style="color:var(--teal-2)">Đã gửi · '+E(x.time)+(x.meet?' · có Meet':'')+'</span>':'<span style="color:var(--rust)">'+E(x.error)+'</span>')+'</td></tr>'; }).join('')+'</tbody></table></div>';
@@ -402,7 +446,7 @@ function invPage(rows){
   h+='<div class="inv-btns"><button class="inv-b" onclick="__ctvInv.send(true)"'+(I.sending||!SEL.length?' disabled':'')+' title="Tạo 1 lịch mời riêng brian.pham@bigx.vn để xem thư hiển thị thế nào; không mời ứng viên, không ghi file">Gửi thử cho tôi</button>'+
     (I.confirm?'<button class="inv-b" onclick="__ctvInv.set(\'confirm\',false,1)">Huỷ</button><button class="inv-b pri"'+dis+' onclick="__ctvInv.send(false)">Xác nhận gửi '+SEL.length+' thư mời</button>'
       :'<button class="inv-b pri"'+dis+' onclick="__ctvInv.set(\'confirm\',true,1)">'+(I.sending?'Đang gửi…':'Gửi '+SEL.length+' thư mời')+'</button>')+'</div>'+
-    '<div class="ctv-s" style="margin:10px 0 0">Gửi xong, file Đăng ký tự ghi <b>Trạng thái liên hệ = Đã liên hệ</b> và <b>Ngày phỏng vấn</b> cho đúng những người đã gửi; các cột khác giữ nguyên.</div></div>';
+    '<div class="ctv-s" style="margin:10px 0 0">Gửi xong, file Đăng ký tự ghi <b>Ngày phỏng vấn</b> cho đúng những người đã gửi; các cột khác (kể cả Trạng thái liên hệ) giữ nguyên.</div></div>';
   return h;
 }
 function rerender(){ if(window.currentTab===TAB) render(); }
