@@ -441,7 +441,7 @@ function invPage(rows){
   h+=invConfHtml(SEL.length);
   if(I.msg) h+='<div class="inv-msg">'+I.msg+'</div>';
   if(I.res) h+='<div class="table-wrap" style="margin-top:10px"><table class="dt"><thead><tr><th>Mã CTV</th><th>Kết quả</th></tr></thead><tbody>'+I.res.map(function(x){
-      return '<tr><td class="nw">'+E(x.ma)+'</td><td>'+(x.ok?'<span style="color:var(--teal-2)">Đã gửi · '+E(x.time)+(x.meet?' · có Meet':'')+'</span>':'<span style="color:var(--rust)">'+E(x.error)+'</span>')+'</td></tr>'; }).join('')+'</tbody></table></div>';
+      return '<tr><td class="nw">'+E(x.ma)+'</td><td>'+(x.ok?'<span style="color:var(--teal-2)">Đã gửi · '+E(x.time)+(x.meet?' · có Meet':'')+'</span>'+(x.warn?'<br><span style="color:#E0A84A">'+E(x.warn)+'</span>':''):'<span style="color:var(--rust)">'+E(x.error)+'</span>')+'</td></tr>'; }).join('')+'</tbody></table></div>';
   var dis=(I.sending||!SEL.length||SEL.length>40)?' disabled':'';
   h+='<div class="inv-btns"><button class="inv-b" onclick="__ctvInv.send(true)"'+(I.sending||!SEL.length?' disabled':'')+' title="Tạo 1 lịch mời riêng brian.pham@bigx.vn để xem thư hiển thị thế nào; không mời ứng viên, không ghi file">Gửi thử cho tôi</button>'+
     (I.confirm?'<button class="inv-b" onclick="__ctvInv.set(\'confirm\',false,1)">Huỷ</button><button class="inv-b pri"'+dis+' onclick="__ctvInv.send(false)">Xác nhận gửi '+SEL.length+' thư mời</button>'
