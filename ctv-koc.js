@@ -284,7 +284,7 @@ function draw(){
 function render(){
   var content=document.getElementById('content'); if(!content) return;
   content.innerHTML=page(); stamp();
-  setTimeout(function(){ if(S.sub==='moi' && isAdmin()){ try{ invCheck(); }catch(e){} return; } try{ body(); draw(); }catch(e){ console.warn('[ctv] draw',e); } },30);
+  setTimeout(function(){ if(S.sub==='moi' && isAdmin()){ try{ invLoad(); invCheck(); }catch(e){} return; } try{ body(); draw(); }catch(e){ console.warn('[ctv] draw',e); } },30);
 }
 window.__ctvLoad=load;
 window.__ctvView=function(v){ S.view=v; render(); };
@@ -398,6 +398,23 @@ function invConfHtml(n){
   return h;
 }
 function invSlotConf(k){ var C=S.inv.conf; if(!C||!C.list) return ''; return C.list.filter(function(x){ return !x.error && x.slots.indexOf(k)>=0; }).map(function(x){ return x.host.split('@')[0]+' '+x.busy; }).join(', '); }
+/* [28/10] Số buổi/ngày của từng host hiện ngay cạnh ô tick (gọi ctvInvLoad theo ngày đang chọn) */
+function invDayLabel(){ var ds=(S.inv.date||'').split('-'); return ds.length===3?ds[2]+'/'+ds[1]:''; }
+function invDayBadge(g,adding){
+  var D=S.inv.day; if(!D || D.date!==S.inv.date || D.loading) return ' <span class="inv-cnt" style="color:var(--faint)">…</span>';
+  if(D.error || !D.counts) return ' <span class="inv-cnt" style="color:var(--faint)">?</span>';
+  var t=(D.counts[g]||0)+adding, c=t>INV_MAX_DAY?'var(--rust)':t===INV_MAX_DAY?'#E0A84A':'var(--faint)';
+  return ' <span class="inv-cnt" style="color:'+c+';font-weight:600">'+t+'/'+INV_MAX_DAY+(t>INV_MAX_DAY?' ⚠':t===INV_MAX_DAY?' (đầy)':'')+'</span>';
+}
+function invLoad(){
+  var I=S.inv; if(!I.date) return; if(I.day && I.day.date===I.date && !I.day.stale) return;
+  var date=I.date; I.day={date:date, loading:true};
+  var opt={ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ key:API_KEY, action:'ctvInvLoad', date:date }) };
+  (window.bxAuthedFetch?window.bxAuthedFetch(API_URL,opt):fetch(API_URL,opt)).then(function(r){ return r.json(); })
+    .then(function(d){ if(I.date!==date) return; I.day=d.ok?{date:date,counts:d.counts}:{date:date,error:d.error||'lỗi'}; })
+    .catch(function(e){ if(I.date===date) I.day={date:date,error:e.message}; })
+    .then(function(){ if(I.date===date && S.sub==='moi') rerender(); });
+}
 var invT=null;
 function invCheck(){
   var I=S.inv, n=invSelected((S.data&&S.data.rows)||[]).length, g=INV_GUESTS.filter(function(x){return I.guests[x];});
@@ -433,9 +450,9 @@ function invPage(rows){
     '<div><label class="inv-l">Thời lượng</label><div class="inv-fx">15 phút / người</div></div></div>'+
     '<label class="inv-l">Nghỉ giữa các lịch</label><select class="inv-i" onchange="__ctvInv.set(\'gap\',this.value,1)">'+opt('0','Không nghỉ (nối liền)',I.gap)+opt('5','5 phút',I.gap)+'</select>'+
     '<label class="inv-l">Nội dung thư</label><textarea class="inv-i inv-ta" oninput="__ctvInv.set(\'desc\',this.value)">'+E(I.desc)+'</textarea></div>';
-  h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">3</span>Người tham gia từ BigX</div><div class="ctv-s">Lịch gửi từ <b>hr@bigx.vn</b> · brian.pham@bigx.vn luôn tham gia</div><div class="inv-chips">'+
+  h+='<div class="ctv-card inv-c"><div class="ctv-h"><span class="inv-st">3</span>Người tham gia từ BigX</div><div class="ctv-s">Lịch gửi từ <b>hr@bigx.vn</b> · brian.pham@bigx.vn luôn tham gia · số bên cạnh = số buổi trong ngày '+invDayLabel()+' (đã có + sắp gửi), tối đa '+INV_MAX_DAY+'</div><div class="inv-chips">'+
     '<span class="inv-chip on fix"><input type="checkbox" checked disabled> brian.pham@bigx.vn <span style="color:var(--faint)">(mặc định)</span></span>'+
-    INV_GUESTS.map(function(g){ return '<label class="inv-chip'+(I.guests[g]?' on':'')+'"><input type="checkbox" '+(I.guests[g]?'checked':'')+' onchange="__ctvInv.guest(\''+g+'\',this.checked)"> '+g+'</label>'; }).join('')+'</div></div></div></div>';
+    INV_GUESTS.map(function(g){ return '<label class="inv-chip'+(I.guests[g]?' on':'')+'"><input type="checkbox" '+(I.guests[g]?'checked':'')+' onchange="__ctvInv.guest(\''+g+'\',this.checked)"> '+g+invDayBadge(g,I.guests[g]?SEL.length:0)+'</label>'; }).join('')+'</div></div></div></div>';
   // xem trước
   var t=String(I.start||'').split(':'), m0=(+t[0])*60+(+t[1]||0), gap=+I.gap||0, ds=(I.date||'').split('-'), dlab=ds.length===3?ds[2]+'/'+ds[1]:'—';
   var ng=1+INV_GUESTS.filter(function(g){return I.guests[g];}).length;
@@ -479,7 +496,7 @@ window.__ctvInv={
         else { I.msg='Đã gửi <b>'+d.sent+'</b>/'+I.res.length+' thư mời.'; I.res.forEach(function(x){ if(x.ok) delete I.sel[x.ma]; }); }
       })
       .catch(function(e){ I.msg='<span style="color:var(--rust)">Lỗi kết nối: '+E(e.message)+'</span>'; })
-      .then(function(){ I.sending=false; rerender(); if(!S.loading) load(); });
+      .then(function(){ I.sending=false; if(I.day) I.day.stale=true; I.conf=null; rerender(); if(!S.loading) load(); });
   }
 };
 
