@@ -155,6 +155,9 @@ function css(){ if(document.getElementById('ctv-css')) return; var s=document.cr
 '.ctv-empty{padding:16px;border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted);font-size:13px;margin-bottom:14px}'+
 '.ctv-lk{color:#9B7BEA;text-decoration:underline}'+
 '.ctv-wk td,.ctv-wk th{text-align:center}'+
+'.bt-hid{font-size:12px;color:var(--faint);border:1px dashed var(--line);border-radius:8px;padding:9px 12px;margin-bottom:14px}'+
+'.bt-host td,.bt-host th{text-align:center}.bt-host .ov{color:var(--rust);font-weight:700;background:rgba(227,107,107,.08)}.bt-host .z{color:#4A5469}.bt-host tr.tt td{border-top:1px solid var(--muted)}.bt-host .nt{font-size:11px;color:var(--faint);margin-top:6px}'+
+'.bt-ctvtodo{margin:0;padding-left:18px;font-size:13px;line-height:1.8}'+
 '.ctv-sub{display:inline-flex;gap:6px;margin:0 0 14px}.ctv-sub button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:6px 12px;font:inherit;font-size:12px;cursor:pointer}.ctv-sub button.on{background:#7B4FD6;border-color:#7B4FD6;color:#fff}'+
 '.inv-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}.inv-c{margin-bottom:14px}.inv-st{display:inline-flex;width:20px;height:20px;border-radius:50%;background:#7B4FD6;color:#fff;font-size:11px;align-items:center;justify-content:center;margin-right:8px;vertical-align:2px;font-family:inherit}'+
 '.inv-l{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 5px}.inv-i{width:100%;box-sizing:border-box;background:var(--paper-2);border:1px solid var(--line);border-radius:7px;color:var(--ink);font:inherit;padding:8px 10px}.inv-ta{min-height:150px;resize:vertical;line-height:1.6}'+
@@ -293,54 +296,82 @@ window.__ctvF=function(){ S.f.q=(document.getElementById('ctv-q')||{}).value||''
   S.f.lh=(document.getElementById('ctv-lh')||{}).value||''; S.f.kn=(document.getElementById('ctv-kn')||{}).value||''; body(); };
 window.addEventListener('resize',function(){ if(S.chart&&window.currentTab===TAB) try{ S.chart.resize(); }catch(e){} });
 
-/* ---------- 6b. Phần CTV cho tab Báo cáo (baocao-td.js gọi window.ctvReport) — mockup duyệt 22/10/2026 ---------- */
-/* p, pv = {start,end} (Date 00:00) của kỳ đang xem / kỳ trước. Trả null nếu chưa có dữ liệu CTV. */
+/* ---------- 6b. Phần CTV cho tab Báo cáo + PDF (baocao-td.js gọi window.ctvReport) — mockup duyệt 28/10/2026 ----------
+   4 khối, chỉ số liệu: (1) chỉ số kỳ (2) chuyển đổi theo tuần đăng ký (3) phỏng vấn theo host (lịch HR BIGX) (4) cần xử lý.
+   Số hẹn phỏng vấn = cột Ngày phỏng vấn trong file (Brian điền đủ). Bảng host = lịch HR BIGX (lịch "Booking" + phỏng vấn/trao đổi/CTV). */
+S.rep=S.rep||{ key:'', data:null, loading:false, error:null, waits:[] };
+function repKey(p,pv){ return ymd(pv.start)+'_'+ymd(p.end); }
+function repFetch(p,pv){
+  var key=repKey(p,pv), Rp=S.rep; if(Rp.key===key && (Rp.data||Rp.loading)) return;
+  Rp.key=key; Rp.data=null; Rp.error=null; Rp.loading=true;
+  var url=API_URL+'?action=ctvStats&from='+ymd(pv.start)+'&to='+ymd(p.end);
+  (window.bxAuthedFetch?window.bxAuthedFetch(url,{cache:'no-store'}):fetch(url,{cache:'no-store'})).then(function(r){ return r.json(); })
+    .then(function(d){ if(Rp.key!==key) return; if(d.ok) Rp.data=d; else Rp.error=d.error||d.reason||'lỗi'; })
+    .catch(function(e){ if(Rp.key===key) Rp.error=e.message; })
+    .then(function(){ if(Rp.key!==key) return; Rp.loading=false; var w=Rp.waits; Rp.waits=[]; w.forEach(function(f){ try{ f(); }catch(e){} });
+      if(window.currentTab==='bao-cao' && window.go) try{ window.go('bao-cao'); }catch(e){} });
+}
+/* PDF chờ số liệu lịch xong (tối đa ~10 giây) */
+window.__ctvRepWait=function(p,pv){ repFetch(p,pv); var Rp=S.rep; if(!Rp.loading) return Promise.resolve();
+  return new Promise(function(ok){ Rp.waits.push(ok); setTimeout(ok,10000); }); };
 window.ctvReport=function(p,pv){
-  if(!S.loading && Date.now()-(S.last||0)>30000) load(); // mở Báo cáo là lấy số mới (quá 30 giây thì gọi lại)
+  if(!S.loading && Date.now()-(S.last||0)>30000) load();
   if(!S.loaded) return null;
-  var rows=S.data.rows||[], today=d0(new Date());
+  try{ css(); }catch(e){}
+  repFetch(p,pv);
+  var rows=S.data.rows||[], G=S.data.group||[], today=d0(new Date());
   function inQ(d,q){ if(!d) return false; d=d0(d); return d>=q.start && d<=q.end; }
-  function nhanKy(r,q){ if(lhOf(r)!=='nhan') return false; var pv2=pd(r.ngayLienHe); return pv2?inQ(pv2,q):inQ(pd(r.ngay),q); }
   var L=rows.filter(function(r){return inQ(pd(r.ngay),p);}), Lp=rows.filter(function(r){return inQ(pd(r.ngay),pv);});
   var k=calc(L), kp=calc(Lp), all=calc(rows);
-  var pvKy=rows.filter(function(r){return inQ(pd(r.ngayLienHe),p);}).length, pvKyP=rows.filter(function(r){return inQ(pd(r.ngayLienHe),pv);}).length;
-  var NH=rows.filter(function(r){return nhanKy(r,p);}), nhP=rows.filter(function(r){return nhanKy(r,pv);}).length;
-  var passNoLh=rows.filter(function(r){return hrOf(r)==='pass'&&lhOf(r)==='chua';}).length;
-  var pvQua=rows.filter(function(r){ var d=pd(r.ngayLienHe); return d&&d0(d)<today&&(lhOf(r)==='chua'||lhOf(r)==='da'); }).length;
-  function dl(c,pr){ var d=c-pr; if(!d) return '<span class="bt-d fl">— bằng kỳ trước</span>'; return '<span class="bt-d '+(d>0?'up':'dn')+'">'+(d>0?'▲':'▼')+' '+Math.abs(d)+'</span> <span class="bt-mute">vs '+pr+'</span>'; }
-  function kp1(t,v,s){ return '<div class="bt-kpi"><div class="t">'+t+'</div><div class="v">'+v+'</div><div class="s">'+s+'</div></div>'; }
-  var kpis='<div class="bt-kpis" style="margin:4px 0 12px">'+
-    kp1('Đăng ký mới',k.n,dl(k.n,kp.n))+
-    kp1('Đã review',k.rev,(k.n?pc(k.rev,k.n)+'% · ':'')+'còn '+k.chua+' chờ')+
-    kp1('PASS',k.pass,k.rev?pc(k.pass,k.rev)+'% số đã review':'—')+
-    kp1('Phỏng vấn trong kỳ',pvKy,'theo Ngày phỏng vấn')+
-    kp1('Nhận CTV',NH.length,dl(NH.length,nhP)+(k.n?' · '+pc(NH.length,k.n)+'% đơn':''))+'</div>';
-  var f=k.funnel, fp=kp.funnel, mx=Math.max(1,f[0][1],fp[0][1]);
-  var fun='<table class="bt-t"><tr><th>Bước</th><th style="width:46%"></th><th>Kỳ này</th><th>Kỳ trước</th></tr>'+f.map(function(x,i){
-    var a=x[1], b=fp[i][1], ra=i&&f[i-1][1]?' <small>'+pc(a,f[i-1][1])+'%</small>':'';
-    return '<tr><td>'+x[0]+'</td><td style="text-align:left"><div style="height:7px;border-radius:3px;background:#2FB59E;width:'+Math.round(a/mx*100)+'%;min-width:'+(a?3:0)+'px"></div><div style="height:7px;border-radius:3px;background:#8A93A7;opacity:.55;margin-top:3px;width:'+Math.round(b/mx*100)+'%;min-width:'+(b?3:0)+'px"></div></td><td><b>'+a+'</b>'+ra+'</td><td>'+b+'</td></tr>'; }).join('')+'</table>';
-  var list=NH.slice().sort(function(a,b){ return String(a.maCtv).localeCompare(String(b.maCtv)); });
-  var tbl='<table class="bt-t"><tr><th>Mã CTV</th><th>Ứng viên</th><th>Ngày gửi</th><th>Ngày PV</th><th>Kinh nghiệm</th></tr>'+(list.length?list.map(function(r){ var d=pd(r.ngay);
-    return '<tr><td><b>'+E(r.maCtv||'—')+'</b></td><td style="text-align:left">'+E(r.ten)+'</td><td>'+(d?dd(d):'—')+'</td><td>'+E(r.ngayLienHe?String(r.ngayLienHe).slice(0,5):'—')+'</td><td>'+E(one(r.kinhNghiem,KN)||'—')+'</td></tr>'; }).join(''):'<tr><td colspan="5" class="bt-mute" style="text-align:left">Kỳ này chưa nhận CTV mới.</td></tr>')+'</table>';
-  var ev=[];
-  if(all.chua) ev.push([all.oldest>=3?'er':'wa','<b>'+all.chua+'</b> đơn CTV chưa review'+(all.oldest!=null?', đơn cũ nhất đã chờ <b>'+all.oldest+' ngày</b>':'')+'.','Chưa review']);
-  if(passNoLh||pvQua) ev.push(['wa',[passNoLh?passNoLh+' người PASS nhưng chưa liên hệ':'',pvQua?pvQua+' người đã qua ngày phỏng vấn mà chưa cập nhật kết quả':''].filter(Boolean).join(' · ')+'.','Cần cập nhật']);
-  if(k.n){ var r1=pc(NH.length,k.n), r0=kp.n?pc(nhP,kp.n):null;
-    ev.push([r0!=null&&r1<r0?'in':'ok','Tỷ lệ nhận CTV <b>'+r1+'%</b> số đơn kỳ này'+(r0!=null?' (kỳ trước '+r0+'%)':'')+'.'+(k.gapAvg!=null?' Từ đăng ký đến phỏng vấn trung bình <b>'+vn(k.gapAvg,1)+' ngày</b>.':''),'Kết quả']); }
-  else ev.push(['in','Kỳ này chưa có đơn đăng ký CTV mới.','Không có đơn']);
+  var pvF=rows.filter(function(r){return inQ(pd(r.ngayLienHe),p);}).length, pvFP=rows.filter(function(r){return inQ(pd(r.ngayLienHe),pv);}).length;
+  var bd=G.filter(function(g){return inQ(pd(g.batDau),p);}).length, bdP=G.filter(function(g){return inQ(pd(g.batDau),pv);}).length;
+  var nhanAll=all.nhan, kocAll=G.filter(function(g){return pd(g.kocDau);}).length;
+  var passNoLich=rows.filter(function(r){ return hrOf(r)==='pass' && lhOf(r)==='da' && !String(r.ngayLienHe||'').trim(); }).length;
+  /* lịch HR BIGX */
+  var Rp=S.rep, EV=(Rp.data&&Rp.key===repKey(p,pv))?(Rp.data.events||[]):null;
+  var days=[]; for(var d=new Date(p.start); d<=p.end; d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)) days.push(d0(d));
+  var W=days.length<=7, cols;
+  if(W) cols=days.map(function(x){ var D=['CN','T2','T3','T4','T5','T6','T7']; return {lab:D[x.getDay()]+' '+x.getDate(), a:x, b:x}; });
+  else { cols=[]; days.forEach(function(x){ var ws=wkStart(x); var c=cols[cols.length-1]; if(!c||c.ws.getTime()!==ws.getTime()) cols.push({ws:ws,a:x,b:x}); else c.b=x; });
+    cols.forEach(function(c){ c.lab=c.a.getDate()+'–'+c.b.getDate()+'/'+(c.b.getMonth()+1); }); }
+  var host=null, over=[];
+  if(EV){
+    var inC=function(e,c){ var x=new Date(e.d+'T00:00'); return x>=c.a && x<=c.b; };
+    var evP=EV.filter(function(e){ var x=new Date(e.d+'T00:00'); return x>=p.start && x<=p.end; });
+    host={ tot:cols.map(function(c){ return evP.filter(function(e){return inC(e,c);}).length; }), rows:[] };
+    TD_HOSTS.forEach(function(h){ var v=cols.map(function(c){ return evP.filter(function(e){ return inC(e,c) && (e.hosts||[]).indexOf(h)>=0; }).length; }), t=v.reduce(function(s,x){return s+x;},0); if(t) host.rows.push({h:h,v:v,t:t}); });
+    host.rows.sort(function(a,b){return b.t-a.t;}); host.n=evP.length;
+    TD_HOSTS.forEach(function(h){ var c={}; evP.forEach(function(e){ if((e.hosts||[]).indexOf(h)>=0) c[e.d]=(c[e.d]||0)+1; }); Object.keys(c).forEach(function(x){ if(c[x]>TD_MAX) over.push(h.split('@')[0]+' '+x.slice(8,10)+'/'+x.slice(5,7)+' ('+c[x]+')'); }); });
+  }
+  /* khối 4: cần xử lý */
   var todo=[];
-  if(all.chua) todo.push([all.oldest>=3?0:1,'Review <b>'+all.chua+' đơn CTV</b> đang chờ trong file Đăng ký CTV.','HR']);
-  if(passNoLh) todo.push([1,'Liên hệ <b>'+passNoLh+' ứng viên CTV</b> đã PASS.','HR']);
-  if(pvQua) todo.push([1,'Cập nhật kết quả cho <b>'+pvQua+' ứng viên CTV</b> đã qua ngày phỏng vấn.','HR']);
-  var dk=k.n-kp.n;
-  var sum='CTV Booking KOC: <b>'+k.n+' đơn đăng ký</b>'+(kp.n||k.n?' ('+(dk?(dk>0?'▲ ':'▼ ')+Math.abs(dk):'bằng')+' so với kỳ trước)':'')+', <b>'+NH.length+' người nhận CTV</b>'+(all.chua?', còn <b>'+all.chua+' đơn chưa review</b>':'')+'.';
-  return { sum:sum, todo:todo,
-    m:{k:k, kp:kp, chua:all.chua, oldest:all.oldest, pv:pvKy, pvP:pvKyP, nhan:NH.length, nhanP:nhP, passNoLh:passNoLh, pvQua:pvQua}, // [CTV] số liệu cho PDF bảng chỉ số
-    html:function(sec,evHtml){ return sec(7,'Tuyển CTV Booking KOC','Đơn đăng ký form CTV gửi trong kỳ, kết quả tính đến hôm nay · so với đơn kỳ trước · "Nhận CTV" tính theo ngày phỏng vấn (chưa có thì theo ngày gửi)',
-      kpis+'<div class="bt-g2" style="gap:12px"><div style="min-width:0;flex:1"><div class="bt-cap" style="margin-top:0"><b>Phễu đơn trong kỳ</b> · xanh = kỳ này, xám = kỳ trước</div><div class="bt-scroll">'+fun+'</div></div>'+
-      '<div style="min-width:0;flex:1"><div class="bt-cap" style="margin-top:0"><b>CTV mới nhận trong kỳ</b></div><div class="bt-scroll">'+tbl+'</div></div></div>'+'<div class="bt-cap"><b>Theo tuần</b> · nhóm theo tuần đăng ký · Có KOC đầu lấy từ sheet Theo dõi Group</div><div class="bt-scroll">'+weekTable(rows,p,'bt-t')+'</div>'+evHtml(ev)); } };
+  if(all.chua) todo.push('<b>'+all.chua+'</b> đơn CTV chưa review'+(all.oldest!=null?' (cũ nhất '+all.oldest+' ngày)':'')+'.');
+  if(passNoLich) todo.push('<b>'+passNoLich+'</b> người PASS, đã liên hệ nhưng chưa có lịch phỏng vấn.');
+  if(nhanAll) todo.push('<b>'+(nhanAll-kocAll)+'/'+nhanAll+'</b> CTV đã nhận chưa ghi nhận KOC đầu tiên (mốc 7 ngày).');
+  if(over.length) todo.push('Vượt '+TD_MAX+' buổi/ngày: <b>'+over.join(', ')+'</b>.');
+  function dl(c,pr){ var x=c-pr; return x?'<span class="'+(x>0?'up':'dn')+'">'+(x>0?'▲ ':'▼ ')+Math.abs(x)+'</span> vs '+pr:'— bằng kỳ trước'; }
+  var K=[['Đơn đăng ký',k.n,dl(k.n,kp.n)],['HR đã review',k.rev,(k.n?pc(k.rev,k.n)+'% · ':'')+'còn '+k.chua],['PASS',k.pass,k.rev?pc(k.pass,k.rev)+'% số review':'—'],
+    ['Hẹn phỏng vấn',pvF,dl(pvF,pvFP)],['CTV bắt đầu',bd,dl(bd,bdP)],['Có KOC đầu',kocAll,'/ '+nhanAll+' CTV đã nhận']];
+  function hostTable(cls){
+    if(!EV) return '<div style="font-size:11px;color:#8A93A7">'+(Rp.error?'Chưa đọc được lịch HR BIGX ('+E(Rp.error)+').':'Đang đọc lịch HR BIGX…')+'</div>';
+    if(!host.n) return '<div style="font-size:11px;color:#8A93A7">Kỳ này chưa có lịch phỏng vấn CTV trên lịch HR BIGX.</div>';
+    var s='<table class="'+cls+'"><tr><th style="text-align:left">Host</th>'+cols.map(function(c){return '<th>'+c.lab+'</th>';}).join('')+'<th>Tổng</th></tr>';
+    host.rows.forEach(function(r){ s+='<tr><td style="text-align:left">'+r.h.split('@')[0]+'</td>'+r.v.map(function(v){ return '<td'+(W&&v>TD_MAX?' class="ov"':!v?' class="z"':'')+'>'+v+'</td>'; }).join('')+'<td><b>'+r.t+'</b></td></tr>'; });
+    s+='<tr class="tt"><td style="text-align:left"><b>Tổng buổi</b></td>'+host.tot.map(function(v){return '<td><b>'+v+'</b></td>';}).join('')+'<td><b>'+host.n+'</b></td></tr></table>';
+    return s+'<div class="nt">'+(W?'Đỏ = vượt '+TD_MAX+' buổi/ngày · ':'Cột = tuần · ')+'một buổi có thể có nhiều host · không tính ecom-drive (mail chung).</div>';
+  }
+  var wk={start:pv.start,end:p.end};
+  var sum='CTV Booking KOC: <b>'+k.n+' đơn đăng ký</b>'+(kp.n||k.n?' ('+(k.n-kp.n?(k.n>kp.n?'▲ ':'▼ ')+Math.abs(k.n-kp.n):'bằng')+' so với kỳ trước)':'')+', <b>'+pvF+'</b> hẹn phỏng vấn, <b>'+bd+'</b> CTV bắt đầu'+(all.chua?', còn <b>'+all.chua+'</b> đơn chưa review':'')+'.';
+  return { sum:sum, todo:[], K:K, todoList:todo,
+    m:{k:k, kp:kp, chua:all.chua, oldest:all.oldest, pv:pvF, pvP:pvFP, nhan:bd, nhanP:bdP, passNoLh:passNoLich},
+    weekTable:function(cls){ return weekTable(rows,wk,cls); }, hostTable:hostTable,
+    html:function(sec,evHtml,n0){ n0=n0||7;
+      var kp6='<div class="bt-kpis" style="grid-template-columns:repeat(6,minmax(0,1fr));margin:4px 0 4px">'+K.map(function(x){ return '<div class="bt-kpi"><div class="t">'+x[0]+'</div><div class="v">'+x[1]+'</div><div class="s">'+x[2]+'</div></div>'; }).join('')+'</div>';
+      return sec(n0,'CTV Booking KOC · chỉ số kỳ','',kp6)
+        +sec(n0+1,'Chuyển đổi theo tuần đăng ký','Kỳ này + kỳ trước · kết quả tính đến hôm nay','<div class="bt-scroll">'+weekTable(rows,wk,'bt-t')+'</div>')
+        +sec(n0+2,'Phỏng vấn theo host','Số buổi theo lịch HR BIGX · mốc '+TD_MAX+' buổi/ngày','<div class="bt-scroll bt-host">'+hostTable('bt-t')+'</div>')
+        +sec(n0+3,'Cần xử lý','',todo.length?'<ul class="bt-ctvtodo">'+todo.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>':'<div class="bt-mute">Không có việc tồn.</div>'); } };
 };
-
 /* ---------- 6c. [27/10/2026] Tab con "Gửi thư mời" (chỉ admin) — mockup duyệt 27/10/2026 ----------
    Web chỉ gửi Mã CTV + ngày giờ + nội dung; Apps Script (action ctvInvite) tự lấy họ tên đầy đủ + email trong file,
    tạo lịch Google Calendar trên lịch hr@bigx.vn (kèm Meet, 15 phút/người, xếp nối tiếp), rồi ghi Trạng thái liên hệ + Ngày phỏng vấn. */

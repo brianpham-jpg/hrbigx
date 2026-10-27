@@ -149,6 +149,8 @@ function todoHtml(R){ return R.todo.length?'<ol class="bt-todo">'+R.todo.map(fun
 function sec(n,title,cap,body){ return '<div class="bt-sec"><div class="bt-sh"><span class="n">'+n+'</span><h3>'+title+'</h3></div>'+(cap?'<div class="bt-cap">'+cap+'</div>':'')+body+'</div>'; }
 var NOTE='Cách tính: phễu đếm theo bước xa nhất đã qua (giống tab Hiệu quả tuyển dụng). CV được gán vào kỳ theo <b>ngày nộp</b>. Dữ liệu chưa có ngày của từng bước (ngày HR duyệt, ngày phỏng vấn…), nên báo cáo theo dõi "các CV nộp trong kỳ đã đi tới đâu", chưa đếm được "trong kỳ đã phỏng vấn bao nhiêu người".';
 function sections(R,charts){ // charts: {fun,day,tr} = html (div cho màn hình / img cho PDF)
+  /* [28/10/2026] Kỳ không có CV inhouse → ẩn toàn bộ phần inhouse, chỉ còn CTV (mockup duyệt 28/10) */
+  if(!R.f[0]) return ['<div class="bt-hid">Tuyển dụng inhouse: kỳ này không có CV mới, phần này được ẩn.</div>'].concat(R.ctv?[R.ctv.html(sec,evHtml,1)]:[]);
   return [
     sec(1,'Tóm tắt kỳ','', '<div class="bt-sum">'+R.summary+'</div>'),
     '<div class="bt-kpis">'+kpiHtml(R)+'</div>',
@@ -157,8 +159,8 @@ function sections(R,charts){ // charts: {fun,day,tr} = html (div cho màn hình 
       +sec(4,'Xu hướng','CV mới '+(R.W?'8 tuần':'6 tháng')+' gần nhất (cột tím = kỳ đang xem) · đường: % qua HR duyệt',charts.tr+evHtml(R.ev.tr))+'</div>',
     sec(5,'Theo vị trí','CV nộp trong kỳ và kết quả hiện tại theo từng bước · cột cuối so lượng CV với kỳ trước','<div class="bt-scroll">'+posTable(R)+'</div>'+evHtml(R.ev.pos)),
     sec(6,'CV tồn đọng (tính đến hôm nay)','Tất cả CV chưa có kết quả, không riêng kỳ này · chia theo bước đang chờ và số ngày từ lúc nộp','<div class="bt-scroll">'+ageTable(R)+'</div>'+evHtml(R.ev.age)),
-  ].concat(R.ctv?[R.ctv.html(sec,evHtml)]:[]).concat([ // [CTV] phần 7 = CTV, Việc cần làm (gộp inhouse + CTV) xuống cuối
-    sec(R.ctv?8:7,'Việc cần làm','Tự đề xuất từ các đánh giá ở trên (inhouse + CTV), sắp theo mức ưu tiên',todoHtml(R))
+  ].concat(R.ctv?[R.ctv.html(sec,evHtml,7)]:[]).concat([ // [CTV] phần 7–10 = CTV (4 khối), Việc cần làm inhouse xuống cuối
+    sec(R.ctv?11:7,'Việc cần làm (inhouse)','Tự đề xuất từ các đánh giá ở trên, sắp theo mức ưu tiên',todoHtml(R))
   ]);
 }
 
@@ -334,45 +336,32 @@ function scRow(name,sub,cur,prev,kind,better){
   return '<tr><td>'+name+(sub?'<small>'+sub+'</small>':'')+'</td><td><b>'+fmt(cur)+'</b></td><td>'+(kind==='s'?'—':fmt(prev))+'</td><td>'+ch+'</td><td class="c"><span class="dot '+dot+'"></span></td></tr>';
 }
 function scHtml(R){
-  var f=R.f, fp=R.fp, r=function(a,b){ return b?a/b*100:null; }, C=R.ctv, m=C&&C.m;
+  /* [28/10/2026] mockup duyệt 28/10: inhouse chỉ hiện khi kỳ có CV; CTV = 4 khối số liệu (chỉ số · theo tuần đăng ký · phỏng vấn theo host · cần xử lý) */
+  var f=R.f, fp=R.fp, r=function(a,b){ return b?a/b*100:null; }, C=R.ctv, IN=f[0]>0;
   var lbl=bcLabel(R.mode,R.p), now=new Date(), stamp=DMY(now)+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  var tile=function(t,v,p){ var d=v-p; return '<div class="ti"><div class="l">'+t+'</div><div class="v">'+v+'</div><div class="d">'+(d?'<span class="'+(d>0?'up':'dn')+'">'+(d>0?'▲ ':'▼ ')+Math.abs(d)+'</span> vs '+p:'<span class="fl">— bằng kỳ trước</span>')+'</div></div>'; };
-  var h='<div class="hd"><div class="hl"><div class="lg">BigX</div><div><div class="t">BÁO CÁO CHỈ SỐ TUYỂN DỤNG</div><div class="s">Kỳ: '+(R.W?'Tuần ':'Tháng ')+lbl+' · so với '+bcLabel(R.mode,R.pv)+'</div></div></div>'
+  var tile=function(t,v,d){ return '<div class="ti"><div class="l">'+t+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div></div>'; };
+  var dl=function(v,p){ var d=v-p; return d?'<span class="'+(d>0?'up':'dn')+'">'+(d>0?'▲ ':'▼ ')+Math.abs(d)+'</span> vs '+p:'<span class="fl">— bằng kỳ trước</span>'; };
+  var h='<div class="hd"><div class="hl"><div class="lg">BigX</div><div><div class="t">BÁO CÁO TUYỂN DỤNG</div><div class="s">Kỳ: '+(R.W?'Tuần ':'Tháng ')+lbl+' · so với '+bcLabel(R.mode,R.pv)+'</div></div></div>'
     +'<div class="hr">BigX Agency · Phòng Nhân sự<br>Ngày xuất: '+stamp+'</div></div>';
-  h+='<div class="tiles">'+tile('CV inhouse mới',f[0],fp[0])+tile('Trúng tuyển',f[5],fp[5])
-    +(m?tile('Đơn CTV mới',m.k.n,m.kp.n)+tile('Nhận CTV',m.nhan,m.nhanP):'<div class="ti"><div class="l">CTV</div><div class="v">—</div><div class="d fl">chưa tải được</div></div><div class="ti"></div>')+'</div>';
-  h+='<table><tr><th>Chỉ số</th><th>Kỳ này</th><th>Kỳ trước</th><th>Thay đổi</th><th class="c">Đánh giá</th></tr>';
-  h+='<tr class="grp"><td colspan="5">Tuyển dụng inhouse</td></tr>'
-    +scRow('CV mới nhận','',f[0],fp[0],'n',1)
-    +scRow('Tỷ lệ qua HR duyệt','CV qua HR / CV nộp',r(f[1],f[0]),r(fp[1],fp[0]),'r',1)
-    +scRow('Tỷ lệ qua Line Manager','qua LM / qua HR',r(f[2],f[1]),r(fp[2],fp[1]),'r',1)
-    +scRow('Qua phỏng vấn vòng 1','',f[3],fp[3],'n',1)
-    +scRow('Trúng tuyển','',f[5],fp[5],'n',1)
-    +scRow('Tỷ lệ CV → trúng tuyển','',r(f[5],f[0]),r(fp[5],fp[0]),'r',1)
-    +scRow('CV kỳ này chưa có kết quả','',R.pend,R.pendP,'n',-1)
-    +scRow('CV tồn quá 7 ngày','toàn hệ thống, tại ngày xuất',R.old7,null,'s',-1);
-  h+='<tr class="grp"><td colspan="5">CTV Booking KOC</td></tr>';
-  if(m){ var k=m.k, kp=m.kp;
-    h+=scRow('Đơn đăng ký mới','',k.n,kp.n,'n',1)
-      +scRow('Tỷ lệ đã review','đơn trong kỳ',r(k.rev,k.n),r(kp.rev,kp.n),'r',1)
-      +scRow('Tỷ lệ PASS','PASS / đã review',r(k.pass,k.rev),r(kp.pass,kp.rev),'r',1)
-      +scRow('Phỏng vấn trong kỳ','theo Ngày phỏng vấn',m.pv,m.pvP,'n',1)
-      +scRow('Nhận CTV','',m.nhan,m.nhanP,'n',1)
-      +scRow('Tỷ lệ nhận CTV / đơn','',r(m.nhan,k.n),r(m.nhanP,kp.n),'r',1)
-      +scRow('Đăng ký → phỏng vấn (TB ngày)','',k.gapAvg,kp.gapAvg,'d',-1)
-      +scRow('Đơn chờ review','tại ngày xuất',m.chua,null,'s',-1); }
-  else h+='<tr><td colspan="5" class="fl">Chưa tải được dữ liệu CTV — mở tab CTV Booking KOC rồi xuất lại.</td></tr>';
-  h+='</table><div class="leg"><span class="dot g"></span> tốt hơn kỳ trước &nbsp; <span class="dot y"></span> bằng / thay đổi nhỏ &nbsp; <span class="dot r"></span> kém hơn &nbsp; <span class="dot n"></span> chưa đủ dữ liệu · "tại ngày xuất": đỏ khi còn tồn</div>';
-  /* nhận định */
-  var nd=[], dd=fp[0]?Math.round((f[0]-fp[0])/fp[0]*100):null;
-  nd.push('<b>Inhouse:</b> '+f[0]+' CV mới'+(dd==null||!dd?'':' ('+(dd>0?'tăng ':'giảm ')+Math.abs(dd)+'% so với kỳ trước)')+(R.PR&&R.PR[0]?', nhiều nhất <b>'+E(dn(R.PR[0].k))+'</b>':'')+'; '+f[1]+' qua HR duyệt, '+f[3]+' qua phỏng vấn vòng 1, <b>'+f[5]+'</b> trúng tuyển.');
-  if(C&&C.sum) nd.push(C.sum.replace(/^CTV Booking KOC:/,'<b>CTV Booking KOC:</b>'));
-  var ton=[]; if(R.old7) ton.push('<b>'+R.old7+'</b> CV inhouse quá 7 ngày'); if(m&&m.chua) ton.push('<b>'+m.chua+'</b> đơn CTV chưa review'+(m.oldest?' (cũ nhất '+m.oldest+' ngày)':''));
-  nd.push(ton.length?'<b>Tồn đọng:</b> '+ton.join(', ')+'.':'<b>Tồn đọng:</b> không có hồ sơ tồn.');
-  var todo=(R.todo||[]).slice(0,6);
-  h+='<div class="two"><div class="box"><h4>Nhận định</h4><ul>'+nd.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>'
-    +'<div class="box"><h4>Việc cần làm</h4>'+(todo.length?'<ol>'+todo.map(function(x){ return '<li>'+x[1]+' <i>'+x[2]+'</i></li>'; }).join('')+'</ol>':'<div class="fl" style="font-size:11px">Không có việc tồn.</div>')+'</div></div>';
-  h+='<div class="ft"><span>Số liệu lấy trực tiếp từ hệ thống HR BigX (Tuyển dụng + Đăng ký CTV)</span><span>Trang 1/1</span></div>';
+  var n=0, H=function(t,sub){ n++; return '<div class="h2"><span>'+n+' · '+t+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</div>'; };
+  if(IN){
+    h+=H('Tuyển dụng inhouse','CV nộp trong kỳ · kết quả đến hôm nay');
+    h+='<table><tr><th>Chỉ số</th><th>Kỳ này</th><th>Kỳ trước</th><th>Thay đổi</th><th class="c">Đánh giá</th></tr>'
+      +scRow('CV mới nhận','',f[0],fp[0],'n',1)
+      +scRow('Tỷ lệ qua HR duyệt','CV qua HR / CV nộp',r(f[1],f[0]),r(fp[1],fp[0]),'r',1)
+      +scRow('Qua phỏng vấn vòng 1','',f[3],fp[3],'n',1)
+      +scRow('Trúng tuyển','',f[5],fp[5],'n',1)
+      +scRow('CV kỳ này chưa có kết quả','',R.pend,R.pendP,'n',-1)
+      +scRow('CV tồn quá 7 ngày','toàn hệ thống, tại ngày xuất',R.old7,null,'s',-1)+'</table>';
+  } else h+='<div class="hid">Tuyển dụng inhouse: kỳ này không có CV mới, phần này được ẩn.</div>';
+  if(C){
+    h+=H('CTV Booking KOC','chỉ số kỳ')+'<div class="tiles six">'+C.K.map(function(x){ return tile(x[0],x[1],x[2]); }).join('')+'</div>';
+    h+=H('Chuyển đổi theo tuần đăng ký','kỳ này + kỳ trước · đến hôm nay')+C.weekTable('wk');
+    h+=H('Phỏng vấn theo host','số buổi theo lịch HR BIGX')+C.hostTable('ht');
+    h+=H('Cần xử lý','')+(C.todoList.length?'<ul class="cx">'+C.todoList.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>':'<div class="fl" style="font-size:11px">Không có việc tồn.</div>');
+  } else h+='<div class="hid">Chưa tải được dữ liệu CTV — mở tab CTV Booking KOC rồi xuất lại.</div>';
+  if(IN && (R.todo||[]).length) h+=H('Việc cần làm (inhouse)','')+'<ol class="cx">'+R.todo.slice(0,5).map(function(x){ return '<li>'+x[1]+' <i>'+x[2]+'</i></li>'; }).join('')+'</ol>';
+  h+='<div class="ft"><span>Nguồn: file Tuyển dụng · form Đăng ký CTV · sheet Theo dõi Group · lịch HR BIGX. Không hiển thị tên ứng viên.</span><span>Trang 1/1</span></div>';
   return h;
 }
 function scCss(){ return '<style>'
@@ -393,6 +382,12 @@ function scCss(){ return '<style>'
   +'.sc .two{display:flex;gap:12px;margin-top:12px}.sc .box{flex:1;min-width:0;border:1px solid #E3E7EE;border-radius:10px;padding:10px 12px}'
   +'.sc .box h4{margin:0 0 6px;font-family:Fraunces,Georgia,serif;font-weight:600;font-size:14px;color:#202D38}.sc .box ul,.sc .box ol{margin:0;padding-left:16px}'
   +'.sc .box li{font-size:11px;line-height:1.5;margin:3px 0;color:#2D3748}.sc .box ol li::marker{color:#6E54C9;font-weight:700}.sc .box i{color:#7A8496;font-style:normal;font-size:10px}'
+  +'.sc .h2{display:flex;gap:8px;align-items:baseline;margin:14px 0 6px;font-family:Fraunces,Georgia,serif;font-weight:600;font-size:14px;color:#202D38}.sc .h2 small{font-family:"Be Vietnam Pro",sans-serif;font-weight:400;font-size:10px;color:#7A8496}'
+  +'.sc .hid{font-size:10.5px;color:#7A8496;border:1px dashed #D5DAE2;border-radius:6px;padding:6px 10px;margin-top:12px}'
+  +'.sc .tiles.six{margin:6px 0}.sc .tiles.six .ti{min-height:62px;padding:7px 9px}.sc .tiles.six .v{font-size:20px}.sc .tiles.six .l{font-size:9px}'
+  +'.sc table.wk td,.sc table.wk th,.sc table.ht td,.sc table.ht th{text-align:center}.sc table.wk td:first-child,.sc table.wk th:first-child{text-align:left}'
+  +'.sc table.ht .ov{color:#C53030;font-weight:700}.sc table.ht .z{color:#C5CCD6}.sc table.ht tr.tt td,.sc table.wk tr:last-child td{border-top:1.5px solid #CBD2DC}'
+  +'.sc .nt{font-size:9.5px;color:#7A8496;margin-top:3px}.sc ul.cx,.sc ol.cx{margin:0;padding-left:18px}.sc .cx li{font-size:11px;line-height:1.55;margin:2px 0;color:#2D3748}.sc .cx i{color:#7A8496;font-style:normal;font-size:10px}'
   +'.sc .ft{position:absolute;left:38px;right:38px;bottom:18px;display:flex;justify-content:space-between;font-size:10px;color:#7A8496;border-top:1px solid #E3E7EE;padding-top:6px}'
   +'</style>'; }
 window.bcExportPDF=function(){
@@ -401,7 +396,7 @@ window.bcExportPDF=function(){
   if(btn){ btn.disabled=true; btn.innerHTML='⏳&nbsp; Đang tạo PDF…'; }
   var need=[]; if(!window.html2canvas) need.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'));
   if(!(window.jspdf&&window.jspdf.jsPDF)) need.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'));
-  Promise.all(need).then(scWaitCtv).then(function(){ return (document.fonts&&document.fonts.ready)||Promise.resolve(); }).then(function(){
+  Promise.all(need).then(scWaitCtv).then(function(){ var R0=compute(); return window.__ctvRepWait?window.__ctvRepWait(R0.p,R0.pv):null; }).then(function(){ return (document.fonts&&document.fonts.ready)||Promise.resolve(); }).then(function(){
     var R=compute();
     var host=document.createElement('div'); host.style.cssText='position:fixed;left:-30000px;top:0;z-index:-1';
     host.innerHTML=scCss()+'<div class="sc">'+scHtml(R)+'</div>'; document.body.appendChild(host);
