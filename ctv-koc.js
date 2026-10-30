@@ -65,9 +65,10 @@ function lhOf(r){ var v=low(r.lienHe);
   if(/nhận ctv/.test(v)) return 'nhan';
   if(/từ chối/.test(v)) return 'tuchoi';
   if(/không phản hồi/.test(v)) return 'khongph';
+  if(/loại/.test(v)) return 'loai'; // [30/10] "Loại" ở cột Trạng thái liên hệ → không còn tính là Đã liên hệ / không gửi thư mời
   return 'da'; }
 var HRP={pass:['teal','PASS'],can:['clay','Cân nhắc'],fail:['rust','FAIL'],chua:['gray','Chưa review']};
-var LHP={nhan:['teal','Nhận CTV'],da:['clay','Đã liên hệ'],tuchoi:['rust','Từ chối'],khongph:['rust','Không phản hồi'],chua:['gray','Chưa liên hệ']};
+var LHP={nhan:['teal','Nhận CTV'],da:['clay','Đã liên hệ'],tuchoi:['rust','Từ chối'],khongph:['rust','Không phản hồi'],loai:['rust','Loại'],chua:['gray','Chưa liên hệ']};
 function pill(map,k,raw){ var p=map[k]; return '<span class="pill '+(p?p[0]:'gray')+'">'+E(p?(k==='khac'||k==='da'?(raw||p[1]):p[1]):(raw||'—'))+'</span>'; }
 
 /* nhóm đáp án (câu chọn nhiều có dấu phẩy trong nhãn → so theo từ khoá, không tách dấu phẩy) */
@@ -213,7 +214,7 @@ function page(){
   h+='<div class="ctv-card"><div class="ctv-h">Danh sách ứng viên CTV</div><div class="ctv-s">Mới nhất ở trên · bấm "Xem CV" mở file trong folder CV (cần quyền Drive)</div>'+
     '<div class="toolbar"><div class="tb-search"><i class="ti ti-search"></i><input id="ctv-q" placeholder="Tìm tên hoặc mã CTV…" value="'+E(f2.q)+'" oninput="__ctvF()"></div>'+
     '<select id="ctv-hr" onchange="__ctvF()">'+opt('','HR Review: tất cả',f2.hr)+opt('pass','PASS',f2.hr)+opt('can','Cân nhắc',f2.hr)+opt('fail','FAIL',f2.hr)+opt('chua','Chưa review',f2.hr)+'</select>'+
-    '<select id="ctv-lh" onchange="__ctvF()">'+opt('','Liên hệ: tất cả',f2.lh)+opt('chua','Chưa liên hệ',f2.lh)+opt('da','Đã liên hệ',f2.lh)+opt('nhan','Nhận CTV',f2.lh)+opt('tuchoi','Từ chối',f2.lh)+opt('khongph','Không phản hồi',f2.lh)+'</select>'+
+    '<select id="ctv-lh" onchange="__ctvF()">'+opt('','Liên hệ: tất cả',f2.lh)+opt('chua','Chưa liên hệ',f2.lh)+opt('da','Đã liên hệ',f2.lh)+opt('nhan','Nhận CTV',f2.lh)+opt('tuchoi','Từ chối',f2.lh)+opt('khongph','Không phản hồi',f2.lh)+opt('loai','Loại',f2.lh)+'</select>'+
     '<select id="ctv-kn" onchange="__ctvF()">'+opt('','Kinh nghiệm: tất cả',f2.kn)+KN.map(function(x){return opt(x[0],x[0],f2.kn);}).join('')+'</select>'+
     '<span class="tb-count" id="ctv-count"></span></div>'+
     '<div class="table-wrap"><table class="dt"><thead><tr><th>Ngày gửi</th><th>Ứng viên</th><th>Kinh nghiệm</th><th>Tệp KOC</th><th>Mảng</th><th>KOC/tháng</th><th>CV</th><th>HR Review</th><th>Liên hệ</th><th>Mã CTV</th><th>Ghi chú</th></tr></thead><tbody id="ctv-body"></tbody></table></div></div>';
