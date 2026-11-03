@@ -80,10 +80,10 @@ function roleOf(prop){ prop=String(prop).toLowerCase();
   if(/background|^fill$|stop-color|flood-color|accent-color/.test(prop)) return 'bg';
   if(/border|outline|stroke|column-rule/.test(prop)) return 'line';
   return 'fg'; }
-window.bxMapColor=mapStr;
 
 /* ---------------- 2. stylesheet + <style> ---------------- */
-function skipSheet(ss){ var n=ss.ownerNode; return !n || (n.id&&/^bx-v5/.test(n.id)) || (n.getAttribute&&n.getAttribute('data-bx-v5')!=null); }
+var OFF='[style*="-30000px"],[style*="-20000px"]'; // khung dựng PDF/ảnh ngoài màn hình (Báo cáo) → giữ nguyên màu in
+function skipSheet(ss){ var n=ss.ownerNode; return !n || (n.id&&/^bx-v5/.test(n.id)) || (n.getAttribute&&n.getAttribute('data-bx-v5')!=null) || (n.closest&&!!n.closest(OFF)); }
 function walk(rules){
   for(var i=0;i<rules.length;i++){ var r=rules[i];
     if(r.type===4){ if(/print/.test(r.media&&r.media.mediaText||'')) continue; walk(r.cssRules); continue; }
@@ -98,16 +98,19 @@ function doSheets(){ [].forEach.call(document.styleSheets,function(ss){ if(skipS
 
 /* ---------------- 3. style inline + thuộc tính SVG ---------------- */
 var ATTRS=['fill','stroke','stop-color','flood-color','color'];
-function skipEl(el){ return el.closest && el.closest('.v5,[_echarts_instance_],#bx-v5-skip'); }
-function doEl(el){
+function skipEl(el){ return el.closest && el.closest('.v5,[_echarts_instance_],#bx-v5-skip,'+OFF); }
+function doEl(el,prev){
   if(el.nodeType!==1||skipEl(el)) return;
   if(!el.__bxo){ var o={s:[],a:[]}, st=el.style;
     if(st&&st.length){ for(var j=0;j<st.length;j++){ var p=st[j]; if(p.indexOf('--')===0) continue; var v=st.getPropertyValue(p); if(TOK.test(v)) o.s.push([p,v,st.getPropertyPriority(p)]); TOK.lastIndex=0; } }
     for(var k=0;k<ATTRS.length;k++){ var av=el.getAttribute(ATTRS[k]); if(av&&TOK.test(av)) o.a.push([ATTRS[k],av]); TOK.lastIndex=0; }
-    if(!o.s.length&&!o.a.length){ el.__bxo=o; return; } el.__bxo=o; }
+    if(prev){ // giá trị hiện tại = đúng màu mình đã đổi trước đó → giữ màu gốc cũ
+      o.s.forEach(function(x){ prev.s.forEach(function(y){ if(y[0]===x[0]&&y[3]===x[1]) x[1]=y[1]; }); });
+      o.a.forEach(function(x){ prev.a.forEach(function(y){ if(y[0]===x[0]&&y[2]===x[1]) x[1]=y[1]; }); }); }
+    el.__bxo=o; }
   var b=el.__bxo; if(!b.s.length&&!b.a.length) return;
-  b.s.forEach(function(x){ el.style.setProperty(x[0],mapStr(x[1],roleOf(x[0])),x[2]); });
-  b.a.forEach(function(x){ el.setAttribute(x[0],mapStr(x[1],x[0]==='color'?'fg':roleOf(x[0]))); });
+  b.s.forEach(function(x){ el.style.setProperty(x[0],mapStr(x[1],roleOf(x[0])),x[2]); x[3]=el.style.getPropertyValue(x[0]); });
+  b.a.forEach(function(x){ el.setAttribute(x[0],mapStr(x[1],x[0]==='color'?'fg':roleOf(x[0]))); x[2]=el.getAttribute(x[0]); });
   el.__bxLast=sig(el);
 }
 function sig(el){ return (el.getAttribute('style')||'')+'|'+(el.getAttribute('fill')||'')+'|'+(el.getAttribute('stroke')||''); }
@@ -115,7 +118,7 @@ function doTree(root){ if(!root||root.nodeType!==1) return; doEl(root); var all=
 
 /* ---------------- 4. ECharts ---------------- */
 var FGK=/label|textStyle|axisLabel|title|legend|nameTextStyle|subtextStyle|axisName|detail/;
-function mapOpt(o,path,seen){
+function mapOpt(o,path,seen){ // seen = {k:[gốc], v:[đã đổi]}
   if(o==null) return o; var t=typeof o;
   if(t==='string'){ var key=path[path.length-1]||'';
     if(!TOK.test(o)){ TOK.lastIndex=0; return o; } TOK.lastIndex=0;
@@ -126,18 +129,21 @@ function mapOpt(o,path,seen){
     return mapStr(o,role); }
   if(t==='function'){ if(path[path.length-1]==='formatter'){ return function(){ var r=o.apply(this,arguments); return typeof r==='string'?mapHtml(r):r; }; } return o; }
   if(t!=='object') return o;
-  if(seen.indexOf(o)>=0) return o; seen.push(o);
-  if(Array.isArray(o)) return o.map(function(v,i){ return mapOpt(v,path.concat(path[path.length-1]||''),seen); });
-  if(o.colorStops||o.image||o.nodeType||o instanceof Date) { if(o.colorStops){ var g={}; for(var kk in o) g[kk]=o[kk]; g.colorStops=o.colorStops.map(function(cs){ return {offset:cs.offset,color:mapStr(cs.color,'bg')}; }); return g; } return o; }
-  var r={}; for(var k in o){ if(Object.prototype.hasOwnProperty.call(o,k)) r[k]=mapOpt(o[k],path.concat(k),seen); } return r;
+  var si=seen.k.indexOf(o); if(si>=0) return seen.v[si];
+  if(o.image||o.nodeType||o instanceof Date) return o;
+  if(o.colorStops){ var g={}; for(var kk in o) g[kk]=o[kk]; g.colorStops=o.colorStops.map(function(cs){ var c2={}; for(var q in cs) c2[q]=cs[q]; c2.color=mapStr(cs.color,'bg'); return c2; }); seen.k.push(o); seen.v.push(g); return g; }
+  var r=Array.isArray(o)?[]:{}; seen.k.push(o); seen.v.push(r);
+  if(Array.isArray(o)){ for(var i=0;i<o.length;i++) r[i]=mapOpt(o[i],path.concat(path[path.length-1]||''),seen); return r; }
+  for(var k in o){ if(Object.prototype.hasOwnProperty.call(o,k)) r[k]=mapOpt(o[k],path.concat(k),seen); } return r;
 }
 function mapHtml(s){ return String(s).replace(/style\s*=\s*(["'])(.*?)\1/gi,function(m,q,body){ return 'style='+q+body.replace(/([a-z-]+)\s*:\s*([^;]+)/gi,function(mm,p,v){ return p+':'+mapStr(v,roleOf(p)); })+q; }); }
 function patchECharts(){
   var ec=window.echarts; if(!ec||ec.__bxv5) return; ec.__bxv5=true;
   var init=ec.init;
-  ec.init=function(){ var inst=init.apply(this,arguments);
+  ec.init=function(dom){ var inst=init.apply(this,arguments);
+    if(dom&&dom.closest&&dom.closest(OFF)) return inst; // chart dựng ảnh cho PDF → giữ màu in
     if(!inst.__bxv5){ inst.__bxv5=true; var so=inst.setOption;
-      inst.setOption=function(opt){ var a=[].slice.call(arguments); try{ a[0]=mapOpt(opt,[],[]); }catch(e){} return so.apply(this,a); }; }
+      inst.setOption=function(opt){ var a=[].slice.call(arguments); try{ a[0]=mapOpt(opt,[],{k:[],v:[]}); }catch(e){} return so.apply(this,a); }; }
     return inst; };
 }
 
@@ -148,10 +154,9 @@ var mo=new MutationObserver(function(list){
       if(n.nodeType!==1) continue;
       if(n.tagName==='STYLE'||(n.tagName==='LINK'&&/stylesheet/i.test(n.rel))){ setTimeout(doSheets,0); if(n.tagName==='LINK') n.addEventListener('load',doSheets); continue; }
       doTree(n); } }
-    else if(m.type==='attributes'){ var el=m.target; if(el.__bxLast!==undefined&&el.__bxLast===sig(el)) continue; el.__bxo=null; el.__bxLast=undefined; doEl(el); }
+    else if(m.type==='attributes'){ var el=m.target; if(el.__bxLast!==undefined&&el.__bxLast===sig(el)) continue; var pv=el.__bxo; el.__bxo=null; el.__bxLast=undefined; doEl(el,pv); }
   }catch(e){ if(window.console) console.warn('[bx-v5]',e); } }
 });
-window.__bxDbg={doTree:doTree,doEl:doEl,mo:mo,mapColor:mapColor};
 function start(){
   patchECharts(); doSheets(); doTree(document.body);
   mo.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','fill','stroke']});
@@ -163,8 +168,16 @@ function setTheme(t,save){
   if(save){ try{ localStorage.setItem(KEY,t); }catch(e){} }
   if(t===THEME) return; THEME=t; document.documentElement.setAttribute('data-theme',t);
   doSheets(); doTree(document.body); markToggle();
-  try{ if(window.currentTab && typeof window.go==='function' && window.HR && HR.loaded) window.go(window.currentTab); }catch(e){}
+  try{ if(window.currentTab && typeof window.go==='function' && window.HR && HR.loaded && !dirty()) window.go(window.currentTab); }catch(e){}
 }
+/* ô nhập trong trang đã có dữ liệu người dùng gõ / chọn file → không vẽ lại (tránh mất dữ liệu đang nhập) */
+function dirty(){ var c=document.getElementById('content'); if(!c) return false;
+  return [].some.call(c.querySelectorAll('input,textarea,select'),function(f){
+    if(f.type==='file') return !!(f.files&&f.files.length);
+    if(f.type==='checkbox'||f.type==='radio') return f.checked!==f.defaultChecked;
+    if(f.tagName==='SELECT') return [].some.call(f.options,function(o){ return o.selected!==o.defaultSelected; });
+    if(f.type==='hidden'||f.type==='button'||f.type==='submit') return false;
+    return f.value!==f.defaultValue; }); }
 window.bxSetTheme=function(t){ setTheme(t,true); };
 if(mq){ var onMq=function(){ if(!pref()) setTheme(mq.matches?'dark':'light',false); };
   if(mq.addEventListener) mq.addEventListener('change',onMq); else if(mq.addListener) mq.addListener(onMq); }
