@@ -167,6 +167,13 @@ function css(){ if(document.getElementById('ctv-css')) return; var s=document.cr
 '.inv-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}.inv-b{border:1px solid var(--line);background:none;color:var(--text);border-radius:7px;padding:9px 16px;font:inherit;cursor:pointer}.inv-b.pri{background:#7B4FD6;border-color:#7B4FD6;color:#fff;font-weight:500}.inv-b[disabled]{opacity:.45;cursor:not-allowed}'+
 '.inv-msg{margin-top:10px;font-size:12.5px;color:var(--text)}'+
 '.inv-note{margin-top:12px;border:1px solid rgba(224,168,74,.45);background:rgba(224,168,74,.08);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.7;color:var(--text)}.inv-note>b{color:#E0A84A}.inv-note.ok{border-color:var(--line);background:none;color:var(--faint)}'+
+'.ctv-hero{display:grid;grid-template-columns:1fr 150px;gap:20px;align-items:center;margin-bottom:14px}.ctv-ring{width:140px;height:140px}'+
+'.ctv-ml{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.ctv-big{font-size:46px;font-weight:700;color:var(--ink);line-height:1;margin-top:8px;letter-spacing:-.02em}.ctv-big small{font-size:20px;font-weight:500;color:var(--muted);letter-spacing:0}'+
+'.ctv-bds{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 26px}.ctv-bd{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap}.ctv-bd.ok{background:rgba(35,160,140,.14);color:var(--teal-2)}.ctv-bd.wa{background:rgba(224,168,74,.16);color:#C08A2E}.ctv-bd.er{background:rgba(227,107,107,.14);color:var(--rust)}.ctv-bd.in{background:rgba(155,123,234,.14);color:#9B7BEA}'+
+'.ctv-pbar{position:relative;height:18px;border-radius:6px;background:var(--paper-2);border:1px solid var(--line)}.ctv-pbar>i{display:block;height:100%;border-radius:6px;background:var(--teal-2);transition:width .8s cubic-bezier(.2,.8,.2,1)}.ctv-pbar>b{position:absolute;top:-7px;bottom:-7px;border-left:2px dashed var(--ink)}.ctv-pbar>b span{position:absolute;top:-17px;left:-50px;width:100px;text-align:center;font-size:10px;font-weight:500;color:var(--ink);white-space:nowrap}'+
+'.ctv-lg{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--muted)}.ctv-lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}'+
+'.ctv-mb{position:relative;height:8px;border-radius:4px;background:var(--paper-2);min-width:90px}.ctv-mb i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}.ctv-mb b{position:absolute;right:0;top:-3px;bottom:-3px;border-left:2px solid var(--ink)}'+
+'@media(max-width:820px){.ctv-hero{grid-template-columns:1fr}.ctv-ring{margin:0 auto}}'+
 '@media(max-width:900px){.inv-grid,.inv-r3{grid-template-columns:1fr}}'+
 '@media(max-width:1100px){.ctv-g4{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:820px){.ctv-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ctv-g2,.ctv-g4{grid-template-columns:1fr}}';
 document.head.appendChild(s); }
@@ -546,23 +553,120 @@ function tdRange(){
   var days=[]; for(var d=new Date(a); d<=b; d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)) days.push(d);
   return { a:a, b:b, days:days };
 }
+/* [04/11/2026] Tăng tốc + luôn khớp lịch hr@bigx.vn:
+   - Đọc 1 lần cho 6 tuần gần nhất (tuần này + 5 tuần trước) → chuyển tuần / lịch sử KPI ra ngay, không gọi API lại.
+   - Lưu tạm trên máy (localStorage) → mở tab hiện ngay bản lần trước, rồi tải bản mới ở nền.
+   - Mỗi lần đọc THAY TOÀN BỘ dữ liệu cũ → lịch bị sửa / xoá trên hr@ cập nhật đúng.
+   - Tự đọc lại mỗi 60 giây khi đang mở tab Tiến độ phỏng vấn + khi quay lại cửa sổ; nút ⟳ Làm mới.
+   - Khoảng ngoài 6 tuần (14 ngày / Tháng / tuần cũ hơn): đọc theo khoảng như trước, có nhớ tạm trong phiên. */
+var LSC='bigx_ctv_cal_v1', CAL_WEEKS=6, KPI_WEEK=50;
+S.cal=S.cal||{ ev:null, from:'', to:'', at:0, loading:false, error:null, errAt:0 };
+try{ var c1=JSON.parse(localStorage.getItem(LSC)||'null'); if(c1&&c1.ev&&!S.cal.ev){ S.cal.ev=c1.ev; S.cal.from=c1.from; S.cal.to=c1.to; S.cal.at=c1.at||0; } }catch(e){}
+function calWin(){ var t=d0(new Date()), m=new Date(t.getFullYear(),t.getMonth(),t.getDate()-((t.getDay()+6)%7));
+  return { a:ymd(new Date(m.getFullYear(),m.getMonth(),m.getDate()-7*(CAL_WEEKS-1))), b:ymd(new Date(m.getFullYear(),m.getMonth(),m.getDate()+6)) }; }
+function calStale(){ return !S.cal.ev || Date.now()-(S.cal.at||0)>55000 || S.cal.from!==calWin().a || S.cal.to!==calWin().b; }
+function hhmm(t){ var d=new Date(t); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function tdStampTxt(){ var T=S.td, at=T.src==='cal'?S.cal.at:(T.at||0), busy=T.src==='cal'?S.cal.loading:T.loading;
+  return '<span style="color:var(--faint)">'+(at?'Cập nhật '+hhmm(at):'Chưa đọc')+(busy?' · đang làm mới…':' · tự làm mới mỗi 1 phút')+
+    (S.cal.error&&T.src==='cal'&&S.cal.ev?' · <span style="color:var(--rust)">lần đọc gần nhất lỗi, đang hiện bản lưu</span>':'')+'</span> · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.reload()">⟳ Làm mới</a>'; }
+function tdStamp(){ var el=document.getElementById('ctv-tdup'); if(el) el.innerHTML=tdStampTxt(); }
+function calLoad(n){
+  if(S.cal.loading) return; var W=calWin(); S.cal.loading=true; tdStamp(); if(n==null) n=1;
+  var url=API_URL+'?action=ctvStats&from='+W.a+'&to='+W.b;
+  (window.bxAuthedFetch?window.bxAuthedFetch(url,{cache:'no-store'}):fetch(url,{cache:'no-store'}))
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(d){ if(!d||!d.ok) throw new Error((d&&(d.error||d.reason))||'lỗi');
+      var ev=d.events||[], same=!!S.cal.ev && S.cal.from===W.a && S.cal.to===W.b && JSON.stringify(S.cal.ev)===JSON.stringify(ev);
+      S.cal.ev=ev; S.cal.from=W.a; S.cal.to=W.b; S.cal.at=Date.now(); S.cal.error=null; S.cal.loading=false;
+      try{ localStorage.setItem(LSC,JSON.stringify({ev:ev,from:W.a,to:W.b,at:S.cal.at})); }catch(e){}
+      if(window.currentTab===TAB && S.sub==='td'){ if(!same || !S.td.data) rerender(); else tdStamp(); } })
+    .catch(function(e){
+      if(n>0){ S.cal.loading=false; setTimeout(function(){ calLoad(n-1); },1500); return; }
+      S.cal.loading=false; S.cal.error=e.message||'lỗi'; S.cal.errAt=Date.now();
+      if(window.currentTab===TAB && S.sub==='td') rerender(); });
+}
+/* khoảng đang xem nằm trong 6 tuần → lấy từ bộ nhớ lịch, trả true */
+function tdSync(){
+  var T=S.td, R=tdRange(), W=calWin(), a=ymd(R.a), b=ymd(R.b); if(a<W.a || b>W.b) return false;
+  T.key=a+'_'+b; T.src='cal';
+  if(S.cal.ev && S.cal.from<=a && S.cal.to>=b){ T.data={ ok:true, events:S.cal.ev.filter(function(e){ return e.d>=a && e.d<=b; }) }; T.loading=false; T.error=null; }
+  else { T.data=null; T.loading=S.cal.loading || !S.cal.error; T.error=S.cal.loading?null:S.cal.error; }
+  return true;
+}
 function tdLoad(force){
-  var T=S.td, R=tdRange(), key=ymd(R.a)+'_'+ymd(R.b);
-  if(!force && T.key===key && (T.data||T.loading)) return;
-  T.key=key; T.loading=true; T.error=null; T.data=null;
+  var T=S.td;
+  if(tdSync()){ if(force || (calStale() && (!S.cal.error || Date.now()-(S.cal.errAt||0)>30000))) calLoad(); return; }
+  var R=tdRange(), key=ymd(R.a)+'_'+ymd(R.b); T.mem=T.mem||{};
+  if(!force && T.src==='rng' && T.key===key && (T.data||T.loading)) return;
+  T.key=key; T.src='rng'; T.error=null; T.data=T.mem[key]||null; T.at=T.data?T.data.__at:0; T.loading=true;
   var url=API_URL+'?action=ctvStats&from='+ymd(R.a)+'&to='+ymd(R.b);
   (window.bxAuthedFetch?window.bxAuthedFetch(url,{cache:'no-store'}):fetch(url,{cache:'no-store'})).then(function(r){ return r.json(); })
-    .then(function(d){ if(T.key!==key) return; if(d.ok) T.data=d; else T.error=d.error||d.reason||'lỗi'; })
-    .catch(function(e){ if(T.key===key) T.error=e.message; })
+    .then(function(d){ if(T.key!==key) return; if(d.ok){ d.__at=Date.now(); T.data=d; T.mem[key]=d; T.at=d.__at; } else if(!T.data) T.error=d.error||d.reason||'lỗi'; })
+    .catch(function(e){ if(T.key===key && !T.data) T.error=e.message; })
     .then(function(){ if(T.key===key){ T.loading=false; if(S.sub==='td') rerender(); } });
 }
+var DAY_TGT=Math.round(KPI_WEEK/7);
+function dlk(k){ var p=k.split('-'); return p[2]+'/'+p[1]; }
+function dayCol(v,k,today){ return k>today?'var(--faint)':v>=DAY_TGT?'var(--teal-2)':k<today?'var(--rust)':'#E0A84A'; }
+function kpiHero(K,keys){
+  var cur=!K.past&&!K.future, ok=!K.thieu, b1, b2='';
+  if(K.past) b1=ok?['ok','Đạt KPI tuần']:['er','Thiếu '+K.thieu+' lịch · '+K.pct+'%'];
+  else if(K.future) b1=['in','Tuần chưa bắt đầu'];
+  else if(ok) b1=['ok','Đã đủ KPI tuần'];
+  else { b1=K.diff>0?['ok','Vượt nhịp +'+K.diff+' · mốc hôm nay '+K.moc]:K.diff===0?['ok','Đúng nhịp · mốc hôm nay '+K.moc]:['wa','Chậm nhịp '+K.diff+' · mốc hôm nay '+K.moc];
+    b2='<span class="ctv-bd wa">Còn thiếu '+K.thieu+' · hạn CN '+dlk(keys[6])+'</span>'; }
+  var C=2*Math.PI*50, ring='<svg class="ctv-ring" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" style="fill:none;stroke:var(--paper-2);stroke-width:12"/>'+
+    '<circle cx="60" cy="60" r="50" transform="rotate(-90 60 60)" style="fill:none;stroke:var(--teal-2);stroke-width:12;stroke-linecap:round;stroke-dasharray:'+(C*K.pct/100).toFixed(1)+' '+C.toFixed(1)+'"/>'+
+    '<text x="60" y="60" text-anchor="middle" style="fill:var(--ink);font-size:24px;font-weight:700">'+K.pct+'%</text><text x="60" y="78" text-anchor="middle" style="fill:var(--faint);font-size:8.5px;letter-spacing:.1em">KPI TUẦN</text></svg>';
+  return '<div class="ctv-card ctv-hero"><div><div class="ctv-ml">KPI tuần · '+KPI_WEEK+' meeting · '+dlk(keys[0])+' – '+dlk(keys[6])+' · tạo lịch = 1 meeting</div>'+
+    '<div class="ctv-big">'+K.n+' <small>/ '+KPI_WEEK+' meeting</small></div>'+
+    '<div class="ctv-bds"><span class="ctv-bd '+b1[0]+'">'+b1[1]+'</span>'+b2+'</div>'+
+    '<div class="ctv-pbar"><i style="width:'+K.pct+'%"></i>'+(cur?'<b style="left:'+(K.done/7*100).toFixed(1)+'%"><span>mốc '+dlk(keys[K.done-1])+' · '+K.moc+'</span></b>':'')+'</div>'+
+    '<div class="ctv-lg"><span><i style="background:var(--teal-2)"></i>Đã tạo lịch '+K.n+'</span><span><i style="background:var(--paper-2);border:1px solid var(--line)"></i>Còn thiếu '+K.thieu+'</span>'+(cur?'<span>┆ Mốc phải đạt tới hôm nay ('+KPI_WEEK+' ÷ 7 ngày)</span>':'')+'</div></div>'+ring+'</div>';
+}
+function paceChart(K,N,keys,today){
+  var cum=[], c=0, lastI=-1; keys.forEach(function(k,i){ c+=N[k]; cum.push(c); if(N[k]||k<=today) lastI=i; });
+  if(K.past) lastI=6;
+  var ymax=Math.max(KPI_WEEK,c), Y=function(v){ return (195-v/ymax*175).toFixed(1); }, X=function(i){ return 76+i*71.5; };
+  var g='', DW=['T2','T3','T4','T5','T6','T7','CN'];
+  [0,.25,.5,.75,1].forEach(function(f){ var v=Math.round(ymax*f); g+='<line x1="40" x2="545" y1="'+Y(v)+'" y2="'+Y(v)+'" style="stroke:var(--line)"/><text x="34" y="'+(+Y(v)+3)+'" text-anchor="end" style="fill:var(--faint);font-size:10px">'+v+'</text>'; });
+  g+='<line x1="40" x2="545" y1="'+Y(KPI_WEEK)+'" y2="'+Y(KPI_WEEK)+'" style="stroke:var(--rust);stroke-dasharray:2 3"/><text x="545" y="'+(+Y(KPI_WEEK)-5)+'" text-anchor="end" style="fill:var(--rust);font-size:10px">KPI '+KPI_WEEK+'</text>';
+  keys.forEach(function(k,i){ if(N[k]) g+='<rect x="'+(X(i)-14)+'" y="'+Y(N[k])+'" width="28" height="'+(195-Y(N[k])).toFixed(1)+'" rx="3" style="fill:var(--teal-2);opacity:.35"/>'; });
+  g+='<polyline points="'+keys.map(function(k,i){ return X(i)+','+Y(KPI_WEEK*(i+1)/7); }).join(' ')+'" style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4"/>';
+  if(lastI>=0){ var pts=cum.slice(0,lastI+1).map(function(v,i){ return X(i)+','+Y(v); });
+    g+='<polyline points="'+pts.join(' ')+'" style="fill:none;stroke:var(--teal-2);stroke-width:3"/>'+pts.map(function(p){ var q=p.split(','); return '<circle cx="'+q[0]+'" cy="'+q[1]+'" r="4" style="fill:var(--teal-2)"/>'; }).join(''); }
+  if(K.thieu && !K.past && lastI>=0) g+='<line x1="'+X(6)+'" x2="'+X(6)+'" y1="'+Y(cum[lastI])+'" y2="'+Y(KPI_WEEK)+'" style="stroke:#E0A84A;stroke-width:2"/><text x="'+(X(6)-8)+'" y="'+((+Y(cum[lastI])+ +Y(KPI_WEEK))/2+4)+'" text-anchor="end" style="fill:#E0A84A;font-size:11px;font-weight:600">thiếu '+K.thieu+' tới hạn CN</text>';
+  keys.forEach(function(k,i){ g+='<text x="'+X(i)+'" y="214" text-anchor="middle" style="fill:'+(k===today?'#9B7BEA':'var(--faint)')+';font-size:10px">'+DW[i]+(k===today?' · nay':'')+'</text>'; });
+  return '<div class="ctv-card"><div class="ctv-h">Nhịp tích luỹ trong tuần</div><div class="ctv-s">Đường đậm = lịch đã tạo cộng dồn · đường đứt = nhịp chuẩn '+KPI_WEEK+' ÷ 7 ngày · cột = số lịch trong ngày</div>'+
+    '<svg viewBox="0 0 560 222" width="100%" role="img" aria-label="Nhịp tích luỹ">'+g+'</svg></div>';
+}
+function weekHist(){
+  var W=calWin(), m0=new Date(W.a+'T00:00'), cur=new Date(W.b+'T00:00'); cur=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()-6);
+  if(!S.cal.ev || S.cal.from>W.a) return '<div class="ctv-card"><div class="ctv-h">Lịch sử KPI theo tuần</div><div class="ctv-empty">'+(S.cal.loading?'Đang đọc lịch 6 tuần…':'Chưa có dữ liệu.')+'</div></div>';
+  var rows='';
+  for(var i=0;i<CAL_WEEKS;i++){ var a=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()-7*i), b=new Date(a.getFullYear(),a.getMonth(),a.getDate()+6), ka=ymd(a), kb=ymd(b);
+    var n=S.cal.ev.filter(function(e){ return e.d>=ka && e.d<=kb; }).length, pct=Math.round(n/KPI_WEEK*100), now=i===0, ok=n>=KPI_WEEK;
+    var col=ok?'var(--teal-2)':now?'var(--teal-2)':pct>=80?'#E0A84A':'var(--rust)';
+    var st=now?'<span class="ctv-bd '+(ok?'ok':'wa')+'">'+(ok?'Đạt':'Đang chạy')+' · '+pct+'%</span>':ok?'<span class="ctv-bd ok">Đạt · '+pct+'%</span>':'<span class="ctv-bd '+(pct>=80?'wa':'er')+'">Thiếu '+(KPI_WEEK-n)+' · '+pct+'%</span>';
+    rows+='<tr style="cursor:pointer'+(S.td.view==='tuan'&&S.td.off===-i?';background:rgba(155,123,234,.08)':'')+'" onclick="__ctvTd.week('+(-i)+')"><td class="nw">'+dd(a)+' – '+dd(b)+'</td><td style="text-align:center;font-weight:600">'+n+'</td><td><div class="ctv-mb"><i style="width:'+Math.min(100,pct)+'%;background:'+col+'"></i><b></b></div></td><td class="nw">'+st+'</td></tr>'; }
+  return '<div class="ctv-card"><div class="ctv-h">Lịch sử KPI theo tuần</div><div class="ctv-s">So với KPI '+KPI_WEEK+' meeting/tuần · vạch = '+KPI_WEEK+' · bấm 1 tuần để xem tuần đó</div>'+
+    '<div class="table-wrap"><table class="dt"><thead><tr><th>Tuần</th><th style="text-align:center">Meeting</th><th>Tiến độ</th><th>Kết quả</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+}
+/* KPI tuần: 50 lịch / 7 ngày (T2–CN). Tạo lịch = 1 meeting. */
+function kpiWeek(R,N,keys,today){
+  var n=keys.reduce(function(s,k){ return s+N[k]; },0), a=keys[0], b=keys[keys.length-1];
+  var done=today<a?0:today>b?7:keys.indexOf(today)+1, moc=Math.round(KPI_WEEK*done/7), diff=n-moc, thieu=Math.max(0,KPI_WEEK-n), left=7-done;
+  var per=left>0&&thieu>0?Math.ceil(thieu/left):0, pct=Math.min(100,Math.round(n/KPI_WEEK*100));
+  return { n:n, done:done, moc:moc, diff:diff, thieu:thieu, left:left, per:per, pct:pct, past:today>b, future:today<a };
+}
 function tdPage(rows){
+  tdSync();
   var T=S.td, R=tdRange(), today=ymd(d0(new Date()));
   var nav='<div class="ctv-seg">'+[['tuan','Tuần'],['14','14 ngày'],['thang','Tháng']].map(function(o){ return '<button class="'+(T.view===o[0]?'on':'')+'" onclick="__ctvTd.view(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>';
-  var rng='<a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(-1)">‹ trước</a> · <b>'+dd(R.a)+' – '+dd(R.b)+'/'+R.b.getFullYear()+'</b> · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(1)">sau ›</a>'+(T.off?' · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(0)">về hiện tại</a>':'');
+  var rng='<a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(-1)">‹ trước</a> · <b>'+dd(R.a)+' – '+dd(R.b)+'/'+R.b.getFullYear()+'</b> · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(1)">sau ›</a>'+(T.off?' · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(0)">về hiện tại</a>':'')+' · <span id="ctv-tdup">'+tdStampTxt()+'</span>';
   var h='';
-  if(T.loading || (!T.data && !T.error)) return h+'<div class="ctv-card">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">'+rng+'</div><div class="ctv-empty">Đang đọc lịch HR BIGX…</div></div>';
-  if(T.error) return h+'<div class="ctv-card">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">'+rng+'</div><div class="ctv-empty" style="color:var(--rust)">Không đọc được lịch: '+E(T.error)+' · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.reload()">thử lại</a></div></div>';
+  if(!T.data && !T.error) return h+'<div class="ctv-card">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">'+rng+'</div><div class="ctv-empty">Đang đọc lịch HR BIGX…</div></div>';
+  if(T.error && !T.data) return h+'<div class="ctv-card">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">'+rng+'</div><div class="ctv-empty" style="color:var(--rust)">Không đọc được lịch: '+E(T.error)+' · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.reload()">thử lại</a></div></div>';
   var ev=T.data.events||[], hosts=TD_HOSTS.concat([TD_SHARED]);
   var M={}, N={}; R.days.forEach(function(d){ var k=ymd(d); N[k]=0; M[k]={}; hosts.forEach(function(x){ M[k][x]=0; }); });
   ev.forEach(function(e){ if(N[e.d]==null) return; N[e.d]++; (e.hosts||[]).forEach(function(x){ if(M[e.d][x]!=null) M[e.d][x]++; }); });
@@ -570,14 +674,20 @@ function tdPage(rows){
   hosts.forEach(function(x){ tot[x]=keys.reduce(function(s,k){ return s+M[k][x]; },0); });
   TD_HOSTS.forEach(function(x){ sumH+=tot[x]; keys.forEach(function(k){ if(M[k][x]>TD_MAX) over.push([x,k,M[k][x]]); }); }); sumS=tot[TD_SHARED];
   var nBuoi=keys.reduce(function(s,k){ return s+N[k]; },0);
+  var ecomSame=keys.every(function(k){ return M[k][TD_SHARED]===N[k]; });
   var best=keys.reduce(function(b,k){ return N[k]>(b?N[b]:-1)?k:b; },null);
   var busy=TD_HOSTS.reduce(function(b,x){ return tot[x]>(b?tot[b]:-1)?x:b; },null);
   var busyDays=busy?keys.filter(function(k){ return M[k][busy]>0; }).length:0;
   function sh(x){ return x.split('@')[0]; }
   function dl(k){ var p=k.split('-'); return p[2]+'/'+p[1]; }
   var DOW=['CN','T2','T3','T4','T5','T6','T7'];
+  var KW=T.view==='tuan'?kpiWeek(R,N,keys,today):null;
+  if(KW) h+=kpiHero(KW,keys);
   h+='<div class="ctv-kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">'+
-    kpi('Tổng buổi phỏng vấn',nBuoi,'mỗi buổi = 1 ứng viên · '+dd(R.a)+' – '+dd(R.b))+
+    (KW?kpi(KW.past?'Kết quả tuần':'Cần tạo thêm / ngày',KW.past?(KW.thieu?'Thiếu '+KW.thieu:'Đạt'):KW.future?'≈ '+Math.ceil(KPI_WEEK/7):KW.thieu?(KW.per?'≈ '+KW.per:'—'):'Đạt',
+        KW.past?KW.n+' / '+KPI_WEEK+' lịch':KW.future?'tuần chưa bắt đầu · '+KPI_WEEK+' lịch / 7 ngày':KW.thieu?(KW.left?KW.thieu+' lịch · '+KW.left+' ngày còn lại':'hết tuần hôm nay · còn thiếu '+KW.thieu):'đã đủ '+KPI_WEEK+' lịch tuần này',
+        KW.past&&KW.thieu?'var(--rust)':'')
+      :kpi('Tổng buổi phỏng vấn',nBuoi,'mỗi buổi = 1 ứng viên · '+dd(R.a)+' – '+dd(R.b)))+
     kpi('Ngày nhiều nhất',best&&N[best]?dl(best):'—',best&&N[best]?N[best]+' buổi':'chưa có lịch')+
     kpi('Host bận nhất',busy&&tot[busy]?sh(busy):'—',busy&&tot[busy]?tot[busy]+' buổi · TB '+vn(tot[busy]/Math.max(1,busyDays),1)+'/ngày làm':'')+
     kpi('Lượt vượt '+TD_MAX+' buổi/ngày',over.length,'host–ngày > '+TD_MAX+' (không tính ecom-drive)',over.length?'var(--rust)':'')+'</div>';
@@ -587,21 +697,30 @@ function tdPage(rows){
   h+='<div class="ctv-card" style="margin-bottom:14px">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">Mỗi ô = số buổi host có mặt (lịch có "CTV Booking KOC" trên lịch HR BIGX) · mốc '+TD_MAX+' buổi/ngày · '+rng+' · bấm vào ngày để xem chi tiết</div>'+
     '<div class="table-wrap"><table class="dt"><thead><tr><th>Host</th>'+keys.map(function(k,i){ var d=R.days[i]; return '<th style="text-align:center;cursor:pointer'+(k===today?';color:#9B7BEA':'')+(T.day===k?';text-decoration:underline':'')+'" onclick="__ctvTd.day(\''+k+'\')">'+DOW[d.getDay()]+' '+dl(k)+'</th>'; }).join('')+'<th style="text-align:center">Tổng</th></tr></thead><tbody>'+
     TD_HOSTS.map(function(x){ return '<tr><td class="nw">'+sh(x)+'</td>'+keys.map(function(k){ return cell(M[k][x],k); }).join('')+'<td class="nw" style="text-align:center;font-weight:600">'+tot[x]+'<span style="display:inline-block;height:6px;border-radius:3px;background:#23A08C;vertical-align:middle;margin-left:6px;width:'+Math.round(tot[x]/mx*60)+'px"></span></td></tr>'; }).join('')+
-    '<tr><td class="nw" style="color:var(--faint)">ecom-drive <span style="font-size:10px">(mail chung)</span></td>'+keys.map(function(k){ return cell(M[k][TD_SHARED],k,1); }).join('')+'<td style="text-align:center;color:var(--faint)">'+tot[TD_SHARED]+'</td></tr>'+
-    '<tr style="font-weight:600;border-top:1px solid var(--muted)"><td class="nw">Tổng buổi (số ứng viên)</td>'+keys.map(function(k){ return '<td style="text-align:center;color:var(--ink)'+(k===today?';box-shadow:inset 0 0 0 999px rgba(155,123,234,.08)':'')+'">'+N[k]+'</td>'; }).join('')+'<td style="text-align:center">'+nBuoi+'</td></tr>'+
+    (ecomSame?'':'<tr><td class="nw" style="color:var(--faint)">ecom-drive <span style="font-size:10px">(mail chung)</span></td>'+keys.map(function(k){ return cell(M[k][TD_SHARED],k,1); }).join('')+'<td style="text-align:center;color:var(--faint)">'+tot[TD_SHARED]+'</td></tr>')+
+    '<tr style="font-weight:600;border-top:1px solid var(--muted)"><td class="nw">Tổng buổi (số ứng viên)</td>'+keys.map(function(k){ return '<td style="text-align:center;color:'+(KW?dayCol(N[k],k,today):'var(--ink)')+(k===today?';box-shadow:inset 0 0 0 999px rgba(155,123,234,.08)':'')+'">'+N[k]+'</td>'; }).join('')+'<td style="text-align:center">'+nBuoi+'</td></tr>'+
+    (KW?'<tr><td class="nw" style="color:var(--faint);font-size:12px">Mục tiêu mỗi ngày</td>'+keys.map(function(k){ return '<td style="text-align:center;color:var(--faint);font-size:12px'+(k===today?';box-shadow:inset 0 0 0 999px rgba(155,123,234,.08)':'')+'">'+DAY_TGT+'</td>'; }).join('')+'<td style="text-align:center;color:var(--faint);font-size:12px">'+KPI_WEEK+'</td></tr>':'')+
     '</tbody></table></div>'+
-    '<div class="ctv-s" style="margin:8px 0 0"><b style="color:var(--ink)">4</b> bình thường · <b style="color:#E0A84A">6</b> vừa đủ · <b style="color:var(--rust)">7</b> vượt '+TD_MAX+' buổi · <span style="color:#9B7BEA">cột tím = hôm nay</span></div>';
+    '<div class="ctv-s" style="margin:8px 0 0"><b style="color:var(--ink)">4</b> bình thường · <b style="color:#E0A84A">6</b> vừa đủ · <b style="color:var(--rust)">7</b> vượt '+TD_MAX+' buổi · <span style="color:#9B7BEA">cột tím = hôm nay</span>'+(KW?' · dòng Tổng: <b style="color:var(--teal-2)">xanh</b> = đạt mục tiêu '+DAY_TGT+'/ngày · <b style="color:var(--rust)">đỏ</b> = ngày đã qua mà thiếu · xám = ngày chưa tới':'')+(ecomSame?' · ecom-drive (mail chung) ẩn vì trùng dòng Tổng':'')+'</div>';
   // đánh giá
   var it=[];
+  if(KW){ var ld=keys[keys.length-1];
+    if(KW.past) it.push([KW.thieu?'er':'ok',KW.thieu?'Tuần này thiếu '+KW.thieu+' lịch so với KPI '+KPI_WEEK+' ('+KW.pct+'%).':'Đạt KPI tuần: '+KW.n+' / '+KPI_WEEK+' lịch.']);
+    else if(KW.future) it.push(['in','Tuần chưa bắt đầu · đã có '+KW.n+' lịch, cần '+KPI_WEEK+' lịch (≈'+Math.ceil(KPI_WEEK/7)+'/ngày).']);
+    else if(!KW.thieu) it.push(['ok','Đã đủ KPI tuần: '+KW.n+' / '+KPI_WEEK+' lịch.']);
+    else it.push([KW.diff>=0?'ok':'wa',(KW.diff>0?'Vượt nhịp':KW.diff===0?'Đúng nhịp':'Chậm nhịp')+': '+KW.n+' lịch, mốc hết '+dl(today)+' là '+KW.moc+(KW.diff?' ('+(KW.diff>0?'+':'')+KW.diff+')':'')+'. Còn thiếu '+KW.thieu+(KW.left?', cần ≈'+KW.per+' lịch/ngày đến '+dl(ld)+'.':' trong hôm nay.')]);
+    if(!KW.past){ var emp=keys.filter(function(k){ return k>today && !N[k]; }); if(emp.length && KW.thieu) it.push(['wa','Chưa có lịch: '+emp.map(function(k){ return DOW[new Date(k+'T00:00').getDay()]+' '+dl(k); }).join(', ')+'.']); }
+  }
   if(over.length) it.push(['er','Vượt '+TD_MAX+' buổi/ngày: '+over.map(function(o){ return sh(o[0])+' '+dl(o[1])+' ('+o[2]+')'; }).join(', ')+'.']);
   if(sumH && busy){ var act=TD_HOSTS.filter(function(x){return tot[x]>0;}), idle=TD_HOSTS.filter(function(x){return !tot[x];}), share=Math.round(tot[busy]/sumH*100);
     if(act.length>1 && share>=35) it.push(['wa','Lệch tải: '+sh(busy)+' gánh '+tot[busy]+' buổi ('+share+'% lượt host)'+(idle.length?'; chưa có buổi nào: '+idle.map(sh).join(', ')+'.':'.')]);
     else if(idle.length) it.push(['in','Chưa có buổi nào: '+idle.map(sh).join(', ')+'.']); }
   var fut=keys.filter(function(k){ return k>today && !N[k] && [0,6].indexOf(new Date(k+'T00:00').getDay())<0; });
-  if(fut.length) it.push(['ok','Ngày làm việc sắp tới chưa có lịch: '+fut.map(dl).join(', ')+'.']);
+  if(fut.length && !KW) it.push(['ok','Ngày làm việc sắp tới chưa có lịch: '+fut.map(dl).join(', ')+'.']);
   if(!nBuoi) it.push(['in','Khoảng này chưa có buổi phỏng vấn CTV nào.']);
   var col={er:'var(--rust)',wa:'#E0A84A',ok:'var(--teal-2)',in:'#9B7BEA'};
   h+='<div class="ctv-ev"><b>● ĐÁNH GIÁ TỰ ĐỘNG</b>'+it.map(function(x){ return '<div><span class="ctv-dot" style="background:'+col[x[0]]+'"></span>'+x[1]+'</div>'; }).join('')+'</div></div>';
+  if(KW) h+='<div class="ctv-g2">'+paceChart(KW,N,keys,today)+weekHist()+'</div>';
   // chi tiết 1 ngày
   var dk=T.day && N[T.day]!=null ? T.day : (N[today]!=null?today:keys[0]);
   var L=ev.filter(function(e){ return e.d===dk; }).sort(function(a,b){ return a.t<b.t?-1:1; });
@@ -617,7 +736,8 @@ window.__ctvTd={
   view:function(v){ S.td.view=v; S.td.off=0; S.td.day=null; tdLoad(); rerender(); },
   move:function(n){ S.td.off=n?S.td.off+n:0; S.td.day=null; tdLoad(); rerender(); },
   day:function(k){ S.td.day=k; rerender(); },
-  reload:function(){ tdLoad(true); rerender(); }
+  reload:function(){ tdLoad(true); rerender(); },
+  week:function(o){ S.td.view='tuan'; S.td.off=o; S.td.day=null; tdLoad(); rerender(); }
 };
 
 /* ---------- 7. Router ---------- */
@@ -636,9 +756,12 @@ if(window.__bxAppBooted){ try{ window.renderNav(); if(window.currentTab) window.
    - quay lại cửa sổ web (sau khi chuyển tab trình duyệt) là làm mới ngay */
 (function bootCtv(n){
   var note=(document.getElementById('tb-note')||{}).textContent||'';
-  if(window.__bxAppBooted && window.BX_ROLE && window.HR && HR.loaded && !/đang làm mới|Đang tải/.test(note)){ setTimeout(function(){ if(!S.loading) load(); },800); return; }
+  if(window.__bxAppBooted && window.BX_ROLE && window.HR && HR.loaded && !/đang làm mới|Đang tải/.test(note)){ setTimeout(function(){ if(!S.loading) load(); },800); setTimeout(function(){ if(calStale()) calLoad(); },4500); return; }
   if(n<240) setTimeout(function(){ bootCtv(n+1); },500); else if(!S.loading) load();
 })(0);
 setInterval(function(){ if(window.BX_ROLE && !S.loading && document.visibilityState==='visible') load(); },60000);
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && window.BX_ROLE && !S.loading && Date.now()-(S.last||0)>30000) load(); });
+/* [04/11/2026] lịch hr@: tự đọc lại mỗi 60 giây khi đang mở Tiến độ phỏng vấn (lệch 30 giây so với load() để không gọi API cùng lúc) + khi quay lại cửa sổ */
+setTimeout(function(){ setInterval(function(){ if(window.BX_ROLE && document.visibilityState==='visible' && window.currentTab===TAB && S.sub==='td') tdLoad(true); },60000); },30000);
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && window.BX_ROLE && window.currentTab===TAB && S.sub==='td' && Date.now()-(S.td.src==='cal'?S.cal.at:(S.td.at||0))>30000) tdLoad(true); });
 })();
