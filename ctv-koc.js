@@ -173,6 +173,8 @@ function css(){ if(document.getElementById('ctv-css')) return; var s=document.cr
 '.ctv-pbar{position:relative;height:18px;border-radius:6px;background:var(--paper-2);border:1px solid var(--line)}.ctv-pbar>i{display:block;height:100%;border-radius:6px;background:var(--teal-2);transition:width .8s cubic-bezier(.2,.8,.2,1)}.ctv-pbar>b{position:absolute;top:-7px;bottom:-7px;border-left:2px dashed var(--ink)}.ctv-pbar>b span{position:absolute;top:-17px;left:-50px;width:100px;text-align:center;font-size:10px;font-weight:500;color:var(--ink);white-space:nowrap}'+
 '.ctv-lg{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--muted)}.ctv-lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}'+
 '.ctv-mb{position:relative;height:8px;border-radius:4px;background:var(--paper-2);min-width:90px}.ctv-mb i{position:absolute;left:0;top:0;bottom:0;border-radius:4px}.ctv-mb b{position:absolute;right:0;top:-3px;bottom:-3px;border-left:2px solid var(--ink)}'+
+'.ctv-hbw .r{grid-template-columns:110px 1fr 76px}.ctv-hbw .n{white-space:nowrap}'+
+'.ctv-fun2 .ctv-fr{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;margin:8px 0;font-size:12.5px;color:var(--text)}.ctv-fr .t{height:16px;background:var(--paper-2);border-radius:4px;overflow:hidden}.ctv-fr .t i{display:block;height:100%;background:var(--teal-2);border-radius:4px}.ctv-fr em{font-style:normal;color:var(--faint);font-size:11px}'+
 '.ctv-sep{display:flex;align-items:center;gap:10px;margin:22px 0 12px}.ctv-sep>b{font-family:var(--serif);font-size:17px;color:var(--ink);white-space:nowrap}.ctv-sep .ln{flex:1;border-top:1px solid var(--line)}'+
 '.ctv-sbar{display:flex;border-radius:6px;overflow:hidden;background:var(--paper-2);border:1px solid var(--line)}.ctv-sbar i{display:block;height:100%}'+
 '.ctv-mk{position:absolute;top:-7px;bottom:-7px;border-left:2px dashed var(--ink)}.ctv-mk span{position:absolute;top:-17px;left:-50px;width:100px;text-align:center;font-size:10px;font-weight:500;color:var(--ink);white-space:nowrap}'+
@@ -552,7 +554,8 @@ S.td=S.td||{ view:'tuan', off:0, data:null, key:'', loading:false, error:null, d
 function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function tdRange(){
   var T=S.td, t=d0(new Date()), a, b;
-  if(T.view==='thang'){ a=new Date(t.getFullYear(),t.getMonth()+T.off,1); b=new Date(a.getFullYear(),a.getMonth()+1,0); }
+  if(T.view==='all'){ var m0=new Date(t.getFullYear(),t.getMonth(),t.getDate()-((t.getDay()+6)%7)); a=new Date(CTV_START+'T00:00'); b=new Date(m0.getFullYear(),m0.getMonth(),m0.getDate()+6); }
+  else if(T.view==='thang'){ a=new Date(t.getFullYear(),t.getMonth()+T.off,1); b=new Date(a.getFullYear(),a.getMonth()+1,0); }
   else { var len=T.view==='14'?14:7, m=new Date(t.getFullYear(),t.getMonth(),t.getDate()-((t.getDay()+6)%7)); a=new Date(m.getFullYear(),m.getMonth(),m.getDate()+T.off*len); b=new Date(a.getFullYear(),a.getMonth(),a.getDate()+len-1); }
   var days=[]; for(var d=new Date(a); d<=b; d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)) days.push(d);
   return { a:a, b:b, days:days };
@@ -566,8 +569,16 @@ function tdRange(){
 var LSC='bigx_ctv_cal_v1', CAL_WEEKS=6, KPI_WEEK=50;
 S.cal=S.cal||{ ev:null, from:'', to:'', at:0, loading:false, error:null, errAt:0 };
 try{ var c1=JSON.parse(localStorage.getItem(LSC)||'null'); if(c1&&c1.ev&&!S.cal.ev){ S.cal.ev=c1.ev; S.cal.from=c1.from; S.cal.to=c1.to; S.cal.at=c1.at||0; } }catch(e){}
-function calWin(){ var t=d0(new Date()), m=new Date(t.getFullYear(),t.getMonth(),t.getDate()-((t.getDay()+6)%7));
-  return { a:ymd(new Date(m.getFullYear(),m.getMonth(),m.getDate()-7*(CAL_WEEKS-1))), b:ymd(new Date(m.getFullYear(),m.getMonth(),m.getDate()+6)) }; }
+var CTV_START='2026-10-19'; /* [04/11/2026] tuần bắt đầu làm CTV (form có người đăng ký đầu tiên 22/10/2026) — chế độ "Từ đầu tới nay" tính từ đây */
+function calWin(){ var t=d0(new Date()), m=new Date(t.getFullYear(),t.getMonth(),t.getDate()-((t.getDay()+6)%7)), a=ymd(new Date(m.getFullYear(),m.getMonth(),m.getDate()-7*(CAL_WEEKS-1)));
+  return { a:a<CTV_START?a:CTV_START, b:ymd(new Date(m.getFullYear(),m.getMonth(),m.getDate()+6)) }; }
+/* đọc lịch theo từng đoạn ≤ 42 ngày (khoảng quá dài API trả rỗng) rồi ghép lại */
+function calChunks(a,b){ var out=[], x=new Date(a+'T00:00'), e=new Date(b+'T00:00');
+  while(x<=e){ var y=new Date(x.getFullYear(),x.getMonth(),x.getDate()+41); if(y>e) y=e; out.push([ymd(x),ymd(y)]); x=new Date(y.getFullYear(),y.getMonth(),y.getDate()+1); } return out; }
+function calFetch(a,b){ var url=API_URL+'?action=ctvStats&from='+a+'&to='+b;
+  return (window.bxAuthedFetch?window.bxAuthedFetch(url,{cache:'no-store'}):fetch(url,{cache:'no-store'}))
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(d){ if(!d||!d.ok) throw new Error((d&&(d.error||d.reason))||'lỗi'); return d.events||[]; }); }
 function calStale(){ return !S.cal.ev || Date.now()-(S.cal.at||0)>55000 || S.cal.from!==calWin().a || S.cal.to!==calWin().b; }
 function hhmm(t){ var d=new Date(t); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function tdStampTxt(){ var T=S.td, at=T.src==='cal'?S.cal.at:(T.at||0), busy=T.src==='cal'?S.cal.loading:T.loading;
@@ -576,11 +587,10 @@ function tdStampTxt(){ var T=S.td, at=T.src==='cal'?S.cal.at:(T.at||0), busy=T.s
 function tdStamp(){ var el=document.getElementById('ctv-tdup'); if(el) el.innerHTML=tdStampTxt(); }
 function calLoad(n){
   if(S.cal.loading) return; var W=calWin(); S.cal.loading=true; tdStamp(); if(n==null) n=1;
-  var url=API_URL+'?action=ctvStats&from='+W.a+'&to='+W.b;
-  (window.bxAuthedFetch?window.bxAuthedFetch(url,{cache:'no-store'}):fetch(url,{cache:'no-store'}))
-    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .then(function(d){ if(!d||!d.ok) throw new Error((d&&(d.error||d.reason))||'lỗi');
-      var ev=d.events||[], same=!!S.cal.ev && S.cal.from===W.a && S.cal.to===W.b && JSON.stringify(S.cal.ev)===JSON.stringify(ev);
+  var acc=[];
+  calChunks(W.a,W.b).reduce(function(p,c){ return p.then(function(){ return calFetch(c[0],c[1]).then(function(e){ acc=acc.concat(e); }); }); },Promise.resolve())
+    .then(function(){
+      var ev=acc, same=!!S.cal.ev && S.cal.from===W.a && S.cal.to===W.b && JSON.stringify(S.cal.ev)===JSON.stringify(ev);
       S.cal.ev=ev; S.cal.from=W.a; S.cal.to=W.b; S.cal.at=Date.now(); S.cal.error=null; S.cal.loading=false;
       try{ localStorage.setItem(LSC,JSON.stringify({ev:ev,from:W.a,to:W.b,at:S.cal.at})); }catch(e){}
       if(window.currentTab===TAB && S.sub==='td'){ if(!same || !S.td.data) rerender(); else tdStamp(); } })
@@ -702,6 +712,74 @@ function nhanBlock(rows,keys,today){
     '<div class="ctv-ev"><b>● ĐÁNH GIÁ TỰ ĐỘNG</b>'+it.map(function(x){ return '<div><span class="ctv-dot" style="background:'+col[x[0]]+'"></span>'+x[1]+'</div>'; }).join('')+'</div></div>'+hist+'</div>';
   return h;
 }
+/* [04/11/2026] Chế độ "Từ đầu tới nay" — mockup duyệt 04/11/2026. Tổng kết từ tuần CTV_START tới hết tuần này. */
+function allPage(rows,ev,nav,rng,R,today){
+  var a=ymd(R.a), b=ymd(R.b), weeks=[], x=new Date(R.a);
+  while(ymd(x)<=b){ var y=new Date(x.getFullYear(),x.getMonth(),x.getDate()+6); weeks.push([ymd(x),ymd(y),new Date(x)]); x=new Date(x.getFullYear(),x.getMonth(),x.getDate()+7); }
+  function inW(k,w){ return k>=w[0] && k<=w[1]; }
+  var regs=rows.map(function(r){ var d=pd(r.ngay); return d?ymd(d0(d)):null; });
+  var W=weeks.map(function(w){ var o=nhanWeek(rows,w[0],w[1]);
+    o.dk=regs.filter(function(k){ return k&&inW(k,w); }).length;
+    o.pass=rows.filter(function(r,i){ return regs[i]&&inW(regs[i],w)&&hrOf(r)==='pass'; }).length;
+    o.meet=ev.filter(function(e){ return inW(e.d,w); }).length; o.full=w[1]<today; o.w=w; return o; });
+  var T={dk:0,pass:0,meet:0,pv:0,nhan:0,loai:0,tuchoi:0,khongph:0,cho:0}; W.forEach(function(o){ Object.keys(T).forEach(function(k){ T[k]+=o[k]; }); });
+  var nW=W.length, full=W.filter(function(o){return o.full;}), okM=full.filter(function(o){return o.meet>=KPI_WEEK;}).length, okN=full.filter(function(o){return o.nhan>=KPI_NHAN;}).length;
+  var kq=T.nhan+T.loai+T.tuchoi+T.khongph, rate=T.pv?T.nhan/T.pv:0;
+  var hrAll={pass:0,fail:0,chua:0,can:0}; rows.forEach(function(r,i){ if(regs[i]&&regs[i]>=a) hrAll[hrOf(r)]++; });
+  var gaps=[]; rows.forEach(function(r){ var p=pd(r.ngay), q=pd(r.ngayLienHe); if(p&&q){ var g=(d0(q)-d0(p))/864e5; if(g>=0) gaps.push(g); } }); gaps.sort(function(u,v){return u-v;});
+  var gAvg=gaps.length?gaps.reduce(function(s,v){return s+v;},0)/gaps.length:null, gMed=gaps.length?gaps[Math.floor(gaps.length/2)]:null;
+  var passNo=rows.filter(function(r){ var c=lhOf(r); return hrOf(r)==='pass' && !pd(r.ngayLienHe) && (c==='da'||c==='chua'); }).length;
+  function kp(l,v,d,c){ return kpi(l,v,d,c); }
+  var h='<div class="ctv-card" style="margin-bottom:14px">'+nav+'<div class="ctv-h">Tổng kết từ đầu tới nay</div><div class="ctv-s">'+rng+' · '+nW+' tuần ('+full.length+' tuần đủ'+(nW>full.length?' + tuần này':'')+') · tuần tính từ T2 → CN</div></div>';
+  h+='<div class="ctv-kpis">'+
+    kp('Đăng ký form',T.dk,'TB '+vn(T.dk/nW,1)+'/tuần')+
+    kp('HR PASS',T.pass,pc(T.pass,T.dk)+'% · '+hrAll.fail+' FAIL · '+(hrAll.chua+hrAll.can)+' chưa review')+
+    kp('Meeting (lịch hr@)',T.meet,'TB '+vn(T.meet/nW,1)+'/tuần · KPI '+KPI_WEEK+' · đạt '+okM+'/'+full.length+' tuần')+
+    kp('Nhận CTV',T.nhan,'TB '+vn(T.nhan/nW,1)+'/tuần · KPI '+KPI_NHAN+' · đạt '+okN+'/'+full.length+' tuần','var(--teal-2)')+
+    kp('Tỷ lệ nhận',pc(T.nhan,T.pv)+'%',T.nhan+' / '+T.pv+' phỏng vấn · '+pc(T.nhan,kq)+'% số có kết quả')+'</div>';
+  // phễu
+  var withPV=rows.filter(function(r,i){ return regs[i]&&regs[i]>=a&&pd(r.ngayLienHe); }).length, nhanAll=rows.filter(function(r,i){ return regs[i]&&regs[i]>=a&&lhOf(r)==='nhan'; }).length;
+  var F=[['Đăng ký form',T.dk,''],['HR PASS',T.pass,pc(T.pass,T.dk)+'%'],['Có lịch phỏng vấn',withPV,pc(withPV,T.pass)+'% PASS'],['Nhận CTV',nhanAll,pc(nhanAll,withPV)+'% PV']];
+  var fun=F.map(function(f){ return '<div class="ctv-fr"><span>'+f[0]+'</span><div class="t"><i style="width:'+(T.dk?f[1]/T.dk*100:0).toFixed(1)+'%"></i></div><span><b>'+f[1]+'</b> <em>'+f[2]+'</em></span></div>'; }).join('');
+  var best=full.slice().sort(function(u,v){ return v.nhan-u.nhan || v.meet-u.meet; })[0];
+  var rates=full.filter(function(o){return o.pv>=10;}).map(function(o){return o.nhan/o.pv;}), rLo=Math.min.apply(null,[rate].concat(rates)), rHi=Math.max.apply(null,[rate].concat(rates));
+  var it=[];
+  if(full.length) it.push([okM||okN?'ok':'er',(okM||okN?'Đạt KPI: meeting '+okM+'/'+full.length+' tuần, nhận '+okN+'/'+full.length+' tuần':'Chưa tuần nào đạt KPI '+KPI_WEEK+' meeting hay '+KPI_NHAN+' nhận')+(best?'; tốt nhất tuần '+dd(best.w[2])+': '+best.meet+' meeting · '+best.nhan+' nhận.':'.')]);
+  if(rate>0){ var need=function(r){ return Math.ceil(KPI_NHAN/r); }, reg=T.pv&&T.dk?T.dk/T.pv:0;
+    it.push(['wa','Hai KPI đang lệch nhau: tỷ lệ nhận '+Math.round(rLo*100)+(rHi>rLo+0.005?'–'+Math.round(rHi*100):'')+'% → muốn nhận '+KPI_NHAN+'/tuần cần ≈'+need(rHi)+(need(rLo)>need(rHi)?'–'+need(rLo):'')+' phỏng vấn/tuần'+(reg?' (≈'+Math.round(need(rate)*reg)+' đăng ký)':'')+'; chạy đủ '+KPI_WEEK+' meeting chỉ ra ≈'+Math.round(KPI_WEEK*rLo)+(rHi>rLo+0.005?'–'+Math.round(KPI_WEEK*rHi):'')+' CTV.']); }
+  if(passNo) it.push(['wa',passNo+' người HR PASS chưa có lịch phỏng vấn (chưa có kết quả) — nguồn bù meeting nhanh nhất.']);
+  if(gAvg!=null) it.push(['in','Từ đăng ký tới phỏng vấn: TB '+vn(gAvg,1)+' ngày (trung vị '+gMed+') · ≈'+(nhanAll?vn(T.dk/nhanAll,1):'—')+' đăng ký → 1 CTV.']);
+  // host
+  var H={}, sumH=0; TD_HOSTS.forEach(function(x){ H[x]=0; }); var shared=0;
+  ev.forEach(function(e){ (e.hosts||[]).forEach(function(x){ if(H[x]!=null){ H[x]++; sumH++; } else if(x===TD_SHARED) shared++; }); });
+  var hs=TD_HOSTS.slice().sort(function(u,v){ return H[v]-H[u]; }), hmx=Math.max(1,H[hs[0]]);
+  if(sumH>=10 && hs.length>1){ var top2=H[hs[0]]+H[hs[1]]; if(top2/sumH>=0.5) it.push(['wa','Tải host lệch: '+hs[0].split('@')[0]+' + '+hs[1].split('@')[0]+' gánh '+pc(top2,sumH)+'% lượt host.']); }
+  var hb='<div class="ctv-hb ctv-hbw">'+hs.map(function(x){ return '<div class="r"><span>'+x.split('@')[0]+'</span><div class="t"><i style="width:'+Math.round(H[x]/hmx*100)+'%"></i></div><span class="n">'+H[x]+' · '+pc(H[x],sumH)+'%</span></div>'; }).join('')+'</div>';
+  // dữ liệu cần dọn
+  var firstReg=regs.filter(Boolean).sort()[0]||a, pre=ev.filter(function(e){ return e.d<firstReg; }), noMa=ev.filter(function(e){ return !e.ma; });
+  var cnt={}; ev.forEach(function(e){ if(e.ma){ var k=String(e.ma).toUpperCase(); cnt[k]=(cnt[k]||0)+1; } }); var dup=Object.keys(cnt).filter(function(k){ return cnt[k]>1; });
+  var evMa={}; ev.forEach(function(e){ if(e.ma) evMa[String(e.ma).toUpperCase()]=1; });
+  var pvNoEv=rows.filter(function(r){ var q=pd(r.ngayLienHe); return q && ymd(d0(q))>=a && r.maCtv && !evMa[String(r.maCtv).toUpperCase()]; });
+  function dl2(k){ var p=k.split('-'); return p[2]+'/'+p[1]; }
+  function grp(L){ var c={}, o=[]; L.forEach(function(e){ if(!c[e.d]){ c[e.d]=0; o.push(e.d); } c[e.d]++; }); o.sort(); return o.map(function(k){ return dl2(k)+(c[k]>1?' ×'+c[k]:''); }).join(', '); }
+  var dq=[];
+  if(pre.length) dq.push(pre.length+' lịch "CTV Booking KOC" trước khi có người đăng ký đầu tiên ('+grp(pre)+') — lịch thử? Lịch trong khoảng từ '+dd(R.a)+' vẫn được tính vào KPI.');
+  if(noMa.length) dq.push(noMa.length+' lịch không ghi mã CTV ('+grp(noMa)+').');
+  if(dup.length) dq.push(dup.length+' mã có nhiều lịch: '+dup.map(function(k){ return k+' ('+cnt[k]+')'; }).join(', ')+'.');
+  if(pvNoEv.length) dq.push(pvNoEv.length+' người có Ngày phỏng vấn trong file nhưng không tìm thấy lịch: '+pvNoEv.slice(0,8).map(function(r){return E(r.maCtv);}).join(', ')+(pvNoEv.length>8?'…':'')+'.');
+  var col={er:'var(--rust)',wa:'#E0A84A',ok:'var(--teal-2)',in:'#9B7BEA'};
+  h+='<div class="ctv-g2"><div class="ctv-card"><div class="ctv-h">Phễu tổng từ đầu</div><div class="ctv-s">Người đăng ký từ '+dd(R.a)+' · mỗi người 1 dòng trong file Đăng ký</div><div class="ctv-fun2">'+fun+'</div>'+
+    '<div class="ctv-ev"><b>● ĐÁNH GIÁ TỰ ĐỘNG (TOÀN KỲ)</b>'+it.map(function(q){ return '<div><span class="ctv-dot" style="background:'+col[q[0]]+'"></span>'+q[1]+'</div>'; }).join('')+'</div></div>'+
+    '<div class="ctv-card"><div class="ctv-h">Tải host từ đầu</div><div class="ctv-s">Số buổi có mặt · lịch hr@ · ecom-drive (mail chung) '+shared+' buổi, không tính</div>'+hb+
+    '<div class="ctv-h" style="margin-top:16px">Dữ liệu cần dọn</div><div class="ctv-s">Để KPI đếm đúng</div>'+(dq.length?'<ul class="bt-ctvtodo">'+dq.map(function(q){return '<li>'+q+'</li>';}).join('')+'</ul>':'<div style="font-size:12px;color:var(--faint)">Không thấy dữ liệu lệch.</div>')+'</div></div>';
+  // bảng tuần
+  function mb(v){ var p=Math.round(v/KPI_WEEK*100), c=v>=KPI_WEEK?'var(--teal-2)':p>=80?'#E0A84A':'var(--rust)'; return '<b>'+v+'</b><div class="ctv-mb" style="margin-top:4px"><i style="width:'+Math.min(100,p)+'%;background:'+c+'"></i><b></b></div>'; }
+  var tr=W.slice().reverse().map(function(o){ return '<tr style="cursor:pointer" onclick="__ctvTd.goWeek(\''+o.w[0]+'\')"><td class="nw">'+dd(o.w[2])+' – '+dd(new Date(o.w[1]+'T00:00'))+(o.full?'':' <span style="color:var(--faint);font-size:11px">đang chạy</span>')+'</td><td style="text-align:center">'+o.dk+'</td><td style="text-align:center">'+o.pass+'</td><td>'+mb(o.meet)+'</td><td style="text-align:center">'+o.pv+'</td><td>'+mb(o.nhan)+'</td><td style="text-align:center;'+(o.cho?'color:#E0A84A':'')+'">'+o.cho+'</td><td style="text-align:center">'+(o.pv?pc(o.nhan,o.pv)+'%':'—')+'</td></tr>'; }).join('');
+  tr+='<tr style="font-weight:700;border-top:1px solid var(--muted)"><td class="nw">Tổng '+nW+' tuần</td><td style="text-align:center">'+T.dk+'</td><td style="text-align:center">'+T.pass+'</td><td>'+T.meet+' <span style="color:var(--faint);font-weight:400;font-size:11px">· TB '+vn(T.meet/nW,1)+'/tuần</span></td><td style="text-align:center">'+T.pv+'</td><td style="color:var(--teal-2)">'+T.nhan+' <span style="color:var(--faint);font-weight:400;font-size:11px">· TB '+vn(T.nhan/nW,1)+'/tuần</span></td><td style="text-align:center">'+T.cho+'</td><td style="text-align:center">'+pc(T.nhan,T.pv)+'%</td></tr>';
+  h+='<div class="ctv-card"><div class="ctv-h">KPI theo từng tuần (T2–CN)</div><div class="ctv-s">Đăng ký & PASS theo tuần đăng ký · Meeting theo lịch hr@ · Phỏng vấn / Nhận / Chờ theo tuần của Ngày phỏng vấn · vạch = KPI '+KPI_WEEK+' · bấm 1 tuần để xem chi tiết tuần đó</div>'+
+    '<div class="table-wrap"><table class="dt"><thead><tr><th>Tuần</th><th style="text-align:center">Đăng ký</th><th style="text-align:center">PASS</th><th>Meeting / '+KPI_WEEK+'</th><th style="text-align:center">PV (file)</th><th>Nhận / '+KPI_NHAN+'</th><th style="text-align:center">Chờ</th><th style="text-align:center">Tỷ lệ nhận</th></tr></thead><tbody>'+tr+'</tbody></table></div></div>';
+  return h;
+}
 function nhanHist(rows){
   var W=calWin(), cur=new Date(W.b+'T00:00'); cur=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()-6); var tr='';
   for(var i=0;i<CAL_WEEKS;i++){ var a=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()-7*i), b=new Date(a.getFullYear(),a.getMonth(),a.getDate()+6), ka=ymd(a), kb=ymd(b), o=nhanWeek(rows,ka,kb);
@@ -721,11 +799,13 @@ function kpiWeek(R,N,keys,today){
 function tdPage(rows){
   tdSync();
   var T=S.td, R=tdRange(), today=ymd(d0(new Date()));
-  var nav='<div class="ctv-seg">'+[['tuan','Tuần'],['14','14 ngày'],['thang','Tháng']].map(function(o){ return '<button class="'+(T.view===o[0]?'on':'')+'" onclick="__ctvTd.view(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>';
+  var nav='<div class="ctv-seg">'+[['tuan','Tuần'],['14','14 ngày'],['thang','Tháng'],['all','Từ đầu tới nay']].map(function(o){ return '<button class="'+(T.view===o[0]?'on':'')+'" onclick="__ctvTd.view(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')+'</div>';
   var rng='<a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(-1)">‹ trước</a> · <b>'+dd(R.a)+' – '+dd(R.b)+'/'+R.b.getFullYear()+'</b> · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(1)">sau ›</a>'+(T.off?' · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.move(0)">về hiện tại</a>':'')+' · <span id="ctv-tdup">'+tdStampTxt()+'</span>';
+  if(T.view==='all') rng='<b>'+dd(R.a)+' → nay ('+dd(d0(new Date()))+'/'+R.b.getFullYear()+')</b> · <span id="ctv-tdup">'+tdStampTxt()+'</span>';
   var h='';
   if(!T.data && !T.error) return h+'<div class="ctv-card">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">'+rng+'</div><div class="ctv-empty">Đang đọc lịch HR BIGX…</div></div>';
   if(T.error && !T.data) return h+'<div class="ctv-card">'+nav+'<div class="ctv-h">Số buổi phỏng vấn theo host · theo ngày</div><div class="ctv-s">'+rng+'</div><div class="ctv-empty" style="color:var(--rust)">Không đọc được lịch: '+E(T.error)+' · <a href="javascript:void(0)" class="ctv-lk" onclick="__ctvTd.reload()">thử lại</a></div></div>';
+  if(T.view==='all') return h+allPage(rows,T.data.events||[],nav,rng,R,today);
   var ev=T.data.events||[], hosts=TD_HOSTS.concat([TD_SHARED]);
   var M={}, N={}; R.days.forEach(function(d){ var k=ymd(d); N[k]=0; M[k]={}; hosts.forEach(function(x){ M[k][x]=0; }); });
   ev.forEach(function(e){ if(N[e.d]==null) return; N[e.d]++; (e.hosts||[]).forEach(function(x){ if(M[e.d][x]!=null) M[e.d][x]++; }); });
@@ -797,7 +877,8 @@ window.__ctvTd={
   move:function(n){ S.td.off=n?S.td.off+n:0; S.td.day=null; tdLoad(); rerender(); },
   day:function(k){ S.td.day=k; rerender(); },
   reload:function(){ tdLoad(true); rerender(); },
-  week:function(o){ S.td.view='tuan'; S.td.off=o; S.td.day=null; tdLoad(); rerender(); }
+  week:function(o){ S.td.view='tuan'; S.td.off=o; S.td.day=null; tdLoad(); rerender(); },
+  goWeek:function(k){ var t=d0(new Date()), m=new Date(t.getFullYear(),t.getMonth(),t.getDate()-((t.getDay()+6)%7)); S.td.view='tuan'; S.td.off=Math.round((new Date(k+'T00:00')-m)/6048e5); S.td.day=null; tdLoad(); rerender(); }
 };
 
 /* ---------- 7. Router ---------- */
