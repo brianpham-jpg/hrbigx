@@ -91,7 +91,7 @@
   const bxAuth = firebase.auth();
   const BX_ALLOWED_EMAIL = 'brian.pham@bigx.vn';
   // Danh sách được vào web: admin = toàn quyền, viewer = chỉ xem (không nạp CV, không chấm AI, không sửa chấm công)
-  const BX_USERS = { 'brian.pham@bigx.vn':'admin', 'kim.nguyen@bigx.vn':'viewer' };
+  const BX_USERS = { 'brian.pham@bigx.vn':'admin', 'kim.nguyen@bigx.vn':'viewer', 'uyen.nguyen@bigx.vn':'viewer' };
   function bxRoleOf(email){ return BX_USERS[String(email||'').trim().toLowerCase()] || null; }
   // Chế độ chỉ xem: chặn mọi lệnh ghi (POST/PUT/PATCH/DELETE) từ trình duyệt — máy chủ cũng chặn lần nữa
   (function(){ var _f=window.fetch;
