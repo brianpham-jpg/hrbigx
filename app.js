@@ -289,16 +289,16 @@ function tdStage(c){
   var f=(c.final||'').trim(), r2=(c.r2||'').trim(),
       r1=(c.r1||'').trim(), lm=(c.lmReview||'').trim(), hr=(c.hrReview||'').trim();
   function cls(v){
+    if(/FAIL|KHÔNG PHÙ HỢP|TỪ CHỐI|CANCEL/.test(v)) return 'rust'; // [05/11/2026] xét 'loại' TRƯỚC: "KHÔNG PHÙ HỢP" có chứa "PHÙ HỢP"
     if(/PASS|PHÙ HỢP|TRÚNG TUYỂN/.test(v)) return 'teal';
-    if(/FAIL|KHÔNG PHÙ HỢP|TỪ CHỐI|CANCEL/.test(v)) return 'rust';
     if(/XEM XÉT|KHÔNG THAM GIA/.test(v)) return 'clay';
     return 'gray';
   }
   if(f)  return {label:(f==='TRÚNG TUYỂN'?'Trúng tuyển':f), cls:cls(f), bucket:(f==='TRÚNG TUYỂN'?'trung':'loai')};
   if(r2) return {label:'Vòng 2 · '+r2, cls:cls(r2), bucket:(r2==='PASS'?'xuly':'loai')};
   if(r1) return {label:'Vòng 1 · '+r1, cls:cls(r1), bucket:(r1==='PASS'?'xuly':'loai')};
-  if(lm) return {label:'LM · '+lm, cls:cls(lm), bucket:(/PHÙ HỢP|XEM XÉT/.test(lm)?'xuly':'loai')};
-  if(hr) return {label:'HR · '+hr, cls:cls(hr), bucket:(/PASS|XEM XÉT/.test(hr)?'xuly':'loai')};
+  if(lm) return {label:'LM · '+lm, cls:cls(lm), bucket:((lm==='PHÙ HỢP'||lm==='XEM XÉT')?'xuly':'loai')};
+  if(hr) return {label:'HR · '+hr, cls:cls(hr), bucket:((hr==='SCAN CV PASS'||hr==='XEM XÉT')?'xuly':'loai')};
   return {label:'Mới nộp', cls:'gold', bucket:'xuly'};
 }
 
@@ -306,8 +306,11 @@ function tdFunnel(list){
   var total=list.length;
   // [D] Mỗi bước = số người đã qua bước đó HOẶC bước sau (VD qua Line Manager mà cột HR để trống vẫn tính đã qua HR) → phễu luôn giảm dần, không vượt 100%
   var K=[['hrReview','hr'],['lmReview','lm'],['r1','r1'],['r2','r2'],['final','fin']];
-  var lv=list.map(function(c){ var m=0; K.forEach(function(k,i){ if((c[k[0]]||'').trim()===TDPASS[k[1]]) m=i+1; }); return m; });
-  var cnt=function(i){ return lv.filter(function(x){return x>=i;}).length; };
+  // [05/11/2026] Đếm ĐÚNG theo file: bước i tính khi cột đó = kết quả qua; nếu cột để TRỐNG mà bước sau đã qua thì vẫn tính (quy tắc [D]).
+  // Cột ghi rõ FAIL / KHÔNG PHÙ HỢP / XEM XÉT… thì KHÔNG tính dù bước sau có PASS (trước đây tính → HR 336 thay vì 313 như file).
+  var ok=function(c,i){ var v=(c[K[i][0]]||'').trim(); if(v===TDPASS[K[i][1]]) return true; if(v) return false;
+    for(var j=i+1;j<K.length;j++){ if((c[K[j][0]]||'').trim()===TDPASS[K[j][1]]) return true; } return false; };
+  var cnt=function(i){ return list.filter(function(c){ return ok(c,i-1); }).length; };
   return [
     {label:'CV nộp',              sub:'tổng hồ sơ',   n:total},
     {label:'HR duyệt CV',         sub:'scan pass',    n:cnt(1)},
