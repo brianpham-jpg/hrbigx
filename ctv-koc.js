@@ -674,26 +674,29 @@ function nkOf(r){ var v=lhOf(r); return v==='nhan'||v==='loai'||v==='tuchoi'||v=
 function nhanWeek(rows,a,b){ var o={pv:0,nhan:0,loai:0,tuchoi:0,khongph:0,cho:0,byDay:{}};
   rows.forEach(function(r){ var d=pd(r.ngayLienHe); if(!d) return; var k=ymd(d0(d)); if(k<a||k>b) return; var c=nkOf(r); o.pv++; o[c]++;
     var D=o.byDay[k]=o.byDay[k]||{pv:0,nhan:0,loai:0,tuchoi:0,khongph:0,cho:0}; D.pv++; D[c]++; });
-  o.kq=o.nhan+o.loai+o.tuchoi+o.khongph; return o; }
+  o.nPv=o.nhan; o.kq=o.nPv+o.loai+o.tuchoi+o.khongph;
+  // [06/11/2026] KPI nhận = số "Nhận CTV" có Ngày bắt đầu trong tuần (tab Theo dõi Group); nPv = số nhận trong nhóm phỏng vấn tuần này (để tính tỷ lệ)
+  o.nhan=((S.data&&S.data.group)||[]).filter(function(g){ var d=pd(g.batDau); if(!d||!/nhận ctv/i.test(String(g.trangThai||''))) return false; var k=ymd(d0(d)); return k>=a&&k<=b; }).length;
+  return o; }
 function sbar(o,base,h){ return '<div class="ctv-sbar" style="height:'+(h||18)+'px">'+['nhan','loai','tuchoi','khongph','cho'].map(function(c){ return o[c]?'<i style="width:'+(o[c]/base*100).toFixed(1)+'%;background:'+NK[c][1]+'"></i>':''; }).join('')+'</div>'; }
 function nhanBlock(rows,keys,today){
   var a=keys[0], b=keys[6], o=nhanWeek(rows,a,b), K=kpiWeek(null,(function(){ var N={}; keys.forEach(function(k){ N[k]=o.byDay[k]?o.byDay[k].nhan:0; }); return N; })(),keys,today);
   K.n=o.nhan; K.thieu=Math.max(0,KPI_NHAN-o.nhan); K.pct=Math.min(100,Math.round(o.nhan/KPI_NHAN*100)); K.diff=o.nhan-Math.round(KPI_NHAN*K.done/7); K.moc=Math.round(KPI_NHAN*K.done/7); K.per=K.left>0&&K.thieu>0?Math.ceil(K.thieu/K.left):0;
-  var cur=!K.past&&!K.future, rate=o.kq?o.nhan/o.kq:null, rPv=o.pv?Math.round(o.nhan/o.pv*100):0, du=rate!=null?Math.round(o.nhan+o.cho*rate):null;
+  var cur=!K.past&&!K.future, rate=o.kq?o.nPv/o.kq:null, rPv=o.pv?Math.round(o.nPv/o.pv*100):0, du=rate!=null?Math.round(o.nhan+o.cho*rate):null;
   var b1=K.past?(K.thieu?['er','Thiếu '+K.thieu+' · '+K.pct+'%']:['ok','Đạt KPI nhận']):K.future?['in','Tuần chưa bắt đầu']:!K.thieu?['ok','Đã đủ KPI nhận']:K.diff>=0?['ok',(K.diff?'Vượt nhịp +'+K.diff:'Đúng nhịp')+' · mốc hôm nay '+K.moc]:['wa','Chậm nhịp '+K.diff+' · mốc hôm nay '+K.moc];
   var C=2*Math.PI*50, ring='<svg class="ctv-ring" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" style="fill:none;stroke:var(--paper-2);stroke-width:12"/>'+
     '<circle cx="60" cy="60" r="50" transform="rotate(-90 60 60)" style="fill:none;stroke:var(--teal-2);stroke-width:12;stroke-linecap:round;stroke-dasharray:'+(C*K.pct/100).toFixed(1)+' '+C.toFixed(1)+'"/>'+
     '<text x="60" y="60" text-anchor="middle" style="fill:var(--ink);font-size:24px;font-weight:700">'+K.pct+'%</text><text x="60" y="78" text-anchor="middle" style="fill:var(--faint);font-size:8.5px;letter-spacing:.1em">KPI NHẬN</text></svg>';
-  var h='<div class="ctv-sep"><b>KPI nhận CTV · '+dlk(a)+' – '+dlk(b)+'</b><span class="ln"></span><span class="ctv-ml">nguồn: file Đăng ký · tuần theo Ngày phỏng vấn</span></div>';
-  h+='<div class="ctv-card ctv-hero"><div><div class="ctv-ml">KPI tuần · '+KPI_NHAN+' người nhận CTV · tính theo tuần của Ngày phỏng vấn (T2–CN)</div>'+
+  var h='<div class="ctv-sep"><b>KPI nhận CTV · '+dlk(a)+' – '+dlk(b)+'</b><span class="ln"></span><span class="ctv-ml">nhận CTV theo Ngày bắt đầu (Theo dõi Group) · phỏng vấn theo Ngày phỏng vấn</span></div>';
+  h+='<div class="ctv-card ctv-hero"><div><div class="ctv-ml">KPI tuần · '+KPI_NHAN+' người nhận CTV · tính theo tuần của Ngày bắt đầu (T2–CN)</div>'+
     '<div class="ctv-big">'+o.nhan+' <small>/ '+KPI_NHAN+' nhận CTV</small></div>'+
-    '<div class="ctv-bds"><span class="ctv-bd '+b1[0]+'">'+b1[1]+'</span><span class="ctv-bd in">Tỷ lệ nhận '+rPv+'% ('+o.nhan+'/'+o.pv+' phỏng vấn)</span>'+(o.cho?'<span class="ctv-bd wa">'+o.cho+' người chờ kết quả</span>':'')+'</div>'+
-    '<div style="position:relative">'+sbar(o,Math.max(KPI_NHAN,o.pv))+(cur?'<b class="ctv-mk" style="left:'+(K.done/7*100*KPI_NHAN/Math.max(KPI_NHAN,o.pv)).toFixed(1)+'%"><span>mốc '+dlk(today)+' · '+K.moc+'</span></b>':'')+'</div>'+
-    '<div class="ctv-lg">'+['nhan','loai','tuchoi','khongph','cho'].filter(function(c){ return c!=='khongph'||o.khongph; }).map(function(c){ return '<span><i style="background:'+NK[c][1]+'"></i>'+NK[c][0]+' '+o[c]+'</span>'; }).join('')+
+    '<div class="ctv-bds"><span class="ctv-bd '+b1[0]+'">'+b1[1]+'</span><span class="ctv-bd in">Tỷ lệ nhận '+rPv+'% ('+o.nPv+'/'+o.pv+' phỏng vấn tuần này)</span>'+(o.cho?'<span class="ctv-bd wa">'+o.cho+' người chờ kết quả</span>':'')+'</div>'+
+    '<div style="position:relative">'+sbar({nhan:o.nPv,loai:o.loai,tuchoi:o.tuchoi,khongph:o.khongph,cho:o.cho},Math.max(KPI_NHAN,o.pv))+(cur?'<b class="ctv-mk" style="left:'+(K.done/7*100*KPI_NHAN/Math.max(KPI_NHAN,o.pv)).toFixed(1)+'%"><span>mốc '+dlk(today)+' · '+K.moc+'</span></b>':'')+'</div>'+
+    '<div class="ctv-lg">'+['nhan','loai','tuchoi','khongph','cho'].filter(function(c){ return c!=='khongph'||o.khongph; }).map(function(c){ return '<span><i style="background:'+NK[c][1]+'"></i>'+(c==='nhan'?'Nhận (trong PV tuần này) '+o.nPv:NK[c][0]+' '+o[c])+'</span>'; }).join('')+
       (o.pv<KPI_NHAN?'<span><i style="background:var(--paper-2);border:1px solid var(--line)"></i>Chưa có người phỏng vấn '+(KPI_NHAN-o.pv)+' (tới mốc '+KPI_NHAN+')</span>':'')+'</div></div>'+ring+'</div>';
   h+='<div class="ctv-kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">'+
     kpi('Nhận CTV tuần này',o.nhan+' / '+KPI_NHAN,K.thieu?(K.past?'thiếu '+K.thieu:'còn thiếu '+K.thieu+(K.left&&cur?' · cần ≈'+K.per+'/ngày':'')):'đã đủ KPI',K.past&&K.thieu?'var(--rust)':'var(--teal-2)')+
-    kpi('Tỷ lệ nhận (đã có kết quả)',rate==null?'—':Math.round(rate*100)+'%',o.kq?o.nhan+' nhận / '+o.kq+' có kết quả':'chưa ai có kết quả')+
+    kpi('Tỷ lệ nhận (đã có kết quả)',rate==null?'—':Math.round(rate*100)+'%',o.kq?o.nPv+' nhận / '+o.kq+' có kết quả':'chưa ai có kết quả')+
     kpi('Chờ kết quả',o.cho,'"Đã liên hệ" / chưa cập nhật',o.cho?'#E0A84A':'')+
     kpi('Dự kiến cuối tuần',du==null?'—':'≈ '+du,du==null?'chưa đủ dữ liệu':o.nhan+' + '+o.cho+' chờ × '+Math.round(rate*100)+'% · nếu giữ tỷ lệ')+'</div>';
   var DW=['T2','T3','T4','T5','T6','T7','CN'];
@@ -702,9 +705,9 @@ function nhanBlock(rows,keys,today){
   var it=[];
   if(K.past) it.push([K.thieu?'er':'ok',K.thieu?'Tuần này nhận '+o.nhan+'/'+KPI_NHAN+' CTV, thiếu '+K.thieu+'.':'Đạt KPI nhận: '+o.nhan+'/'+KPI_NHAN+' CTV.']);
   else if(K.future) it.push(['in','Tuần chưa bắt đầu · đã có '+o.pv+' người hẹn phỏng vấn.']);
-  else it.push([K.thieu?(K.diff>=0?'ok':'wa'):'ok','Đã nhận '+o.nhan+' CTV từ '+o.pv+' người phỏng vấn ('+rPv+'%)'+(K.thieu?'; còn thiếu '+K.thieu+' để đạt '+KPI_NHAN+'.':' — đã đủ KPI.')]);
+  else it.push([K.thieu?(K.diff>=0?'ok':'wa'):'ok','Đã nhận '+o.nhan+' CTV bắt đầu trong tuần · phỏng vấn tuần này '+o.pv+' người, nhận '+o.nPv+' ('+rPv+'%)'+(K.thieu?'; còn thiếu '+K.thieu+' để đạt '+KPI_NHAN+'.':' — đã đủ KPI.')]);
   if(o.cho) it.push(['wa',o.cho+' người đã phỏng vấn / hẹn phỏng vấn còn chờ kết quả (cột Trạng thái liên hệ chưa ghi Nhận / Loại / Từ chối).']);
-  if(rate!=null && o.kq>=5) it.push(['in','Trong số đã có kết quả, tỷ lệ nhận '+Math.round(rate*100)+'% ('+o.nhan+'/'+o.kq+').'+(du!=null&&!K.past&&o.cho?' Nếu giữ tỷ lệ này, cuối tuần dự kiến ≈'+du+' CTV.':'')]);
+  if(rate!=null && o.kq>=5) it.push(['in','Trong số đã có kết quả, tỷ lệ nhận '+Math.round(rate*100)+'% ('+o.nPv+'/'+o.kq+').'+(du!=null&&!K.past&&o.cho?' Nếu giữ tỷ lệ này, cuối tuần dự kiến ≈'+du+' CTV.':'')]);
   if(!K.past && o.pv<KPI_NHAN) it.push(['wa','Mới có '+o.pv+' người phỏng vấn trong tuần — dù nhận hết vẫn chưa đủ '+KPI_NHAN+'; cần thêm ít nhất '+(KPI_NHAN-o.pv)+' người phỏng vấn.']);
   var col={er:'var(--rust)',wa:'#E0A84A',ok:'var(--teal-2)',in:'#9B7BEA'};
   var hist=nhanHist(rows);
@@ -722,9 +725,9 @@ function allPage(rows,ev,nav,rng,R,today){
     o.dk=regs.filter(function(k){ return k&&inW(k,w); }).length;
     o.pass=rows.filter(function(r,i){ return regs[i]&&inW(regs[i],w)&&hrOf(r)==='pass'; }).length;
     o.meet=ev.filter(function(e){ return inW(e.d,w); }).length; o.full=w[1]<today; o.w=w; return o; });
-  var T={dk:0,pass:0,meet:0,pv:0,nhan:0,loai:0,tuchoi:0,khongph:0,cho:0}; W.forEach(function(o){ Object.keys(T).forEach(function(k){ T[k]+=o[k]; }); });
+  var T={dk:0,pass:0,meet:0,pv:0,nhan:0,nPv:0,loai:0,tuchoi:0,khongph:0,cho:0}; W.forEach(function(o){ Object.keys(T).forEach(function(k){ T[k]+=o[k]; }); });
   var nW=W.length, full=W.filter(function(o){return o.full;}), okM=full.filter(function(o){return o.meet>=KPI_WEEK;}).length, okN=full.filter(function(o){return o.nhan>=KPI_NHAN;}).length;
-  var kq=T.nhan+T.loai+T.tuchoi+T.khongph, rate=T.pv?T.nhan/T.pv:0;
+  var kq=T.nPv+T.loai+T.tuchoi+T.khongph, rate=T.pv?T.nPv/T.pv:0;
   var hrAll={pass:0,fail:0,chua:0,can:0}; rows.forEach(function(r,i){ if(regs[i]&&regs[i]>=a) hrAll[hrOf(r)]++; });
   var gaps=[]; rows.forEach(function(r){ var p=pd(r.ngay), q=pd(r.ngayLienHe); if(p&&q){ var g=(d0(q)-d0(p))/864e5; if(g>=0) gaps.push(g); } }); gaps.sort(function(u,v){return u-v;});
   var gAvg=gaps.length?gaps.reduce(function(s,v){return s+v;},0)/gaps.length:null, gMed=gaps.length?gaps[Math.floor(gaps.length/2)]:null;
@@ -736,13 +739,13 @@ function allPage(rows,ev,nav,rng,R,today){
     kp('HR PASS',T.pass,pc(T.pass,T.dk)+'% · '+hrAll.fail+' FAIL · '+(hrAll.chua+hrAll.can)+' chưa review')+
     kp('Meeting (lịch hr@)',T.meet,'TB '+vn(T.meet/nW,1)+'/tuần · KPI '+KPI_WEEK+' · đạt '+okM+'/'+full.length+' tuần')+
     kp('Nhận CTV',T.nhan,'TB '+vn(T.nhan/nW,1)+'/tuần · KPI '+KPI_NHAN+' · đạt '+okN+'/'+full.length+' tuần','var(--teal-2)')+
-    kp('Tỷ lệ nhận',pc(T.nhan,T.pv)+'%',T.nhan+' / '+T.pv+' phỏng vấn · '+pc(T.nhan,kq)+'% số có kết quả')+'</div>';
+    kp('Tỷ lệ nhận',pc(T.nPv,T.pv)+'%',T.nPv+' / '+T.pv+' phỏng vấn · '+pc(T.nPv,kq)+'% số có kết quả')+'</div>';
   // phễu
   var withPV=rows.filter(function(r,i){ return regs[i]&&regs[i]>=a&&pd(r.ngayLienHe); }).length, nhanAll=rows.filter(function(r,i){ return regs[i]&&regs[i]>=a&&lhOf(r)==='nhan'; }).length;
   var F=[['Đăng ký form',T.dk,''],['HR PASS',T.pass,pc(T.pass,T.dk)+'%'],['Có lịch phỏng vấn',withPV,pc(withPV,T.pass)+'% PASS'],['Nhận CTV',nhanAll,pc(nhanAll,withPV)+'% PV']];
   var fun=F.map(function(f){ return '<div class="ctv-fr"><span>'+f[0]+'</span><div class="t"><i style="width:'+(T.dk?f[1]/T.dk*100:0).toFixed(1)+'%"></i></div><span><b>'+f[1]+'</b> <em>'+f[2]+'</em></span></div>'; }).join('');
   var best=full.slice().sort(function(u,v){ return v.nhan-u.nhan || v.meet-u.meet; })[0];
-  var rates=full.filter(function(o){return o.pv>=10;}).map(function(o){return o.nhan/o.pv;}), rLo=Math.min.apply(null,[rate].concat(rates)), rHi=Math.max.apply(null,[rate].concat(rates));
+  var rates=full.filter(function(o){return o.pv>=10;}).map(function(o){return o.nPv/o.pv;}), rLo=Math.min.apply(null,[rate].concat(rates)), rHi=Math.max.apply(null,[rate].concat(rates));
   var it=[];
   if(full.length) it.push([okM||okN?'ok':'er',(okM||okN?'Đạt KPI: meeting '+okM+'/'+full.length+' tuần, nhận '+okN+'/'+full.length+' tuần':'Chưa tuần nào đạt KPI '+KPI_WEEK+' meeting hay '+KPI_NHAN+' nhận')+(best?'; tốt nhất tuần '+dd(best.w[2])+': '+best.meet+' meeting · '+best.nhan+' nhận.':'.')]);
   if(rate>0){ var need=function(r){ return Math.ceil(KPI_NHAN/r); }, reg=T.pv&&T.dk?T.dk/T.pv:0;
@@ -774,9 +777,9 @@ function allPage(rows,ev,nav,rng,R,today){
     '<div class="ctv-h" style="margin-top:16px">Dữ liệu cần dọn</div><div class="ctv-s">Để KPI đếm đúng</div>'+(dq.length?'<ul class="bt-ctvtodo">'+dq.map(function(q){return '<li>'+q+'</li>';}).join('')+'</ul>':'<div style="font-size:12px;color:var(--faint)">Không thấy dữ liệu lệch.</div>')+'</div></div>';
   // bảng tuần
   function mb(v){ var p=Math.round(v/KPI_WEEK*100), c=v>=KPI_WEEK?'var(--teal-2)':p>=80?'#E0A84A':'var(--rust)'; return '<b>'+v+'</b><div class="ctv-mb" style="margin-top:4px"><i style="width:'+Math.min(100,p)+'%;background:'+c+'"></i><b></b></div>'; }
-  var tr=W.slice().reverse().map(function(o){ return '<tr style="cursor:pointer" onclick="__ctvTd.goWeek(\''+o.w[0]+'\')"><td class="nw">'+dd(o.w[2])+' – '+dd(new Date(o.w[1]+'T00:00'))+(o.full?'':' <span style="color:var(--faint);font-size:11px">đang chạy</span>')+'</td><td style="text-align:center">'+o.dk+'</td><td style="text-align:center">'+o.pass+'</td><td>'+mb(o.meet)+'</td><td style="text-align:center">'+o.pv+'</td><td>'+mb(o.nhan)+'</td><td style="text-align:center;'+(o.cho?'color:#E0A84A':'')+'">'+o.cho+'</td><td style="text-align:center">'+(o.pv?pc(o.nhan,o.pv)+'%':'—')+'</td></tr>'; }).join('');
+  var tr=W.slice().reverse().map(function(o){ return '<tr style="cursor:pointer" onclick="__ctvTd.goWeek(\''+o.w[0]+'\')"><td class="nw">'+dd(o.w[2])+' – '+dd(new Date(o.w[1]+'T00:00'))+(o.full?'':' <span style="color:var(--faint);font-size:11px">đang chạy</span>')+'</td><td style="text-align:center">'+o.dk+'</td><td style="text-align:center">'+o.pass+'</td><td>'+mb(o.meet)+'</td><td style="text-align:center">'+o.pv+'</td><td>'+mb(o.nhan)+'</td><td style="text-align:center;'+(o.cho?'color:#E0A84A':'')+'">'+o.cho+'</td><td style="text-align:center">'+(o.pv?pc(o.nPv,o.pv)+'%':'—')+'</td></tr>'; }).join('');
   tr+='<tr style="font-weight:700;border-top:1px solid var(--muted)"><td class="nw">Tổng '+nW+' tuần</td><td style="text-align:center">'+T.dk+'</td><td style="text-align:center">'+T.pass+'</td><td>'+T.meet+' <span style="color:var(--faint);font-weight:400;font-size:11px">· TB '+vn(T.meet/nW,1)+'/tuần</span></td><td style="text-align:center">'+T.pv+'</td><td style="color:var(--teal-2)">'+T.nhan+' <span style="color:var(--faint);font-weight:400;font-size:11px">· TB '+vn(T.nhan/nW,1)+'/tuần</span></td><td style="text-align:center">'+T.cho+'</td><td style="text-align:center">'+pc(T.nhan,T.pv)+'%</td></tr>';
-  h+='<div class="ctv-card"><div class="ctv-h">KPI theo từng tuần (T2–CN)</div><div class="ctv-s">Đăng ký & PASS theo tuần đăng ký · Meeting theo lịch hr@ · Phỏng vấn / Nhận / Chờ theo tuần của Ngày phỏng vấn · vạch = KPI '+KPI_WEEK+' · bấm 1 tuần để xem chi tiết tuần đó</div>'+
+  h+='<div class="ctv-card"><div class="ctv-h">KPI theo từng tuần (T2–CN)</div><div class="ctv-s">Đăng ký & PASS theo tuần đăng ký · Meeting theo lịch hr@ · Nhận theo tuần của Ngày bắt đầu · Phỏng vấn / Chờ theo tuần của Ngày phỏng vấn · vạch = KPI '+KPI_WEEK+' · bấm 1 tuần để xem chi tiết tuần đó</div>'+
     '<div class="table-wrap"><table class="dt"><thead><tr><th>Tuần</th><th style="text-align:center">Đăng ký</th><th style="text-align:center">PASS</th><th>Meeting / '+KPI_WEEK+'</th><th style="text-align:center">PV (file)</th><th>Nhận / '+KPI_NHAN+'</th><th style="text-align:center">Chờ</th><th style="text-align:center">Tỷ lệ nhận</th></tr></thead><tbody>'+tr+'</tbody></table></div></div>';
   return h;
 }
@@ -785,8 +788,8 @@ function nhanHist(rows){
   for(var i=0;i<CAL_WEEKS;i++){ var a=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()-7*i), b=new Date(a.getFullYear(),a.getMonth(),a.getDate()+6), ka=ymd(a), kb=ymd(b), o=nhanWeek(rows,ka,kb);
     var mt=S.cal.ev&&S.cal.from<=ka?S.cal.ev.filter(function(e){ return e.d>=ka&&e.d<=kb; }).length:'—', pct=Math.round(o.nhan/KPI_NHAN*100), ok=o.nhan>=KPI_NHAN, now=i===0;
     var st=ok?'<span class="ctv-bd ok">Đạt · '+pct+'%</span>':now?'<span class="ctv-bd wa">Đang chạy · '+pct+'%</span>':'<span class="ctv-bd '+(pct>=80?'wa':'er')+'">Thiếu '+(KPI_NHAN-o.nhan)+' · '+pct+'%</span>';
-    tr+='<tr style="cursor:pointer'+(S.td.view==='tuan'&&S.td.off===-i?';background:rgba(155,123,234,.08)':'')+'" onclick="__ctvTd.week('+(-i)+')"><td class="nw">'+dd(a)+' – '+dd(b)+'</td><td style="text-align:center;color:var(--faint)">'+mt+'</td><td style="text-align:center">'+o.pv+'</td><td style="text-align:center;font-weight:600;color:var(--teal-2)">'+o.nhan+'</td><td style="text-align:center">'+(o.loai+o.khongph)+' / '+o.tuchoi+'</td><td style="text-align:center;'+(o.cho?'color:#E0A84A':'')+'">'+o.cho+'</td><td style="text-align:center">'+(o.pv?Math.round(o.nhan/o.pv*100)+'%':'—')+'</td><td class="nw">'+st+'</td></tr>'; }
-  return '<div class="ctv-card"><div class="ctv-h">Lịch sử KPI nhận theo tuần</div><div class="ctv-s">Tuần = tuần của Ngày phỏng vấn · Meeting (lịch hr@) chỉ để đối chiếu · bấm 1 tuần để xem tuần đó</div>'+
+    tr+='<tr style="cursor:pointer'+(S.td.view==='tuan'&&S.td.off===-i?';background:rgba(155,123,234,.08)':'')+'" onclick="__ctvTd.week('+(-i)+')"><td class="nw">'+dd(a)+' – '+dd(b)+'</td><td style="text-align:center;color:var(--faint)">'+mt+'</td><td style="text-align:center">'+o.pv+'</td><td style="text-align:center;font-weight:600;color:var(--teal-2)">'+o.nhan+'</td><td style="text-align:center">'+(o.loai+o.khongph)+' / '+o.tuchoi+'</td><td style="text-align:center;'+(o.cho?'color:#E0A84A':'')+'">'+o.cho+'</td><td style="text-align:center">'+(o.pv?Math.round(o.nPv/o.pv*100)+'%':'—')+'</td><td class="nw">'+st+'</td></tr>'; }
+  return '<div class="ctv-card"><div class="ctv-h">Lịch sử KPI nhận theo tuần</div><div class="ctv-s">Nhận = theo Ngày bắt đầu · PV / Loại / Chờ = theo Ngày phỏng vấn · Meeting (lịch hr@) chỉ để đối chiếu · bấm 1 tuần để xem tuần đó</div>'+
     '<div class="table-wrap"><table class="dt"><thead><tr><th>Tuần</th><th style="text-align:center">Meeting<br>(lịch)</th><th style="text-align:center">PV<br>(file)</th><th style="text-align:center">Nhận</th><th style="text-align:center">Loại / TC</th><th style="text-align:center">Chờ</th><th style="text-align:center">Tỷ lệ nhận</th><th>KPI '+KPI_NHAN+'</th></tr></thead><tbody>'+tr+'</tbody></table></div></div>';
 }
 /* KPI tuần: 50 lịch / 7 ngày (T2–CN). Tạo lịch = 1 meeting. */
