@@ -34,7 +34,7 @@ function attempt(n){
    .then(function(d){ if(!d||!d.ok) throw new Error((d&&(d.error||d.reason))||'API lỗi');
      var same=S.data && JSON.stringify([S.data.posts,S.data.runs,S.data.groups,S.data.research,S.data.config])===JSON.stringify([d.posts,d.runs,d.groups,d.research,d.config]);
      S.data=d; S.loaded=true; S.last=Date.now(); try{ localStorage.setItem(LS,JSON.stringify(d)); }catch(e){}
-     S.loading=false; if(window.currentTab===TAB && !same) render(); })
+     S.loading=false; if(window.currentTab===TAB && (!same || S.sub==='tq')) render(); })
    .catch(function(e){
      if(n>0){ setTimeout(function(){ attempt(n-1); },1500); return; }
      S.loading=false; S.error=e.message||'Lỗi kết nối'; if(window.currentTab===TAB) render(); });
