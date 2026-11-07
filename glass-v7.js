@@ -30,7 +30,7 @@ function buildGate(){
     '<button type="button" class="g-cord" aria-label="Giật dây để bật đèn và hiện khung đăng nhập" aria-pressed="false"><i></i><b></b></button>'+
     '<div class="g-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M20 12H5M10 7l-5 5 5 5"/></svg>Giật dây đèn để đăng nhập</div>'+
     '<div class="g-xs">'+xs+'</div>'+
-    '<div class="g-brand"><img src="bx7-logo.png" alt="BigX"><div><b>HR</b><small>Tuyển dụng CTV</small></div></div>'+
+    '<div class="g-brand"><img src="bx7-logo.png" alt="BigX"><div><b>TA</b><small>Talent Acquisition</small></div></div>'+
     '<div class="g-tag"><h2>Người BigX,<br>nơi làm việc là nhà.</h2><p>Đăng nhập để xem tuyển dụng, kho CV và báo cáo.</p></div>'+
     '<form class="g-card" novalidate autocomplete="on">'+
       '<h1>Chào mừng trở lại</h1><div class="sub">Nhập email được cấp quyền để vào dashboard</div>'+
@@ -101,7 +101,8 @@ function buildScene(){
 function swapLogo(){
   var lg=document.querySelector('#bx-topnav .tn-logo'); if(!lg) return false; if(lg.classList.contains('bx7-logo')) return true;
   lg.classList.add('bx7-logo'); lg.innerHTML='<img src="bx7-logo.png" alt="BigX">';
-  var b=document.querySelector('#bx-topnav .tn-brand b'); if(b) b.textContent='HR';
+  var b=document.querySelector('#bx-topnav .tn-brand b'); if(b) b.textContent='TA';
+  var sm=document.querySelector('#bx-topnav .tn-brand small'); if(sm) sm.textContent='Talent Acquisition';
   return true;
 }
 

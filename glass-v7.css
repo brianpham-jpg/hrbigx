@@ -8,14 +8,14 @@
 
 /* ---------- 1. biến màu kính (sáng) ---------- */
 :root[data-theme=light]{
-  --x-bg:transparent; --x-app:rgba(255,255,255,.34); --x-s1:rgba(255,255,255,.62); --x-s2:rgba(255,255,255,.46); --x-s3:rgba(255,255,255,.74);
+  --x-bg:transparent; --x-app:rgba(255,255,255,.64); --x-s1:rgba(255,255,255,.74); --x-s2:rgba(255,255,255,.56); --x-s3:rgba(255,255,255,.82);
   --x-line:rgba(255,255,255,.72); --x-line2:rgba(255,255,255,.5);
-  --x-tx:#0f2a33; --x-tx2:#21414b; --x-mu:#47646d; --x-fa:#6d8890;
+  --x-tx:#0b1f26; --x-tx2:#16323b; --x-mu:#2f4c55; --x-fa:#4a666e; /* chữ đậm hơn cho dễ đọc (Brian góp ý 07/11) */
   --x-acc:#1fb6d5; --x-accink:#0e7f99; --x-acctx:#ffffff; --x-accsoft:rgba(31,182,213,.16);
   --x-glass:rgba(255,255,255,.72); --x-shadow:0 14px 34px -16px rgba(6,40,50,.38);
-  --bg:transparent; --paper:rgba(255,255,255,.62); --paper-2:rgba(255,255,255,.46); --card2:rgba(255,255,255,.46);
+  --bg:transparent; --paper:rgba(255,255,255,.74); --paper-2:rgba(255,255,255,.56); --card2:rgba(255,255,255,.56);
   --line:rgba(15,42,51,.11); --line-soft:rgba(15,42,51,.07); --grid:rgba(15,42,51,.07);
-  --ink:#0f2a33; --text:#21414b; --muted:#47646d; --faint:#6d8890;
+  --ink:#0b1f26; --text:#16323b; --muted:#2f4c55; --faint:#4a666e;
 }
 /* ---------- biến màu kính (tối) ---------- */
 :root,:root[data-theme=dark]{
@@ -23,6 +23,7 @@
   --x-line:rgba(255,255,255,.15); --x-line2:rgba(255,255,255,.10);
   --x-acc:#3cc8e3; --x-accink:#5fd6ec; --x-acctx:#062028; --x-accsoft:rgba(60,200,227,.16);
   --x-glass:rgba(14,36,44,.8);
+  --x-tx2:#dbe4e7; --x-mu:#b3c1c6; --x-fa:#8fa1a7; --text:#dbe4e7; --muted:#b3c1c6; --faint:#8fa1a7;
   --bg:transparent; --paper:rgba(14,36,44,.62); --paper-2:rgba(255,255,255,.06); --card2:rgba(255,255,255,.06);
 }
 :root{--g7-ease:cubic-bezier(.22,.9,.24,1)}
@@ -38,7 +39,7 @@ html,body{background:#0b3b47!important}
 #main{background:transparent!important}
 
 /* ---------- 3. kính mờ cho khung ---------- */
-.content,#bx-topnav{backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);
+.content,#bx-topnav{backdrop-filter:blur(30px) saturate(140%);-webkit-backdrop-filter:blur(30px) saturate(140%);
   box-shadow:0 10px 30px rgba(6,40,50,.18), inset 0 1px 0 rgba(255,255,255,.4)}
 :root[data-theme=light] .tn-menu,:root[data-theme=light] .tn-mob{background:rgba(255,255,255,.9)}
 :root[data-theme=dark] .tn-menu,:root[data-theme=dark] .tn-mob{background:rgba(12,34,42,.92)}
@@ -55,6 +56,10 @@ html,body{background:#0b3b47!important}
 /* tiêu đề: Fraunces như mockup */
 .page-h1,.tb-title,.x5-head h1{font-family:'Fraunces',serif!important;font-weight:600!important;letter-spacing:-.01em!important}
 .tb-title{font-size:19px!important}
+/* tiêu đề tab + ghi chú nằm trên nền ảnh → đặt trên kính để chữ luôn rõ */
+.topbar .tb-left,.topbar .tb-right{background:var(--x-s1);border:1px solid var(--x-line);border-radius:16px;padding:6px 14px 6px 8px;
+  backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);box-shadow:0 6px 18px rgba(6,40,50,.12)}
+.topbar .tb-right{padding:6px 8px 6px 14px}
 
 /* ---------- 4. chuyển động khi đổi tab ---------- */
 .bx7-in{animation:bx7rise .75s var(--g7-ease) both;animation-delay:calc(var(--i) * 70ms + 80ms)}
