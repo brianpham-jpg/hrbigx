@@ -21,11 +21,14 @@ function E(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return 
 function icon(it){ return ICON[it.id]||it.icon||'ti-point'; }
 function groupMeta(g){ return GROUP[g.group]||{label:String(g.group).split('—')[0].trim(),icon:'ti-layout-grid'}; }
 
+/* NAV khai báo bằng const trong app.js → không nằm trên window, phải đọc trực tiếp */
+function getNav(){ try{ return NAV; }catch(e){ return window.NAV||null; } }
+
 function build(){
-  var main=document.getElementById('main');
-  if(!main||!window.NAV||document.getElementById('bx-topnav')) return;
+  var main=document.getElementById('main'), NAVL=getNav();
+  if(!main||!NAVL||document.getElementById('bx-topnav')) return;
   var nav='', mob='';
-  NAV.forEach(function(g,gi){
+  NAVL.forEach(function(g,gi){
     if(g.items.length===1 && gi===0){
       var it=g.items[0];
       nav+='<button type="button" class="tn-it" data-id="'+it.id+'"><i class="ti '+icon(it)+'"></i><span>'+E(it.label)+'</span></button>';
