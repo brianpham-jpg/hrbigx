@@ -1,0 +1,184 @@
+/* ============================================================
+   BigX HR — glass-v7.css  (giao diện kính mờ + login cây đèn — mockup Brian duyệt 07/11/2026)
+   - Lớp phủ lên theme-v5 + topnav-v6: chỉ đổi biến màu, nền ảnh, kính mờ, hiệu ứng.
+   - KHÔNG sửa file cũ. Gỡ 2 dòng glass-v7.css / glass-v7.js khỏi index.html là web về y như cũ.
+   - Thẻ <link> có data-bx-v5 → theme-v5.js không đổi màu file này.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@700;800&display=swap');
+
+/* ---------- 1. biến màu kính (sáng) ---------- */
+:root[data-theme=light]{
+  --x-bg:transparent; --x-app:rgba(255,255,255,.34); --x-s1:rgba(255,255,255,.62); --x-s2:rgba(255,255,255,.46); --x-s3:rgba(255,255,255,.74);
+  --x-line:rgba(255,255,255,.72); --x-line2:rgba(255,255,255,.5);
+  --x-tx:#0f2a33; --x-tx2:#21414b; --x-mu:#47646d; --x-fa:#6d8890;
+  --x-acc:#1fb6d5; --x-accink:#0e7f99; --x-acctx:#ffffff; --x-accsoft:rgba(31,182,213,.16);
+  --x-glass:rgba(255,255,255,.72); --x-shadow:0 14px 34px -16px rgba(6,40,50,.38);
+  --bg:transparent; --paper:rgba(255,255,255,.62); --paper-2:rgba(255,255,255,.46); --card2:rgba(255,255,255,.46);
+  --line:rgba(15,42,51,.11); --line-soft:rgba(15,42,51,.07); --grid:rgba(15,42,51,.07);
+  --ink:#0f2a33; --text:#21414b; --muted:#47646d; --faint:#6d8890;
+}
+/* ---------- biến màu kính (tối) ---------- */
+:root,:root[data-theme=dark]{
+  --x-bg:transparent; --x-app:rgba(6,22,28,.42); --x-s1:rgba(14,36,44,.64); --x-s2:rgba(255,255,255,.07); --x-s3:rgba(255,255,255,.12);
+  --x-line:rgba(255,255,255,.15); --x-line2:rgba(255,255,255,.10);
+  --x-acc:#3cc8e3; --x-accink:#5fd6ec; --x-acctx:#062028; --x-accsoft:rgba(60,200,227,.16);
+  --x-glass:rgba(14,36,44,.8);
+  --bg:transparent; --paper:rgba(14,36,44,.62); --paper-2:rgba(255,255,255,.06); --card2:rgba(255,255,255,.06);
+}
+:root{--g7-ease:cubic-bezier(.22,.9,.24,1)}
+
+/* ---------- 2. nền: ảnh phòng mờ + phủ xanh ngọc ---------- */
+html,body{background:#0b3b47!important}
+#bx7-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:linear-gradient(135deg,#3fa9b8 0%,#1c6f80 55%,#0f4a58 100%)}
+#bx7-bg .ph{position:absolute;inset:-40px;background:url("bx7-room.jpg") center/cover no-repeat;filter:blur(6px) saturate(.9)}
+#bx7-bg .tn{position:absolute;inset:0;background:linear-gradient(135deg,#8fd3dc 0%,#4aa3b4 50%,#22697a 100%);mix-blend-mode:multiply;opacity:.92;transition:filter 1.1s ease}
+:root[data-theme=dark] #bx7-bg .tn,:root:not([data-theme]) #bx7-bg .tn{background:linear-gradient(135deg,#2f7482 0%,#174b58 50%,#0a2a33 100%);opacity:1}
+#bx7-bg .sh{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 40%,transparent 40%,rgba(8,40,50,.35) 100%)}
+#sidebar,#main{position:relative;z-index:1}
+#main{background:transparent!important}
+
+/* ---------- 3. kính mờ cho khung ---------- */
+.content,#bx-topnav{backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);
+  box-shadow:0 10px 30px rgba(6,40,50,.18), inset 0 1px 0 rgba(255,255,255,.4)}
+:root[data-theme=light] .tn-menu,:root[data-theme=light] .tn-mob{background:rgba(255,255,255,.9)}
+:root[data-theme=dark] .tn-menu,:root[data-theme=dark] .tn-mob{background:rgba(12,34,42,.92)}
+.tn-menu,.tn-mob{backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%)}
+.tn-it.on,.tn-dd.on>.tn-it{background:linear-gradient(90deg,rgba(31,182,213,.95),rgba(31,182,213,.7))!important;color:#fff!important;box-shadow:0 4px 14px rgba(31,182,213,.35)}
+.tn-it.on>i.ti:first-child,.tn-dd.on>.tn-it>i.ti:first-child,
+:root[data-theme=light] .tn-it.on>i.ti:first-child,:root[data-theme=light] .tn-dd.on>.tn-it>i.ti:first-child{color:#fff!important}
+.tn-logo.bx7-logo{width:auto;height:38px;background:none;padding:0;border-radius:10px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.tn-logo.bx7-logo img{height:38px;width:auto;display:block}
+.tn-av{background:var(--x-acc)!important;color:#fff!important}
+.ctv-card,.bot-card,.v3-card,.card{transition:transform .25s ease, box-shadow .25s ease}
+.ctv-card:hover,.bot-card:hover,.v3-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(6,40,50,.14)}
+
+/* tiêu đề: Fraunces như mockup */
+.page-h1,.tb-title,.x5-head h1{font-family:'Fraunces',serif!important;font-weight:600!important;letter-spacing:-.01em!important}
+.tb-title{font-size:19px!important}
+
+/* ---------- 4. chuyển động khi đổi tab ---------- */
+.bx7-in{animation:bx7rise .75s var(--g7-ease) both;animation-delay:calc(var(--i) * 70ms + 80ms)}
+@keyframes bx7rise{from{opacity:0;transform:translateY(34px) scale(.985)}to{opacity:1;transform:none}}
+.topbar{position:relative}
+.bx7-fls{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:0}
+.topbar>*:not(.bx7-fls){position:relative;z-index:1}
+.bx7-fl{position:absolute;transition:transform .6s ease-out}
+.bx7-fe{opacity:0;transform:translate(var(--fx),var(--fy)) rotate(var(--fr)) scale(.35);transition:transform 1.1s var(--g7-ease) var(--d), opacity .7s ease var(--d)}
+.bx7-fe.show{opacity:1;transform:none}
+.bx7-fe.gone{transition-duration:.45s;transition-delay:0s;opacity:0;transform:translate(calc(var(--fx) * -.6),var(--fy)) rotate(calc(var(--fr) * -1)) scale(.4)}
+.bx7-fb{width:var(--sz);height:var(--sz);border-radius:50%;display:grid;place-items:center;color:#fff;font-size:calc(var(--sz) * .48);
+  background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 8px 20px rgba(6,40,50,.18), inset 0 1px 0 rgba(255,255,255,.6);animation:bx7bob var(--bd) ease-in-out infinite alternate}
+@keyframes bx7bob{from{transform:translateY(-5px) rotate(-6deg)}to{transform:translateY(5px) rotate(6deg)}}
+
+/* ---------- 5. hoa đào rơi + kim tuyến ---------- */
+.bx7-glitter,.bx7-petals{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.bx7-glitter i{position:absolute;border-radius:50%;background:#fff;opacity:0;box-shadow:0 0 6px 1px rgba(255,255,255,.8);animation:bx7tw var(--d) ease-in-out var(--delay) infinite}
+.bx7-glitter i.gold{background:#f6e3a8;box-shadow:0 0 6px 1px rgba(246,227,168,.75)}
+.bx7-glitter b{position:absolute;width:var(--s);height:var(--s);opacity:0;animation:bx7tw var(--d) ease-in-out var(--delay) infinite}
+.bx7-glitter b::before,.bx7-glitter b::after{content:"";position:absolute;left:50%;top:50%;background:#fff;border-radius:2px;transform:translate(-50%,-50%);box-shadow:0 0 6px rgba(255,255,255,.9)}
+.bx7-glitter b::before{width:100%;height:2px}.bx7-glitter b::after{width:2px;height:100%}
+@keyframes bx7tw{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:var(--o);transform:scale(1) rotate(45deg)}}
+.bx7-petal{position:absolute;top:-40px;left:var(--x);animation:bx7fall var(--d) linear var(--delay) infinite}
+.bx7-petal i{display:block;width:var(--s);height:calc(var(--s) * .78);background:radial-gradient(ellipse at 30% 30%,#fff3f5 0%,#fbd3dc 45%,#f2a7b8 100%);
+  border-radius:150% 0 150% 0;opacity:.88;box-shadow:0 2px 6px rgba(120,30,60,.12);animation:bx7sway var(--sw) ease-in-out infinite alternate, bx7spin var(--sp) linear infinite}
+@keyframes bx7fall{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--dx),calc(100vh + 80px),0)}}
+@keyframes bx7sway{from{margin-left:-24px}to{margin-left:24px}}
+@keyframes bx7spin{from{transform:rotate3d(1,.4,.2,0deg)}to{transform:rotate3d(1,.4,.2,360deg)}}
+
+/* ---------- 6. login cây đèn ---------- */
+html #google-gate.bx7-gate{background:#08090b!important;display:block}
+html #google-gate.bx7-gate[style*="display: none"],html #google-gate.bx7-gate[style*="display:none"]{display:none!important}
+#google-gate>div.bx7-g{position:fixed;inset:0;background:none!important;border:0!important;border-radius:0!important;overflow:hidden;color:#fff;
+  font-family:'Be Vietnam Pro',sans-serif;transition:opacity .4s ease;--lx:42%;--y:#ffe037}
+#google-gate>div.bx7-g.wait{opacity:0}
+#google-gate>div.bx7-g>.g-photo{position:fixed;inset:0;background:url("bx7-team.jpg") center top/cover no-repeat!important;
+  opacity:.07;filter:brightness(.35) saturate(.6) blur(1px);transition:opacity 1.1s var(--g7-ease), filter 1.1s var(--g7-ease)}
+.bx7-g .g-dark{position:fixed;inset:0;pointer-events:none;background:radial-gradient(70% 85% at var(--lx) 55%,rgba(8,9,11,0) 0%,rgba(8,9,11,.25) 45%,rgba(8,9,11,.85) 100%);transition:opacity 1.1s var(--g7-ease)}
+#google-gate.g7-on>.bx7-g>.g-photo{opacity:1;filter:brightness(.92) saturate(1) blur(.6px)}
+#google-gate.g7-on .g-dark{opacity:.5}
+.bx7-g .g-lamp{position:fixed;left:var(--lx);top:0;transform:translateX(-50%);z-index:3;width:200px;display:flex;flex-direction:column;align-items:center;cursor:pointer;animation:g7swing 6s ease-in-out infinite;transform-origin:50% 0}
+@keyframes g7swing{0%,100%{transform:translateX(-50%) rotate(.6deg)}50%{transform:translateX(-50%) rotate(-.6deg)}}
+.bx7-g .g-wire{width:2px;height:120px;background:linear-gradient(#2a2c30,#45484e)}
+.bx7-g .g-shade{position:relative;width:170px;height:70px}
+.bx7-g .g-shade svg{width:100%;height:100%;display:block;overflow:visible}
+.bx7-g .g-bulb{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:46px;height:16px;border-radius:50%;background:#3a3a36;transition:background .3s, box-shadow .3s}
+#google-gate.g7-on .g-bulb{background:#fff7cc;box-shadow:0 0 18px 6px rgba(255,236,140,.9),0 0 60px 20px rgba(255,224,55,.45)}
+.bx7-g .g-cord{position:fixed;left:calc(var(--lx) + 58px);top:178px;z-index:4;background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:0 8px;transition:transform .25s var(--g7-ease)}
+.bx7-g .g-cord i{display:block;width:1.5px;height:78px;background:linear-gradient(#8a8578,#c9c2ad)}
+.bx7-g .g-cord b{display:block;width:10px;height:14px;border-radius:5px;background:radial-gradient(circle at 35% 30%,#fff3b0,#d9b52a 70%);box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.bx7-g .g-cord.pull{transform:translateY(16px)}
+.bx7-g .g-cord:focus-visible{outline:2px solid var(--y);outline-offset:4px;border-radius:6px}
+.bx7-g .g-beam{position:fixed;left:var(--lx);top:186px;transform:translateX(-50%);z-index:2;pointer-events:none;width:min(900px,92vw);height:calc(100vh - 186px);
+  clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);background:linear-gradient(180deg,rgba(255,236,140,.55) 0%,rgba(255,224,55,.22) 35%,rgba(255,224,55,.06) 75%,rgba(255,224,55,0) 100%);
+  mix-blend-mode:screen;filter:blur(4px);opacity:0}
+#google-gate.g7-on .g-beam{animation:g7flick .9s steps(1,end) forwards}
+@keyframes g7flick{0%{opacity:0}12%{opacity:.7}22%{opacity:.15}34%{opacity:.85}44%{opacity:.4}56%,100%{opacity:1}}
+.bx7-g .g-glow{position:fixed;left:var(--lx);top:150px;transform:translate(-50%,-50%);width:520px;height:320px;border-radius:50%;z-index:1;pointer-events:none;background:radial-gradient(closest-side,rgba(255,224,55,.28),transparent);opacity:0;transition:opacity .9s .2s}
+#google-gate.g7-on .g-glow{opacity:1}
+.bx7-g .g-hint{position:fixed;left:calc(var(--lx) + 84px);top:236px;z-index:4;font-size:13px;color:rgba(255,255,255,.62);display:flex;align-items:center;gap:8px;transition:opacity .4s;animation:g7nudge 2.4s ease-in-out infinite}
+.bx7-g .g-hint svg{width:22px;height:22px}
+@keyframes g7nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
+#google-gate.g7-on .g-hint{opacity:0}
+.bx7-g .g-xs{position:fixed;inset:0;z-index:4;pointer-events:none}
+.bx7-g .g-xs .fl{position:absolute;transition:transform .7s ease-out}
+.bx7-g .g-xs .fe{opacity:0;transform:translate(var(--fx),var(--fy)) rotate(var(--fr)) scale(.3);transition:transform 1.2s var(--g7-ease) var(--d), opacity .7s ease var(--d)}
+#google-gate.g7-on .g-xs .fe{opacity:1;transform:none}
+#google-gate:not(.g7-on) .g-xs .fe{transition-duration:.5s;transition-delay:0s}
+.bx7-g .g-xs .fb{width:var(--sz);height:var(--sz);animation:g7bob var(--bd) ease-in-out infinite alternate;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35))}
+.bx7-g .g-xs svg{width:100%;height:100%;display:block}
+@keyframes g7bob{from{transform:translateY(-8px) rotate(-10deg)}to{transform:translateY(8px) rotate(10deg)}}
+.bx7-g .g-brand{position:fixed;left:32px;top:28px;display:flex;align-items:center;gap:10px;z-index:5;transition:opacity .6s}
+.bx7-g .g-brand img{height:40px;width:auto;border-radius:10px;display:block}
+.bx7-g .g-brand b{display:block;font-size:15px}.bx7-g .g-brand small{font-size:11px;opacity:.75}
+#google-gate:not(.g7-on) .g-brand{opacity:.45}
+.bx7-g .g-tag{position:fixed;left:32px;top:100px;z-index:5;max-width:420px;text-shadow:0 2px 14px rgba(0,0,0,.55);opacity:0;transform:translateY(8px);transition:opacity .8s .5s var(--g7-ease), transform .8s .5s var(--g7-ease)}
+.bx7-g .g-tag h2{font-family:'Fraunces',serif;font-size:34px;font-weight:600;letter-spacing:-.01em;line-height:1.15;margin:0}
+.bx7-g .g-tag p{font-size:13px;opacity:.88;margin:8px 0 0}
+#google-gate.g7-on .g-tag{opacity:1;transform:none}
+.bx7-g .g-card{position:fixed;right:40px;top:28px;z-index:6;width:360px;padding:24px;border-radius:20px;box-sizing:border-box;
+  background:rgba(18,18,20,.58);border:1px solid rgba(255,224,55,.22);backdrop-filter:blur(22px) saturate(130%);-webkit-backdrop-filter:blur(22px) saturate(130%);
+  box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+  opacity:0;visibility:hidden;transform:translateY(16px) scale(.97);transition:opacity .5s var(--g7-ease), transform .5s var(--g7-ease), visibility 0s .5s}
+#google-gate.g7-on .g-card{opacity:1;visibility:visible;transform:none;transition:opacity .6s .45s var(--g7-ease), transform .6s .45s var(--g7-ease), visibility 0s}
+.bx7-g .g-card h1{font-family:'Fraunces',serif;font-size:28px;font-weight:600;letter-spacing:-.01em;margin:0;color:#fff}
+.bx7-g .g-card .sub{font-size:12px;opacity:.7;margin-top:4px}
+.bx7-g .g-field{margin-top:14px}
+.bx7-g .g-field label{display:block;font-size:11px;font-weight:600;opacity:.8;margin-bottom:6px}
+.bx7-g .g-inp{display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);transition:.2s}
+.bx7-g .g-inp:focus-within{border-color:var(--y);box-shadow:0 0 0 3px rgba(255,224,55,.18)}
+.bx7-g .g-inp.bad{border-color:#e0565b;animation:g7shake .35s}
+@keyframes g7shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.bx7-g .g-inp svg{width:16px;height:16px;opacity:.7;flex:none}
+.bx7-g .g-inp input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font:500 13px 'Be Vietnam Pro',sans-serif}
+.bx7-g .g-inp input::placeholder{color:rgba(255,255,255,.45)}
+.bx7-g .g-msg{font-size:12px;line-height:1.45;margin-top:14px;border-radius:10px;padding:9px 12px;background:rgba(224,86,91,.14);color:#ff9a9d;border:1px solid rgba(224,86,91,.35)}
+.bx7-g .g-msg.ok{background:rgba(255,224,55,.12);color:var(--y);border-color:rgba(255,224,55,.35)}
+.bx7-g .g-btn{width:100%;margin-top:18px;padding:12px;border:0;border-radius:12px;cursor:pointer;font:700 14px 'Be Vietnam Pro',sans-serif;color:#141414;background:var(--y);
+  box-shadow:0 8px 24px rgba(255,224,55,.25);transition:transform .2s, box-shadow .2s}
+.bx7-g .g-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,224,55,.38)}
+.bx7-g .g-foot{margin-top:16px;font-size:11px;opacity:.6;text-align:center}
+.bx7-g .g-off{display:block;margin:12px auto 0;background:none;border:0;color:rgba(255,255,255,.5);font:500 11px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.bx7-g .g-off:hover{color:#fff}
+
+/* ---------- 7. điện thoại / giảm chuyển động / in ---------- */
+@media (max-width:820px){
+  .bx7-fls{display:none}
+  .bx7-g{--lx:50%!important}
+  .bx7-g .g-tag{display:none}
+  .bx7-g .g-hint{left:50%;top:auto;bottom:46%;transform:translateX(-50%);animation:none;white-space:nowrap}
+  .bx7-g .g-card{right:16px;left:16px;width:auto;top:auto;bottom:16px}
+  .bx7-g .g-brand{left:16px;top:16px}
+  .bx7-g .g-wire{height:90px}.bx7-g .g-cord{top:148px}.bx7-g .g-beam{top:156px;height:calc(100vh - 156px)}.bx7-g .g-glow{top:120px}
+  .bx7-g .g-xs .fl:nth-child(n+5){display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .bx7-in{animation:none}.bx7-fe,.bx7-g .g-xs .fe{transition:none}.bx7-fb,.bx7-g .g-xs .fb,.bx7-g .g-lamp,.bx7-g .g-hint{animation:none}
+  #google-gate.g7-on .g-beam{animation:none;opacity:1}
+  .bx7-glitter i,.bx7-glitter b{animation:none;opacity:.5}.bx7-petals{display:none}
+}
+@media print{
+  #bx7-bg,.bx7-glitter,.bx7-petals,.bx7-fls{display:none!important}
+  html,body{background:#fff!important}
+  .content,#bx-topnav{backdrop-filter:none!important;box-shadow:none!important}
+}
