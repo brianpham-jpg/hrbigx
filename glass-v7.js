@@ -16,6 +16,9 @@ function R(a,b){ return a+Math.random()*(b-a); }
 
 /* ================= 1. LOGIN CÂY ĐÈN ================= */
 function xSvg(c1,c2){ return '<svg viewBox="0 0 40 40"><rect x="15.5" y="1" width="9" height="38" rx="4.5" transform="rotate(45 20 20)" fill="'+c1+'" stroke="#fff" stroke-width="1.2"/><rect x="15.5" y="1" width="9" height="38" rx="4.5" transform="rotate(-45 20 20)" fill="'+c2+'" stroke="#fff" stroke-width="1.2"/></svg>'; }
+/* đã qua cổng đèn trong lần mở web này (đóng tab/trình duyệt là phải qua lại) */
+function gatePassed(){ try{ return sessionStorage.getItem('bx7_gate_ok')==='1'; }catch(e){ return !!window.__bx7Ok; } }
+function passGate(){ window.__bx7Pending=false; window.__bx7Ok=true; try{ sessionStorage.setItem('bx7_gate_ok','1'); }catch(e){} }
 function buildGate(){
   var gate=document.getElementById('google-gate'); if(!gate||gate.__bx7) return; gate.__bx7=true;
   gate.classList.add('bx7-gate');
@@ -49,10 +52,15 @@ function buildGate(){
     if(!v){ box.classList.add('bad'); say('Anh/chị nhập email nhé.'); em.focus(); return; }
     var role=(typeof bxRoleOf==='function')?bxRoleOf(v):null;
     if(!role){ box.classList.add('bad'); say('Email này chưa được cấp quyền truy cập. Liên hệ HR nếu cần.'); em.select(); return; }
+    var cur=null; try{ cur=bxAuth.currentUser&&String(bxAuth.currentUser.email||'').toLowerCase(); }catch(_){}
+    if(cur && cur===v){ /* đã xác thực Google sẵn với đúng email này → mở khóa luôn */
+      passGate(); say('Xin chào! Đang vào dashboard…',true);
+      setTimeout(function(){ gate.style.display='none'; gate.classList.remove('g7-on'); msg.style.display='none'; em.value=''; },700); return; }
     try{
+      window.__bx7Pending=true;
       var p=new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account',login_hint:v});
       say('Đang mở xác nhận Google cho '+v+'…',true);
-      bxAuth.signInWithPopup(p).catch(function(err){ say('Đăng nhập thất bại: '+(err&&err.message?err.message:err)); });
+      bxAuth.signInWithPopup(p).then(function(){ passGate(); }).catch(function(err){ window.__bx7Pending=false; say('Đăng nhập thất bại: '+(err&&err.message?err.message:err)); });
     }catch(ex){ say('Không mở được đăng nhập Google: '+(ex&&ex.message?ex.message:ex)); }
   });
   em.addEventListener('input',function(){ box.classList.remove('bad'); });
@@ -60,7 +68,14 @@ function buildGate(){
     [].forEach.call(g.querySelectorAll('.g-xs .fl'),function(f){ var d=+f.getAttribute('data-depth'); f.style.transform='translate('+(-dx*40*d)+'px,'+(-dy*30*d)+'px)'; }); });
   /* tránh nháy cảnh đèn khi đã đăng nhập sẵn: chờ Firebase báo trạng thái rồi mới hiện */
   var shown=false; function reveal(){ if(!shown){ shown=true; g.classList.remove('wait'); } }
-  try{ bxAuth.onAuthStateChanged(function(){ setTimeout(reveal,60); }); }catch(e){}
+  try{ bxAuth.onAuthStateChanged(function(user){
+    var role=user&&typeof bxRoleOf==='function'?bxRoleOf(user.email):null;
+    if(user && role){
+      if(window.__bx7Pending){ passGate(); }
+      if(!gatePassed()){ gate.style.display='flex'; } /* còn nhớ đăng nhập nhưng chưa qua cổng trong lần mở này → hiện lại cổng */
+    }
+    setTimeout(reveal,60);
+  }); }catch(e){}
   setTimeout(reveal,2500);
 }
 
