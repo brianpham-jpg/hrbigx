@@ -53,6 +53,22 @@ html,body{background:#0b3b47!important}
 .ctv-card,.bot-card,.v3-card,.card{transition:transform .25s ease, box-shadow .25s ease}
 .ctv-card:hover,.bot-card:hover,.v3-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(6,40,50,.14)}
 
+/* menu tài khoản (bấm avatar) */
+.tn-av{cursor:pointer;transition:transform .2s, box-shadow .2s}
+.tn-av:hover{transform:scale(1.06);box-shadow:0 0 0 3px rgba(31,182,213,.3)}
+#bx7-um{position:fixed;z-index:99990;min-width:220px;padding:6px;border-radius:14px;background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.9);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 18px 40px rgba(6,40,50,.25);font-family:'Be Vietnam Pro',sans-serif;animation:bx7um .18s ease}
+@keyframes bx7um{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+#bx7-um .um-h{padding:8px 10px 10px;border-bottom:1px solid rgba(15,42,51,.1);margin-bottom:4px}
+#bx7-um .um-h b{display:block;font-size:13px;color:#0b1f26}
+#bx7-um .um-h small{font-size:11px;color:#2f4c55}
+#bx7-um .um-out{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:none;cursor:pointer;font:600 13px 'Be Vietnam Pro',sans-serif;color:#c8402f;text-align:left}
+#bx7-um .um-out:hover{background:rgba(200,64,47,.1)}
+#bx7-um .um-out i{font-size:17px}
+:root[data-theme=dark] #bx7-um{background:rgba(12,34,42,.94);border-color:rgba(255,255,255,.14)}
+:root[data-theme=dark] #bx7-um .um-h b{color:#fff}:root[data-theme=dark] #bx7-um .um-h small{color:#b3c1c6}
+:root[data-theme=dark] #bx7-um .um-h{border-color:rgba(255,255,255,.12)}:root[data-theme=dark] #bx7-um .um-out{color:#ff8a80}
+
 /* tiêu đề: Fraunces như mockup */
 .page-h1,.tb-title,.x5-head h1{font-family:'Fraunces',serif!important;font-weight:600!important;letter-spacing:-.01em!important}
 .tb-title{font-size:19px!important}

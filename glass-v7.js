@@ -194,7 +194,34 @@ function wrapGo(){
   w.__bx7=true; window.go=w; return true;
 }
 
+
+/* ================= 4. BẤM AVATAR → ĐĂNG XUẤT ================= */
+function userMenu(){
+  if(window.__bx7Um) return; window.__bx7Um=true;
+  function close(){ var m=document.getElementById('bx7-um'); if(m) m.remove(); }
+  document.addEventListener('click',function(ev){
+    var av=ev.target.closest&&ev.target.closest('#bx-topnav .tn-av');
+    if(!av){ if(!(ev.target.closest&&ev.target.closest('#bx7-um'))) close(); return; }
+    ev.stopPropagation();
+    if(document.getElementById('bx7-um')){ close(); return; }
+    var email=String(window.BX_USER||''), role=window.BX_ROLE==='viewer'?'Chỉ xem':'Toàn quyền';
+    var m=document.createElement('div'); m.id='bx7-um'; m.setAttribute('role','menu');
+    m.innerHTML='<div class="um-h"><b>'+email.replace(/[<>&"]/g,'')+'</b><small>'+role+'</small></div>'+
+      '<button type="button" class="um-out" role="menuitem"><i class="ti ti-logout"></i>Đăng xuất</button>';
+    var r=av.getBoundingClientRect(); m.style.top=(r.bottom+10)+'px'; m.style.right=Math.max(8,innerWidth-r.right)+'px';
+    document.body.appendChild(m);
+    m.querySelector('.um-out').addEventListener('click',function(){
+      close(); try{ sessionStorage.removeItem('bx7_gate_ok'); }catch(e){} window.__bx7Ok=false;
+      var g=document.getElementById('google-gate'); if(g){ g.classList.remove('g7-on'); var em=g.querySelector('#bx7-em'), ms=g.querySelector('#google-gate-error'); if(em) em.value=''; if(ms) ms.style.display='none'; }
+      try{ bxAuth.signOut(); }catch(e){ location.reload(); }
+    });
+  },true);
+  document.addEventListener('keydown',function(ev){ if(ev.key==='Escape') close(); });
+  addEventListener('resize',close);
+}
+
 /* ================= khởi động ================= */
+userMenu();
 buildGate();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',buildGate);
 buildScene();
