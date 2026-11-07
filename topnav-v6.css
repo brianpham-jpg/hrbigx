@@ -1,0 +1,62 @@
+/* ============================================================
+   BigX HR — topnav-v6.css  (thanh công cụ ngang — phương án B, 07/11/2026)
+   Dùng biến màu của theme-v5 (sáng/tối theo máy). Gỡ file là về thanh dọc cũ.
+   ============================================================ */
+body.bx-topnav-on #sidebar{display:none!important}
+body.bx-topnav-on .content{margin:0 12px 12px 12px!important}
+body.bx-topnav-on .topbar{padding:0 26px!important}
+
+#bx-topnav{position:relative;z-index:70;display:flex;align-items:center;gap:18px;height:60px;margin:12px 12px 0;padding:0 10px 0 12px;
+  background:var(--x-app);border:1px solid var(--x-line2);border-radius:18px;font-family:var(--x-sans);flex-shrink:0}
+.tn-brand{display:flex;align-items:center;gap:10px;cursor:pointer;flex-shrink:0;padding-right:6px}
+.tn-logo{width:34px;height:34px;border-radius:10px;background:var(--x-acc);color:var(--x-acctx);display:grid;place-items:center;font-weight:800;font-size:16px}
+.tn-brand b{display:block;color:var(--x-tx);font-weight:700;font-size:14px;line-height:1.15}
+.tn-brand small{display:block;color:var(--x-mu);font-size:11px}
+
+.tn-nav{display:flex;align-items:center;gap:4px;flex:1;min-width:0}
+.tn-it{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border:0;border-radius:19px;background:transparent;
+  color:var(--x-tx2);font:500 13.5px var(--x-sans);cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.tn-it>i.ti:first-child{font-size:18px;color:var(--x-mu);transition:color .15s}
+.tn-it:hover{background:var(--x-s2);color:var(--x-tx)}
+.tn-it:hover>i.ti:first-child{color:var(--x-tx)}
+.tn-it.on,.tn-dd.on>.tn-it{background:var(--x-tx);color:var(--x-app)}
+.tn-it.on>i.ti:first-child,.tn-dd.on>.tn-it>i.ti:first-child{color:var(--x-acc)}
+:root[data-theme=light] .tn-it.on>i.ti:first-child,:root[data-theme=light] .tn-dd.on>.tn-it>i.ti:first-child{color:var(--x-acc)}
+.tn-chev{font-size:14px;margin-left:-2px;opacity:.7;transition:transform .2s}
+.tn-dd{position:relative}
+.tn-dd.open .tn-chev{transform:rotate(180deg)}
+
+.tn-menu{position:absolute;top:calc(100% + 10px);left:0;min-width:300px;padding:6px;background:var(--x-s1);border:1px solid var(--x-line);
+  border-radius:14px;box-shadow:var(--x-shadow);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .16s,transform .16s}
+.tn-dd.open .tn-menu{opacity:1;transform:none;pointer-events:auto}
+.tn-mi{display:flex;align-items:center;gap:12px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;text-align:left;cursor:pointer;font-family:var(--x-sans)}
+.tn-mi:hover{background:var(--x-s2)}
+.tn-mi.on{background:var(--x-s3)}
+.tn-ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+.tn-ico i{font-size:19px}
+.tone-norm{background:var(--x-normbg);color:var(--x-norm)}
+.tone-high{background:var(--x-highbg);color:var(--x-high)}
+.tone-ok{background:var(--x-okbg);color:var(--x-ok)}
+.tone-acc{background:var(--x-accsoft);color:var(--x-accink)}
+.tn-tx b{display:flex;align-items:center;gap:6px;color:var(--x-tx);font-weight:600;font-size:13.5px}
+.tn-tx b em{font-style:normal;font-size:10px;font-weight:600;color:var(--x-accink);background:var(--x-accsoft);border-radius:6px;padding:1px 6px}
+.tn-tx small{display:block;color:var(--x-mu);font-size:11.5px;margin-top:1px}
+
+.tn-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tn-theme-slot:empty{display:none}
+.tn-ro{font-size:11px;font-weight:600;color:var(--x-high);background:var(--x-highbg);border-radius:10px;padding:3px 8px}
+.tn-av{width:34px;height:34px;border-radius:50%;background:#5B6B3A;color:#F4F8E0;display:grid;place-items:center;font-size:12px;font-weight:700}
+.tn-burger{display:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--x-line);background:var(--x-s1);color:var(--x-tx);cursor:pointer}
+.tn-burger i{font-size:19px}
+.tn-mob{display:none}
+.tn-mgrp{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--x-mu);padding:12px 10px 4px}
+
+@media (max-width:820px){
+  #bx-topnav{gap:10px;padding:0 8px 0 10px}
+  .tn-nav,.tn-brand small{display:none}
+  .tn-brand{flex:1}
+  .tn-burger{display:grid;place-items:center}
+  .tn-mob{position:absolute;top:calc(100% + 8px);left:0;right:0;padding:6px;background:var(--x-s1);border:1px solid var(--x-line);border-radius:14px;box-shadow:var(--x-shadow)}
+  #bx-topnav.mob-open .tn-mob{display:block}
+  body.bx-topnav-on .topbar{padding:0 16px!important}
+}
