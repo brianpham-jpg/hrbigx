@@ -241,14 +241,16 @@ function grpRows(){
     var tv=(note.match(/([\d.,]+\s*K)\s*TV/i)||[])[1]||String(gv(g,['thanhVien'])||''), hd=(note.match(/(\d+\+?\s*bài\/ngày)/i)||[])[1]||'';
     var mine=S.k.P.filter(function(p){ return (ma&&p.maGroup===ma)||(!ma&&p.tenGroup===ten); }).sort(function(a,b){return (b._d||0)-(a._d||0);});
     var wk=mine.filter(function(p){ return p._d&&p._d>=ws&&p._s!=='loi'; }), last=mine[0];
+    var treo=/treo/i.test(duyet), pend=mine.some(function(p){return p._s==='cho';}), full=wk.length>=max;
     var st;
     if(!inS) st=pill2('b2-mute','Ngoài lịch');
-    else if(/treo/i.test(duyet)) st=pill2('b2-bad','Bỏ qua · treo bài'+((duyet.match(/(\d{1,2}\/\d{1,2})/)||[])[1]?' '+duyet.match(/(\d{1,2}\/\d{1,2})/)[1]:''));
-    else if(wk.length>=max) st=pill2('b2-mute','Đủ '+max+' bài tuần này');
-    else if(last&&last._s==='cho'&&wk.length) st=pill2('b2-wait','Chờ duyệt');
+    else if(treo) st=pill2('b2-bad','Bỏ qua · treo bài'+((duyet.match(/(\d{1,2}\/\d{1,2})/)||[])[1]?' '+duyet.match(/(\d{1,2}\/\d{1,2})/)[1]:''));
+    else if(full) st=pill2('b2-mute','Đủ '+max+' bài tuần này');
+    else if(pend) st=pill2('b2-wait','Có bài chờ duyệt');
     else if(wk.length) st=pill2('b2-on','Đã đăng tuần này');
     else st=pill2('b2-info','Sẵn sàng');
-    return { ma:ma, ten:ten, link:link, tv:tv, hd:hd, why:(duyet.split('–')[1]||duyet).trim(), duyet:duyet.replace(/\s*–.*$/,'')||'—', n:wk.length, max:max, last:last, st:st, inS:inS, skip:/treo/i.test(duyet) };
+    var why=treo?(duyet.split('–')[1]||duyet).trim():full?'đủ '+max+' bài tuần này':pend?'đang có bài chờ duyệt':'';
+    return { ma:ma, ten:ten, link:link, tv:tv, hd:hd, why:why, duyet:duyet.replace(/\s*–.*$/,'')||'—', n:wk.length, max:max, last:last, st:st, inS:inS, skip:treo||full||pend };
   });
 }
 function weekCard(){
@@ -308,13 +310,13 @@ function page2(){
   if(S.sub==='hq') return head2+tabs2+'<div class="bot-card"><div class="bot-h">Hiệu quả theo group</div><div class="bot-s">30 ngày gần nhất · xếp theo comment / bài</div>'+groupTable(k.gl)+evGroups(k.gl)+'</div>';
   if(S.sub==='rs') return head2+tabs2+'<div class="bot-card"><div class="bot-h">Research group</div><div class="bot-s">Các group đã quét</div>'+researchTable()+'</div>';
   var G=grpRows(), canPost=G.filter(function(g){return g.inS&&!g.skip;}).length, inS=G.filter(function(g){return g.inS;}).length;
-  var sumWk=k.okW+k.choW;
+  var sumWk=k.wk.filter(function(p){return p._s!=='loi';}).length;
   var kp='<div class="b2-kpis">'+
-    '<div class="b2-card b2-kpi"><div class="l">Bài tuần này</div><div class="v">'+sumWk+'</div><div class="n">'+delta(sumWk,k.pwk.filter(function(p){return p._s==='ok'||p._s==='cho';}).length)+'</div></div>'+
+    '<div class="b2-card b2-kpi"><div class="l">Bài tuần này</div><div class="v">'+sumWk+'</div><div class="n">'+delta(sumWk,k.pwk.filter(function(p){return p._s!=='loi';}).length)+'</div></div>'+
     '<div class="b2-card b2-kpi"><div class="l">Đã hiển thị</div><div class="v">'+k.okW+'</div><div class="n">bài lên group tuần này</div></div>'+
     '<div class="b2-card b2-kpi"><div class="l">Chờ admin duyệt</div><div class="v">'+k.choW+'</div><div class="n">tuần này</div></div>'+
     '<div class="b2-card b2-kpi"><div class="l">Bị gỡ / lỗi</div><div class="v"'+((k.goW+k.loiW)?' style="color:var(--bad)"':'')+'>'+(k.goW+k.loiW)+'</div><div class="n">'+((k.goW+k.loiW)?'cần kiểm tra':'nick an toàn')+'</div></div>'+
-    '<div class="b2-card b2-kpi"><div class="l">Group đăng được</div><div class="v">'+canPost+'/'+inS+'</div><div class="n">'+(inS-canPost?(inS-canPost)+' group treo bài cũ':'trong lịch')+'</div></div></div>';
+    '<div class="b2-card b2-kpi"><div class="l">Group đăng được</div><div class="v">'+canPost+'/'+inS+'</div><div class="n">'+(inS-canPost?(inS-canPost)+' group đang chờ duyệt / đủ bài':'trong lịch')+'</div></div></div>';
   var log='<div class="b2-card"><h3>Nhật ký bài đăng</h3><div class="cs">Bot mở lại link bài sau đăng để cập nhật trạng thái và số comment</div>'+logTable()+'</div>';
   return head2+tabs2+kp+'<div class="b2-row">'+timeline()+'<div class="b2-col">'+weekCard()+tmplCard()+'</div></div>'+groupCard(G)+log;
 }
