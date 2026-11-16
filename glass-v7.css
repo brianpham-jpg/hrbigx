@@ -39,7 +39,7 @@ html,body{background:#0b3b47!important}
 #main{background:transparent!important}
 
 /* ---------- 3. kính mờ cho khung ---------- */
-.content,#bx-topnav{backdrop-filter:blur(30px) saturate(140%);-webkit-backdrop-filter:blur(30px) saturate(140%);
+.content,#bx-topnav{backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%);
   box-shadow:0 10px 30px rgba(6,40,50,.18), inset 0 1px 0 rgba(255,255,255,.4)}
 :root[data-theme=light] .tn-menu,:root[data-theme=light] .tn-mob{background:rgba(255,255,255,.9)}
 :root[data-theme=dark] .tn-menu,:root[data-theme=dark] .tn-mob{background:rgba(12,34,42,.92)}
