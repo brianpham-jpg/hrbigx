@@ -85,12 +85,12 @@ function buildScene(){
   var bg=document.createElement('div'); bg.id='bx7-bg'; bg.innerHTML='<div class="ph"></div><div class="tn"></div><div class="sh"></div>';
   document.body.insertBefore(bg,document.body.firstChild);
   var gl=document.createElement('div'); gl.className='bx7-glitter';
-  var n=MOBILE()?45:110;
+  var n=MOBILE()?15:30;
   for(var k=0;k<n;k++){ var star=Math.random()<.18, el=document.createElement(star?'b':'i'), s=star?R(8,14):R(1.5,3.5);
     el.style.cssText='left:'+R(0,100)+'%;top:'+R(0,100)+'%;width:'+s+'px;height:'+s+'px;--s:'+s+'px;--d:'+R(2.2,5).toFixed(2)+'s;--delay:'+R(0,5).toFixed(2)+'s;--o:'+R(.55,1).toFixed(2);
     if(!star&&Math.random()<.3) el.className='gold'; gl.appendChild(el); }
   var pt=document.createElement('div'); pt.className='bx7-petals';
-  var m=MOBILE()?12:26;
+  var m=0; /* bo hoa dao (16/11/2026) - lag khi share Meet */
   for(var j=0;j<m;j++){ var p=document.createElement('div'); p.className='bx7-petal';
     p.style.cssText='--x:'+R(-5,100)+'%;--dx:'+R(40,160)+'px;--d:'+R(9,18).toFixed(1)+'s;--delay:'+(-R(0,18)).toFixed(1)+'s;--s:'+R(10,18).toFixed(0)+'px;--sw:'+R(2,4).toFixed(1)+'s;--sp:'+R(3,7).toFixed(1)+'s';
     p.innerHTML='<i></i>'; pt.appendChild(p); }
