@@ -1,0 +1,61 @@
+/* ============================================================
+   BigX HR — earth-v8.css  (bảng màu Nâu · Kem · Xanh baby — reel diego.a.does, 17/11/2026)
+   - Lớp phủ CUỐI CÙNG lên glass-v7: nền phẳng, bỏ ảnh nền + kim tuyến + kính mờ → nhẹ máy, đỡ lag.
+   - KHÔNG sửa file cũ. Gỡ dòng earth-v8.css khỏi index.html là web về y như glass-v7.
+   - Palette: Brown #3B2418 · Cream #F2E8DA · Baby Blue #8EC5FF
+   ============================================================ */
+:root,:root[data-theme=light],:root[data-theme=dark]{
+  --e-brown:#3B2418; --e-cream:#F2E8DA; --e-blue:#8EC5FF;
+  --x-bg:#F2E8DA; --x-app:#F7F0E6; --x-s1:#FBF7F1; --x-s2:#F2E8DA; --x-s3:#EADDCB;
+  --x-line:#E3D5C2; --x-line2:#ECE1D2;
+  --x-tx:#3B2418; --x-tx2:#4A3326; --x-mu:#62493A; --x-fa:#7A6252;
+  --x-acc:#8EC5FF; --x-accink:#3B2418; --x-acctx:#3B2418; --x-accsoft:rgba(142,197,255,.22);
+  --x-glass:#FBF7F1; --x-shadow:0 10px 28px -18px rgba(59,36,24,.35);
+  --bg:#F2E8DA; --paper:#FBF7F1; --paper-2:#F5EDE2; --card2:#F5EDE2;
+  --line:#E3D5C2; --line-soft:#ECE1D2; --grid:#ECE1D2;
+  --ink:#3B2418; --text:#4A3326; --muted:#62493A; --faint:#7A6252;
+  --teal:#3B2418; --teal-2:#3B2418; --s1:#3B2418; --s3:#8EC5FF;
+  /* màu trạng thái đậm hơn cho nền kem (đủ tương phản ≥4.5) */
+  --x-crit:#A3301E; --x-high:#7A4F08; --x-ok:#22633D; --x-norm:#24578A;
+  --rust:#A3301E; --bad:#A3301E; --clay:#7A4F08; --warn:#7A4F08; --gold:#7A4F08; --good:#22633D;
+  color-scheme:light;
+}
+
+/* nền phẳng — bỏ ảnh phòng, kim tuyến, hoa, icon bay */
+html,body{background:var(--e-cream)!important}
+#bx7-bg,.bx7-glitter,.bx7-petals,.bx7-fls{display:none!important}
+
+/* bỏ toàn bộ kính mờ (backdrop-filter là thứ ngốn GPU nhất khi share màn hình) */
+.content,#bx-topnav,.topbar .tb-left,.topbar .tb-right,.tn-menu,.tn-mob,#bx7-um{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.content,#bx-topnav{background:var(--x-s1)!important;border:1px solid var(--x-line)!important;box-shadow:var(--x-shadow)!important}
+.topbar .tb-left,.topbar .tb-right{background:var(--x-s1)!important;border-color:var(--x-line)!important;box-shadow:none!important}
+.tn-menu,.tn-mob,#bx7-um{background:var(--x-s1)!important;border-color:var(--x-line)!important}
+
+/* menu: tab đang chọn = xanh baby, chữ nâu */
+.tn-it.on,.tn-dd.on>.tn-it{background:var(--e-blue)!important;color:var(--e-brown)!important;box-shadow:none!important}
+.tn-it.on>i.ti:first-child,.tn-dd.on>.tn-it>i.ti:first-child,
+:root[data-theme=light] .tn-it.on>i.ti:first-child,:root[data-theme=light] .tn-dd.on>.tn-it>i.ti:first-child{color:var(--e-brown)!important}
+.tn-av{background:var(--e-brown)!important;color:var(--e-cream)!important}
+
+/* hover nhẹ, không đổ bóng to */
+.ctv-card:hover,.bot-card:hover,.v3-card:hover{transform:none;box-shadow:var(--x-shadow)}
+
+/* ---------- chữ dễ đọc: nhãn/pill trạng thái (màu do theme-v5.js tự đổi → ghi đè trực tiếp, thêm "html body" để thắng <style> module chèn sau) ---------- */
+html body .pill.clay,html body .x5-p-high,html body .ix-chip.c-wa,html body .rv-chip.rv-wa,html body .tone-high{color:#6E4706!important}
+html body .pill.rust,html body .x5-p-crit,html body .ix-chip.c-er,html body .rv-chip.rv-er,html body .tone-crit{color:#8E2A1A!important}
+html body .pill.teal,html body .x5-p-ok,html body .ix-chip.c-ok,html body .rv-chip.rv-ok,html body .tone-ok,html body .bc-cad b{color:#1C5533!important}
+html body .ix-chip.c-in,html body .ix-tab,html body .rv-chip.rv-in,html body .tone-norm,html body .x5-p-norm{color:#1F4C7A!important}
+html body .pill.gray{color:var(--x-mu)!important}
+html body .kcv-new{color:#fff!important}
+/* chữ nhấn xanh lá cũ (accent v5) → nâu */
+html body .rv-eval h4,html body .ctv-card .v,html body .ctv-lk,html body .ctv-ev b,html body .x5-p-acc{color:var(--e-brown)!important}
+/* chữ phụ xám → nâu xám đậm (đủ tương phản trên nền kem) */
+html body #content th,html body .rv-sub,html body .rv-n,html body .rv-sc,html body .rv-lg .m,html body .bt-cap,html body .bt-note,
+html body .bt-kpi .s,html body .bt-kpi .t,html body .bt-kpi .dn,html body .bt-sh .n,html body .bc-seg button,html body .bc-cmp,html body .bc-step .lbl small,
+html body .ix-q,html body .ix-kpi .l{color:var(--x-mu)!important}
+/* nút đang chọn / nút chính còn màu xanh chanh cũ → xanh baby chữ nâu; thanh tiến độ → nâu */
+html body .ctv-sub button.on,html body .ctv-seg button.on,html body .rv-sc.on,html body .bc-pdf{background:var(--e-blue)!important;color:var(--e-brown)!important;border-color:var(--e-blue)!important}
+html body .ctv-card .t>i,html body .rv-prog>div{background:var(--e-brown)!important}
+/* số phụ trong thẻ chỉ số Phân tích: giữ màu tín hiệu nhưng đậm hơn */
+html body .ix-kpi .d{filter:brightness(.72)}
+html body .ix-t td b,html body .ix-t td small{filter:brightness(.72)}
