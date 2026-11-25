@@ -34,7 +34,9 @@ function load(){
     .then(function(){ S.loading=false; if(window.currentTab===TAB) render(); });
 }
 function set(d){ S.data=d; try{ localStorage.setItem(LS,JSON.stringify(d)); }catch(e){} banner(); }
-function setPai(d){ S.pai=d; try{ localStorage.setItem(LS2,JSON.stringify(d)); }catch(e){} }
+function setPai(d){ S.pai=d; try{ localStorage.setItem(LS2,JSON.stringify(d)); }catch(e){}
+  var busy=(d.tasks||[]).some(function(t){ return t.status==='Chờ chạy'||t.status==='Đang làm'; });
+  clearTimeout(S.pollT); if(busy) S.pollT=setTimeout(function(){ if(window.currentTab===TAB && !S.sending) loadPai(); },8000); }
 function loadPai(){
   if(S.paiLoading||!window.BX_ROLE) return; S.paiLoading=true; S.paiErr=null;
   var url=API_URL+'?action=pai';
@@ -197,7 +199,7 @@ function logView(){
 /* ---------- 6b. Các màn Phòng AI ---------- */
 var RN={ truong_phong:'Trưởng phòng', bien_tap:'Biên tập viên', trinh_sat:'Trinh sát', buu_ta:'Bưu tá', le_tan:'Lễ tân Zalo', gac_cong:'Gác cổng', bao_mat:'Bảo mật', he_thong:'Hệ thống' };
 var RI={ truong_phong:'ti-user-star', bien_tap:'ti-pencil', trinh_sat:'ti-telescope', buu_ta:'ti-mail', le_tan:'ti-message-circle', gac_cong:'ti-shield-check', bao_mat:'ti-shield-lock' };
-var TS={ 'Hoàn tất':'pai-st-run','Đã duyệt':'pai-st-run','Đang làm':'pai-st-info','Chờ duyệt':'pai-st-warn','Lỗi':'pai-st-stop','Từ chối':'pai-st-off','Chưa cấu hình':'pai-st-off' };
+var TS={ 'Hoàn tất':'pai-st-run','Đã duyệt':'pai-st-run','Đang làm':'pai-st-info','Chờ chạy':'pai-st-info','Chờ duyệt':'pai-st-warn','Lỗi':'pai-st-stop','Từ chối':'pai-st-off','Chưa cấu hình':'pai-st-off' };
 function tst(s){ return '<span class="pai-st '+(TS[s]||'pai-st-off')+'">'+E(s||'—')+'</span>'; }
 function P(){ return S.pai||{}; }
 function paiBar(t,sub,btn){ return '<div class="pai-bar"><div class="t">'+t+(sub?'<small>'+sub+'</small>':'')+'</div>'+(btn||'')+'</div>'; }
