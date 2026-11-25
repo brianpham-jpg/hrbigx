@@ -230,7 +230,7 @@ function chatView(){
     return '<div class="pai-ag"><div class="meta"><b>'+E(m.who)+'</b> · '+E(m.at)+'</div><div class="tx">'+nl(m.text)+'</div>'+cards+'</div>';
   }).join('');
   if(!C.length) msgs='<div class="pai-empty">Nhắn cho Trưởng phòng để bắt đầu. Ví dụ: “Tuần này có bao nhiêu CV mới?”, “Viết 3 bài tuyển CTV Booking KOC”, “Nghiên cứu mức hoa hồng CTV booking KOC”.</div>';
-  if(S.sending) msgs+='<div class="pai-ag"><div class="meta"><b>Trưởng phòng</b></div><div class="tx pai-typing">Đang xử lý…</div></div>';
+  if(S.sending) msgs+='<div class="pai-ag"><div class="meta"><b>Trưởng phòng</b></div><div class="tx pai-typing">Đang xử lý… Gemini có thể mất 1–2 phút, anh cứ để đó.</div></div>';
   var comp=admin?'<div class="pai-comp"><textarea id="pai-in" rows="2" placeholder="Nhắn cho Trưởng phòng… (Enter để gửi, Shift+Enter xuống dòng)" onkeydown="__paiKey(event)"'+(S.sending?' disabled':'')+'>'+E(S.draft)+'</textarea>'+
     '<div class="bot"><div class="chips">'+['Tuần này có bao nhiêu CV mới?','Viết 3 bài tuyển CTV Booking KOC','Kiểm tra rủi ro hệ thống'].map(function(q){ return '<span onclick="__paiQ(this)">'+E(q)+'</span>'; }).join('')+'</div>'+
     '<button class="pai-send"'+(S.sending?' disabled':'')+' onclick="__paiSend()"><i class="ti ti-send"></i>Gửi</button></div></div>'+
