@@ -219,7 +219,7 @@ function logView(){
 }
 
 /* ---------- 6b. Các màn Phòng AI ---------- */
-var RN={ bao_cao:'Email báo cáo', truong_phong:'Trưởng phòng', bien_tap:'Biên tập viên', trinh_sat:'Trinh sát', buu_ta:'Bưu tá', le_tan:'Lễ tân Zalo', gac_cong:'Gác cổng', bao_mat:'Bảo mật', he_thong:'Hệ thống' };
+var RN={ bao_cao:'Email báo cáo', truong_phong:'Gemini Điều phối', bien_tap:'Gemini Viết bài', trinh_sat:'Gemini Search', buu_ta:'Gmail gửi JD', le_tan:'Zalo soạn tin', gac_cong:'Gác cổng (quy tắc)', bao_mat:'Bảo mật', he_thong:'Hệ thống' };
 var RI={ truong_phong:'ti-user-star', bien_tap:'ti-pencil', trinh_sat:'ti-telescope', buu_ta:'ti-mail', le_tan:'ti-message-circle', gac_cong:'ti-shield-check', bao_mat:'ti-shield-lock' };
 var TS={ 'Hoàn tất':'pai-st-run','Đã duyệt':'pai-st-run','Đang làm':'pai-st-info','Chờ chạy':'pai-st-info','Chờ duyệt':'pai-st-warn','Lỗi':'pai-st-stop','Từ chối':'pai-st-off','Chưa cấu hình':'pai-st-off' };
 function whyTxt(w){ return w==='REVIEW'?'Lịch yêu cầu anh duyệt kết quả':w; }
@@ -252,14 +252,14 @@ function chatView(){
     String(m.text).replace(/#(\d+)/g,function(_,id){ if(seen[id]) return; seen[id]=1; var t=taskById(id); if(t&&t.status==='Chờ duyệt') cards+='<div class="pai-att"><div class="h"><b>#'+t.id+' · '+E(RN[t.robot]||t.robot)+'</b>'+tst(t.status)+'</div><div class="c">'+E(t.why||t.text)+'</div>'+resultHtml(t)+decideBtns(t)+'</div>'; });
     return '<div class="pai-ag"><div class="meta"><b>'+E(m.who)+'</b> · '+E(m.at)+'</div><div class="tx">'+nl(m.text)+'</div>'+cards+'</div>';
   }).join('');
-  if(!C.length) msgs='<div class="pai-empty">Nhắn cho Trưởng phòng để bắt đầu. Ví dụ: “Tuần này có bao nhiêu CV mới?”, “Viết 3 bài tuyển CTV Booking KOC”, “Nghiên cứu mức hoa hồng CTV booking KOC”.</div>';
-  if(S.sending) msgs+='<div class="pai-ag"><div class="meta"><b>Trưởng phòng</b></div><div class="tx pai-typing">Đang xử lý… Gemini có thể mất 1–2 phút, anh cứ để đó.</div></div>';
-  var comp=admin?'<div class="pai-comp"><textarea id="pai-in" rows="2" placeholder="Nhắn cho Trưởng phòng… (Enter để gửi, Shift+Enter xuống dòng)" onkeydown="__paiKey(event)"'+(S.sending?' disabled':'')+'>'+E(S.draft)+'</textarea>'+
+  if(!C.length) msgs='<div class="pai-empty">Nhắn cho Gemini Điều phối để bắt đầu. Ví dụ: “Tuần này có bao nhiêu CV mới?”, “Viết 3 bài tuyển CTV Booking KOC”, “Nghiên cứu mức hoa hồng CTV booking KOC”.</div>';
+  if(S.sending) msgs+='<div class="pai-ag"><div class="meta"><b>Gemini Điều phối</b></div><div class="tx pai-typing">Đang xử lý… Gemini có thể mất 1–2 phút, anh cứ để đó.</div></div>';
+  var comp=admin?'<div class="pai-comp"><textarea id="pai-in" rows="2" placeholder="Nhắn cho Gemini Điều phối… (Enter để gửi, Shift+Enter xuống dòng)" onkeydown="__paiKey(event)"'+(S.sending?' disabled':'')+'>'+E(S.draft)+'</textarea>'+
     '<div class="bot"><div class="chips">'+['Tuần này có bao nhiêu CV mới?','Viết 3 bài tuyển CTV Booking KOC','Kiểm tra rủi ro hệ thống'].map(function(q){ return '<span onclick="__paiQ(this)">'+E(q)+'</span>'; }).join('')+'</div>'+
     '<button class="pai-send"'+(S.sending?' disabled':'')+' onclick="__paiSend()"><i class="ti ti-send"></i>Gửi</button></div></div>'+
-    '<div class="pai-disc">Lệnh đụng dữ liệu ứng viên, gửi ra ngoài, xoá hoặc hàng loạt sẽ bị Gác cổng giữ lại chờ anh duyệt.</div>'
+    '<div class="pai-disc">Lệnh đụng dữ liệu ứng viên, gửi ra ngoài, xoá hoặc hàng loạt sẽ bị Gác cổng (quy tắc) giữ lại chờ anh duyệt.</div>'
     :'<div class="pai-disc">Tài khoản chỉ xem — không gửi lệnh được.</div>';
-  return paiBar('Trao đổi','Trưởng phòng · Gemini'+(S.paiLoading?' · đang tải…':''), p.sheetUrl?'<a class="pai-b" href="'+E(p.sheetUrl)+'" target="_blank" rel="noopener"><i class="ti ti-table"></i>Sheet dữ liệu</a>':'')+waitMsg()+
+  return paiBar('Trao đổi','Gemini Điều phối'+(S.paiLoading?' · đang tải…':''), p.sheetUrl?'<a class="pai-b" href="'+E(p.sheetUrl)+'" target="_blank" rel="noopener"><i class="ti ti-table"></i>Sheet dữ liệu</a>':'')+waitMsg()+
     '<div class="pai-thread" id="pai-thread"><div class="col">'+msgs+'</div></div>'+comp;
 }
 var RS={ run:['pai-st-run','Đang chạy'], warn:['pai-st-warn','Cần xử lý'], err:['pai-st-stop','Lỗi'], off:['pai-st-off','Chưa cấu hình'] };
@@ -315,7 +315,7 @@ function lichView(){
   var we=new Date(ws); we.setDate(we.getDate()+6);
   var ev={}, minH=7, maxH=23;
   L.forEach(function(s){ occ(s,ws).forEach(function(o){ if(o.h<minH) minH=o.h; var k=o.d+'_'+o.h; (ev[k]=ev[k]||[]).push(s); }); });
-  var legend='<div class="pai-legend">'+[['bien_tap','Biên tập viên'],['trinh_sat','Trinh sát'],['bao_mat','Bảo mật'],['bao_cao','Email báo cáo']].map(function(x){ return '<span><i class="'+RC[x[0]]+'"></i>'+x[1]+'</span>'; }).join('')+'</div>';
+  var legend='<div class="pai-legend">'+[['bien_tap','Gemini Viết bài'],['trinh_sat','Gemini Search'],['bao_mat','Bảo mật'],['bao_cao','Email báo cáo']].map(function(x){ return '<span><i class="'+RC[x[0]]+'"></i>'+x[1]+'</span>'; }).join('')+'</div>';
   var head='<div class="pg-h"></div>'+DOW.map(function(d,i){ var dt=new Date(ws); dt.setDate(dt.getDate()+i); var t=dt.getTime()===today.getTime();
     return '<div class="pg-h'+(t?' today':'')+'">'+d+'<b>'+dt.getDate()+'</b></div>'; }).join('');
   var band='<div class="pg-hr" style="height:auto;padding:8px 6px 0 0">Liên tục</div><div class="pg-band">'+(sc.continuous||[]).map(function(x){ var a=x.split(' · '); return '<span><b>'+E(a[0])+'</b> '+E(a[1]||'')+'</span>'; }).join('')+'</div>';
@@ -332,8 +332,8 @@ function lichView(){
       (admin&&!sel.sys?'<div class="pf-acts"><button class="pai-b dk"'+(S.busy?' disabled':'')+' onclick="__paiSch(\'runNow\',\''+sel.id+'\')"><i class="ti ti-player-play"></i>Chạy ngay</button><button class="pai-b"'+(S.busy?' disabled':'')+' onclick="__paiSch(\'toggle\',\''+sel.id+'\')">'+(sel.bat?'Tạm dừng':'Bật lại')+'</button><button class="pai-b no"'+(S.busy?' disabled':'')+' onclick="__paiSch(\'delete\',\''+sel.id+'\')">Xoá</button></div>':'')+'</div>'; }
   else if(admin){ var f=S.f;
     side='<div class="pf"><h3>Giao việc mới</h3>'+
-      '<div class="fl"><label>Robot</label><select onchange="__paiFF(\'robot\',this.value)">'+[['bien_tap','Biên tập viên'],['trinh_sat','Trinh sát'],['bao_mat','Bảo mật'],['bao_cao','Email báo cáo']].map(function(o){ return '<option value="'+o[0]+'"'+(f.robot===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></div>'+
-      '<div class="fl"><label>Việc cần làm</label><textarea id="pf-viec" oninput="__paiFF(\'viec\',this.value,1)" placeholder="'+(f.robot==='bien_tap'?'VD: Viết 3 bài tuyển CTV Booking KOC, xoay keyword…':f.robot==='trinh_sat'?'VD: Đối thủ đang tuyển KOC với mức hoa hồng nào?':'Không cần ghi')+'">'+E(f.viec)+'</textarea></div>'+
+      '<div class="fl"><label>Robot</label><select onchange="__paiFF(\'robot\',this.value)">'+[['bien_tap','Gemini Viết bài'],['trinh_sat','Gemini Search'],['bao_mat','Bảo mật'],['bao_cao','Email báo cáo']].map(function(o){ return '<option value="'+o[0]+'"'+(f.robot===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></div>'+
+      '<div class="pai-muted" style="font-size:12px;margin-top:-6px">'+({bien_tap:'Gemini viết bài đăng tuyển dụng FB, chấm rủi ro chính sách — kết quả vào Chờ duyệt.',trinh_sat:'Gemini tra Google: thị trường, đối thủ, mức hoa hồng, rủi ro.',bao_mat:'Quét bảo mật hệ thống, có lỗi thì báo Gmail.',bao_cao:'Gửi báo cáo tuyển dụng tuần về mail anh.'}[f.robot]||'')+'</div>'+'<div class="fl"><label>Việc cần làm</label><textarea id="pf-viec" oninput="__paiFF(\'viec\',this.value,1)" placeholder="'+(f.robot==='bien_tap'?'VD: Viết 3 bài tuyển CTV Booking KOC, xoay keyword…':f.robot==='trinh_sat'?'VD: Đối thủ đang tuyển KOC với mức hoa hồng nào?':'Không cần ghi')+'">'+E(f.viec)+'</textarea></div>'+
       '<div class="fl"><label>Lặp lại</label><div class="seg">'+[['once','1 lần'],['daily','Hằng ngày'],['weekly','Hằng tuần']].map(function(o){ return '<span class="'+(f.lap===o[0]?'on':'')+'" onclick="__paiFF(\'lap\',\''+o[0]+'\')">'+o[1]+'</span>'; }).join('')+'</div></div>'+
       (f.lap==='weekly'?'<div class="fl"><label>Vào các ngày</label><div class="days">'+DOW.map(function(d){ return '<span class="'+(f.ngay.indexOf(d)>-1?'on':'')+'" onclick="__paiDay(\''+d+'\')">'+d+'</span>'; }).join('')+'</div></div>':'')+
       '<div class="row2"><div class="fl"><label>Giờ chạy</label><input type="time" value="'+E(f.gio)+'" onchange="__paiFF(\'gio\',this.value,1)"></div><div class="fl"><label>'+(f.lap==='once'?'Ngày chạy':'Bắt đầu từ')+'</label><input type="date" value="'+E(f.batDau)+'" onchange="__paiFF(\'batDau\',this.value,1)"></div></div>'+
