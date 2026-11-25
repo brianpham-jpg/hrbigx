@@ -140,8 +140,8 @@ function css(){
 '.pg-c{min-height:44px;border-bottom:1px solid var(--x-line2,#ECE1D2);border-left:1px solid var(--x-line2,#ECE1D2);padding:3px}.pg-c.today{background:rgba(142,197,255,.08)}'+
 '.pg-band{grid-column:2/9;font-size:11.5px;color:var(--x-mu,#62493A);padding:7px 10px;border-bottom:1px solid var(--x-line2,#ECE1D2);background:var(--x-s2,#F2E8DA);display:flex;gap:18px;flex-wrap:wrap}.pg-band b{color:var(--x-tx,#3B2418)}'+
 '.pg-ev{border-radius:5px;padding:4px 6px;font-size:11px;line-height:1.3;border-left:3px solid;cursor:pointer;margin-bottom:3px;overflow:hidden}.pg-ev b{display:block}.pg-ev.off{opacity:.45}.pg-ev.sel{box-shadow:0 0 0 2px var(--x-tx,#3B2418)}'+
-'.pe-bt{background:#EFE4D4;border-color:#3B2418;color:#3B2418}.pe-ts{background:#DCEBFA;border-color:#24578A;color:#1E4670}.pe-bm{background:#E3EFE6;border-color:#22633D;color:#1C5232}.pe-em{background:#F4E8CF;border-color:#7A4F08;color:#6E4706}'+
-'.pai-legend i.pe-bt{background:#3B2418}.pai-legend i.pe-ts{background:#24578A}.pai-legend i.pe-bm{background:#22633D}.pai-legend i.pe-em{background:#7A4F08}'+
+'.pqv-bt{background:#EFE4D4;border-color:#3B2418;color:#3B2418}.pqv-ts{background:#DCEBFA;border-color:#24578A;color:#1E4670}.pqv-bm{background:#E3EFE6;border-color:#22633D;color:#1C5232}.pqv-em{background:#F4E8CF;border-color:#7A4F08;color:#6E4706}'+
+'.pai-legend i.pqv-bt{background:#3B2418}.pai-legend i.pqv-ts{background:#24578A}.pai-legend i.pqv-bm{background:#22633D}.pai-legend i.pqv-em{background:#7A4F08}'+
 '.pf{padding:14px 16px;display:flex;flex-direction:column;gap:12px}.pf h3{margin:0;font-size:14px;color:var(--x-tx,#3B2418)}.pf-h{display:flex;justify-content:space-between;align-items:center}'+
 '.pf .fl label{display:block;font-size:11.5px;color:var(--x-fa,#7A6252);margin-bottom:5px;font-weight:500}'+
 '.pf select,.pf input[type=time],.pf input[type=date],.pf textarea{width:100%;box-sizing:border-box;border:1px solid var(--x-line,#E3D5C2);background:#fff;border-radius:7px;padding:8px 10px;font-size:13px;font-family:inherit;color:var(--x-tx,#3B2418)}.pf textarea{resize:none;height:66px}'+
@@ -297,7 +297,7 @@ function secView(){
 }
 
 /* ---------- Lịch & giao việc ---------- */
-var DOW=['T2','T3','T4','T5','T6','T7','CN'], RC={ bien_tap:'pe-bt', trinh_sat:'pe-ts', bao_mat:'pe-bm', bao_cao:'pe-em' };
+var DOW=['T2','T3','T4','T5','T6','T7','CN'], RC={ bien_tap:'pqv-bt', trinh_sat:'pqv-ts', bao_mat:'pqv-bm', bao_cao:'pqv-em' };
 function pdm(s){ var m=String(s||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/); return m?new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0)):null; }
 function z2(n){ return (n<10?'0':'')+n; }
 function wkStart(off){ var d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7)+7*off); return d; }
@@ -322,7 +322,7 @@ function lichView(){
   var rows='';
   for(var h=minH;h<=maxH;h++){ rows+='<div class="pg-hr">'+z2(h)+':00</div>';
     for(var d=0;d<7;d++){ var dt=new Date(ws); dt.setDate(dt.getDate()+d); var t=dt.getTime()===today.getTime();
-      rows+='<div class="pg-c'+(t?' today':'')+'">'+(ev[d+'_'+h]||[]).map(function(s){ return '<div class="pg-ev '+(RC[s.robot]||'pe-bt')+(s.bat?'':' off')+(S.sel===s.id?' sel':'')+'" onclick="__paiSel(\''+s.id+'\')"><b>'+E(RN[s.robot]||s.robot)+'</b>'+E(s.viec)+'</div>'; }).join('')+'</div>'; } }
+      rows+='<div class="pg-c'+(t?' today':'')+'">'+(ev[d+'_'+h]||[]).map(function(s){ return '<div class="pg-ev '+(RC[s.robot]||'pqv-bt')+(s.bat?'':' off')+(S.sel===s.id?' sel':'')+'" onclick="__paiSel(\''+s.id+'\')"><b>'+E(RN[s.robot]||s.robot)+'</b>'+E(s.viec)+'</div>'; }).join('')+'</div>'; } }
   var grid='<div class="pg-wkbar"><div class="nav2"><button class="pai-b" onclick="__paiWk(-1)"><i class="ti ti-chevron-left"></i></button>Tuần '+z2(ws.getDate())+'/'+z2(ws.getMonth()+1)+' – '+z2(we.getDate())+'/'+z2(we.getMonth()+1)+'/'+we.getFullYear()+'<button class="pai-b" onclick="__paiWk(1)"><i class="ti ti-chevron-right"></i></button></div><button class="pai-b" onclick="__paiWk(0)">Hôm nay</button></div>'+
     '<div class="pg-grid">'+head+band+rows+'</div>';
   // panel phải: chi tiết lịch đang chọn hoặc form
